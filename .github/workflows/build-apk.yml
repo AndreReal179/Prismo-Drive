@@ -113,13 +113,14 @@ jobs:
         run: |
           mkdir -p saida
           cp "$PROJ"/app/build/outputs/apk/release/*.apk "saida/PrismoDrive_v${VERSAO}.apk"
+          cp "saida/PrismoDrive_v${VERSAO}.apk" "saida/PrismoDrive.apk"
           ls -la saida
 
       - name: Enviar APK (Artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: PrismoDrive_v${{ env.VERSAO }}
-          path: saida/*.apk
+          path: saida/PrismoDrive_v${{ env.VERSAO }}.apk
           retention-days: 30
 
       - name: Montar notas da atualização
@@ -130,6 +131,18 @@ jobs:
             if [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi
           } > notas.md
           cat notas.md
+          # versao.json: o app lê este arquivo (sem usar a API do GitHub, que tem limite por hora)
+          REPO_REL="${REPO_ATUALIZACAO:-${{ github.repository }}}"
+          NOTAS_TXT=$(if [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi)
+          jq -n \
+            --arg vn "$VERSAO" \
+            --argjson vc "$VERSION_CODE" \
+            --arg notas "$NOTAS_TXT" \
+            --arg url "https://github.com/$REPO_REL/releases/download/v$VERSAO/PrismoDrive.apk" \
+            --argjson tam "$(stat -c %s saida/PrismoDrive.apk)" \
+            --arg data "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{versionName:$vn, versionCode:$vc, notas:$notas, url:$url, tamanho:$tam, data:$data}' > saida/versao.json
+          cat saida/versao.json
 
       - name: Publicar atualização (Release)
         if: env.ASSINADO == '1' && (github.event_name == 'push' || inputs.publicar)
@@ -138,7 +151,10 @@ jobs:
           tag_name: v${{ env.VERSAO }}
           name: Prismo Drive ${{ env.VERSAO }}
           body_path: notas.md
-          files: saida/*.apk
+          files: |
+            saida/PrismoDrive_v${{ env.VERSAO }}.apk
+            saida/PrismoDrive.apk
+            saida/versao.json
           make_latest: true
           repository: ${{ vars.REPO_ATUALIZACAO || github.repository }}
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
