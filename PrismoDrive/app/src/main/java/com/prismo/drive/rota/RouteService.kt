@@ -218,16 +218,15 @@ class RouteService : AccessibilityService() {
         runCatching { maybeAutoAccept(results) }
     }
 
-    /** Tela inicial do iFood aberta: lê o saldo e lança os aumentos como "Recebimento iFood". */
+    /** Tela "Oba, mais uma rota concluída!" do iFood: lança o valor ganho (+ bônus) no Prismo Drive. */
     private fun lerSaldoIfood(roots: List<AccessibilityNodeInfo>) {
         if (!prefs.ifoodSaldoAuto) return
-        val h = resources.displayMetrics.heightPixels
         for (r in roots) {
             val p = r.packageName?.toString().orEmpty()
             val ehIfood = p.contains("ifood", true) || (p.isNotEmpty() && p == prefs.ifoodPkg)
             if (!ehIfood) continue
-            val saldo = IfoodSaldo.lerDaTela(r, h) ?: continue
-            IfoodSaldo.observar(this, saldo)
+            val (valor, bonus) = IfoodSaldo.lerConclusao(r) ?: continue
+            IfoodSaldo.observarConclusao(this, valor, bonus)
             return
         }
     }

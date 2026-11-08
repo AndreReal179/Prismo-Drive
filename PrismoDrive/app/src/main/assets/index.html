@@ -2026,7 +2026,7 @@ function carteiraDiaria(e,sinal){
     if(sinal>0){
       if(ext.some(x=>x&&x.diariaId===e.id))return;
       const d=new Date(e.criadoEm),p=n=>String(n).padStart(2,'0');
-      ext.push({id:'dia_'+e.id,debtId:null,desc:(e.origem==='ifood'?'Recebimento iFood':'Diária'),cat:(e.origem==='ifood'?'iFood':''),valor:v,ts:e.criadoEm,mes:d.getFullYear()+'-'+p(d.getMonth()+1),tipo:'entrada',diariaId:e.id});
+      ext.push({id:'dia_'+e.id,debtId:null,desc:(e.origem==='ifood'?'Recebimento iFood':(e.origem==='ifood_bonus'?'Bônus iFood (promoção)':'Diária')),cat:(String(e.origem||'').indexOf('ifood')===0?'iFood':''),valor:v,ts:e.criadoEm,mes:d.getFullYear()+'-'+p(d.getMonth()+1),tipo:'entrada',diariaId:e.id});
     }else{
       if(!ext.some(x=>x&&x.diariaId===e.id))return; // só estorna o que foi creditado
       ext=ext.filter(x=>!(x&&x.diariaId===e.id));
@@ -2063,10 +2063,12 @@ function renderDiariaLista(){
   const total=lista.reduce((a,e)=>a+(Number(e.valor)||0),0);
   if(totalEl)totalEl.innerText=moeda(total);
   if(!lista.length){cont.innerHTML='<p class="pr-dia-vazio">Nenhum lançamento diário ainda hoje.</p>';return;}
-  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${e.origem==='ifood'?'iFood · ':''}${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
+  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${e.origem==='ifood'?'iFood · ':(e.origem==='ifood_bonus'?'Bônus iFood · ':'')}${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
 }
 function getTotalDiariaValor(){
-  return getDiariaEntries().reduce((a,e)=>a+(Number(e.valor)||0),0);
+  /* Faturamento do dia: só o que é de HOJE (zera à meia-noite). A Carteira continua com tudo. */
+  const hoje=hojeStrISO();
+  return getDiariaEntries().filter(e=>(e.diaISO||_isoLocal(new Date(e.criadoEm)))===hoje).reduce((a,e)=>a+(Number(e.valor)||0),0);
 }
 // Recalcula o card "Faturamento do Dia" somando o que veio da planilha (backend) + o que está na Diária (só local).
 // A Diária nunca é enviada pro backend, então nunca entra no fechamento semanal — só soma aqui, na visão do dia.
@@ -3915,8 +3917,8 @@ window.PrismoRotas=(function(){
 })();
 
 
-/* ═══ RECEBIMENTO iFOOD — saldo lido da tela do iFood pelo Assistente de rotas ═══
-   O assistente (processo nativo) guarda cada AUMENTO do saldo numa fila. Aqui ele vira um
+/* ═══ RECEBIMENTO iFOOD — tela "Oba, mais uma rota concluída!" lida pelo Assistente de rotas ═══
+   O assistente (processo nativo) guarda cada rota concluída (valor + bônus) numa fila. Aqui ele vira um
    lançamento do tipo Diária: entra no Faturamento do dia, vai na hora para o Saldo em conta
    da Carteira e aparece no extrato como "Recebimento iFood". */
 window.PrismoIfood=(function(){
@@ -3933,11 +3935,17 @@ window.PrismoIfood=(function(){
       var feitos=[],total=0,hist=[];try{hist=getDiariaHist();}catch(e){}
       fila.forEach(function(p){
         if(!p||!p.id)return;
-        var id='if_'+p.id,v=Math.round((Number(p.valor)||0)*100)/100;
-        if(v<=0||hist.some(function(h){return h&&h.id===id;})){feitos.push(p.id);return;}
-        var ts=Number(p.ts)||Date.now();
-        addDiariaEntry({id:id,valor:v,km:0,consumo:(typeof getConsumo==='function'?getConsumo():0),preco:(typeof getPreco==='function'?getPreco():0),criadoEm:ts,diaISO:_isoLocal(new Date(ts)),origem:'ifood'});
-        feitos.push(p.id);total+=v;
+        var ts=Number(p.ts)||Date.now(),iso=_isoLocal(new Date(ts));
+        var cons=(typeof getConsumo==='function'?getConsumo():0),pre=(typeof getPreco==='function'?getPreco():0);
+        function lanca(id,v,origem){
+          v=Math.round((Number(v)||0)*100)/100;
+          if(v<=0||hist.some(function(h){return h&&h.id===id;}))return;
+          addDiariaEntry({id:id,valor:v,km:0,consumo:cons,preco:pre,criadoEm:ts,diaISO:iso,origem:origem});
+          total+=v;
+        }
+        lanca('if_'+p.id,p.valor,'ifood');          /* "Você ganhou: R$ 60,00" */
+        lanca('ifb_'+p.id,p.bonus,'ifood_bonus');   /* "+ R$ 8,00" em verde (promoção) */
+        feitos.push(p.id);
       });
       if(feitos.length)n.ifoodConfirmar(JSON.stringify(feitos));
       if(total>0){

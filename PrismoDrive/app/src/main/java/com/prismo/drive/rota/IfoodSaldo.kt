@@ -11,32 +11,37 @@ import java.io.File
 import java.io.RandomAccessFile
 
 /**
- * Lê o saldo mostrado na tela inicial do iFood (ex.: "R$ 151,73", no topo, ao lado do olho)
- * e transforma cada AUMENTO do saldo num "Recebimento iFood" no Prismo Drive.
+ * Recebimento iFood: quando aparece a tela "Oba, mais uma rota concluída! · Você ganhou: R$ 60,00"
+ * (às vezes com "+ R$ 8,00" em verde, que é o bônus de promoção do próprio iFood), o valor vira um
+ * lançamento no Prismo Drive: entra no Faturamento do dia e no Saldo em conta da Carteira, com
+ * "Recebimento iFood" (e "Bônus iFood" separado) no extrato.
  *
- * - O saldo do iFood é acumulado (vai somando até o repasse/saque). Por isso só a DIFERENÇA
- *   desde a última leitura vira recebimento — o mesmo dinheiro nunca entra duas vezes.
- * - Primeira leitura: vira só o ponto de partida (o que já estava no saldo não é lançado de novo).
- * - Saldo caiu (repasse, saque): só atualiza o ponto de partida, sem lançar nada.
- * - O valor precisa aparecer igual em 2 leituras seguidas (≥ 1,5 s) para evitar leituras pela metade.
- * - Segurança: um salto de mais de R$ 400 entre duas leituras não é lançado (só reposiciona).
+ * - Cada tela de rota concluída é lançada UMA vez (a mesma tela relida várias vezes não repete).
+ * - Os valores precisam ficar iguais por ~1,5 s antes de lançar (o bônus às vezes aparece depois).
+ * - Se o bônus aparecer depois do valor já lançado, só o bônus é lançado.
  *
  * O serviço (processo ":rotas") grava os recebimentos numa fila em arquivo; a tela do Prismo Drive
- * (processo principal) busca a fila, lança no faturamento do dia e na carteira, e confirma.
+ * (processo principal) busca a fila, lança e confirma.
  */
 object IfoodSaldo {
 
     const val ACTION_NOVO = "com.prismo.drive.action.IFOOD_RECEBIMENTO"
 
-    private const val ARQ_ESTADO = "ifood_saldo.json"
+    private const val ARQ_ESTADO = "ifood_ultimo.json"
     private const val ARQ_FILA = "ifood_pendentes.json"
     private const val ARQ_LOCK = "ifood_saldo.lock"
 
-    private val VALOR = Regex("""^R\$\s*(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})$""")
+    /** "R$ 60,00", "+ R$ 8,00", "R$ 1.234,56" (pode haver mais de um no mesmo texto). */
+    private val VALOR = Regex("""(\+\s*)?R\$\s*(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})""")
 
-    // estabilidade da leitura (só no processo do serviço)
-    private var candidato = -1.0
-    private var candidatoDesde = 0L
+    private class Lido(val valor: Double, val mais: Boolean, val top: Int, val left: Int, val altura: Int)
+
+    // estabilidade e anti-repetição (só no processo do serviço)
+    private var candKey = ""
+    private var candDesde = 0L
+    private var ultPrincipal = -1.0
+    private var ultBonus = 0.0
+    private var ultVisto = 0L
 
     private fun dir(ctx: Context) = (ctx.applicationContext ?: ctx).filesDir
 
@@ -54,83 +59,101 @@ object IfoodSaldo {
         if (!tmp.renameTo(f)) { f.writeText(txt); tmp.delete() }
     }
 
+    private fun num(m: MatchResult): Double? =
+        (m.groupValues[2].replace(".", "") + "." + m.groupValues[3]).toDoubleOrNull()
+
     // ───────────────────────── leitura da tela (serviço) ─────────────────────────
 
-    /** É a tela inicial do iFood? Procura o saldo no topo; null se não achar. */
-    fun lerDaTela(root: AccessibilityNodeInfo, alturaTela: Int): Double? {
-        var marcador = false
-        var achado: Double? = null
-        var achadoTop = Int.MAX_VALUE
+    /**
+     * Procura a tela de rota concluída. Retorna (valor da rota, bônus) ou null se não for essa tela.
+     * Usa só o que está ABAIXO de "Você ganhou" (o saldo do topo da tela não entra).
+     */
+    fun lerConclusao(root: AccessibilityNodeInfo): Pair<Double, Double>? {
+        var concluida = false
+        var ganhouBottom = -1
+        var limiteBaixo = Int.MAX_VALUE
+        val valores = ArrayList<Lido>()
         val r = Rect()
         val fila = ArrayDeque<AccessibilityNodeInfo>()
         fila.add(root)
         var vistos = 0
-        while (fila.isNotEmpty() && vistos < 600) {
+        while (fila.isNotEmpty() && vistos < 800) {
             val n = fila.removeFirst()
             vistos++
-            val t = (n.text?.toString() ?: n.contentDescription?.toString() ?: "").trim()
+            val t = (n.text?.toString() ?: n.contentDescription?.toString() ?: "").replace('\u00A0', ' ').trim()
             if (t.isNotEmpty()) {
-                // marcadores da TELA INICIAL (evita confundir com o valor de uma rota em andamento)
-                if (t.contains("Rotas pra entregar", true) || t.contains("conferir as Rotas", true)) marcador = true
-                val m = VALOR.find(t.replace(' ', ' '))
-                if (m != null) {
+                if (t.contains("rota concluída", true) || t.contains("rota concluida", true)) concluida = true
+                if (t.contains("Você ganhou", true) || t.contains("Voce ganhou", true)) {
+                    n.getBoundsInScreen(r); ganhouBottom = maxOf(ganhouBottom, r.top)
+                }
+                if (t.contains("Avaliar a rota", true) || t.contains("Sair sem avaliar", true)) {
+                    n.getBoundsInScreen(r); limiteBaixo = minOf(limiteBaixo, r.top)
+                }
+                val achados = VALOR.findAll(t).toList()
+                if (achados.isNotEmpty()) {
                     n.getBoundsInScreen(r)
-                    // o saldo fica no topo da tela inicial (primeiros ~22% da altura)
-                    if (r.top >= 0 && r.top < alturaTela * 0.22 && r.top < achadoTop) {
-                        val inteiro = m.groupValues[1].replace(".", "")
-                        achado = "$inteiro.${m.groupValues[2]}".toDoubleOrNull()
-                        achadoTop = r.top
+                    achados.forEachIndexed { i, m ->
+                        num(m)?.let { v ->
+                            valores.add(Lido(v, m.groupValues[1].isNotEmpty(), r.top, r.left + i, r.height()))
+                        }
                     }
                 }
             }
             for (i in 0 until n.childCount) n.getChild(i)?.let { fila.add(it) }
         }
-        return if (marcador) achado else null
-    }
-
-    /** Chamado a cada leitura da tela inicial do iFood. Retorna o valor creditado (ou null). */
-    fun observar(ctx: Context, saldo: Double): Double? {
-        val agora = SystemClock.uptimeMillis()
-        if (Math.abs(saldo - candidato) > 0.001) {
-            candidato = saldo
-            candidatoDesde = agora
-            return null
+        if (!concluida || ganhouBottom < 0) return null
+        val abaixo = valores.filter { it.top >= ganhouBottom && it.top < limiteBaixo }
+            .sortedWith(compareBy<Lido>({ it.top }, { it.left }))
+        val principal = abaixo.firstOrNull { !it.mais } ?: return null
+        // bônus: valor com "+" ou outro valor na MESMA linha, à direita do principal
+        val bonus = abaixo.filter { it !== principal }.firstOrNull { b ->
+            b.mais || (Math.abs(b.top - principal.top) <= maxOf(principal.altura, 24) && b.left > principal.left)
         }
-        if (agora - candidatoDesde < 1500) return null
-        return registrar(ctx, saldo)
+        if (principal.valor <= 0) return null
+        return Pair(principal.valor, bonus?.valor ?: 0.0)
     }
 
-    private fun registrar(ctx: Context, saldo: Double): Double? = runCatching {
-        comTrava(ctx) {
-            val fEst = File(dir(ctx), ARQ_ESTADO)
-            val est = lerJson(fEst)?.let { runCatching { JSONObject(it) }.getOrNull() } ?: JSONObject()
-            val ultimo = if (est.has("ultimo")) est.optDouble("ultimo", -1.0) else -1.0
-            val agora = System.currentTimeMillis()
-            var credito: Double? = null
-            when {
-                ultimo < 0 -> { /* primeira leitura: só ponto de partida */ }
-                // aumento acima de R$ 400 de uma vez é leitura errada ou app sem abrir há dias:
-                // só reposiciona a referência, para nunca lançar valor indevido
-                saldo > ultimo + 400.0 -> { }
-                saldo > ultimo + 0.009 -> credito = Math.round((saldo - ultimo) * 100) / 100.0
-                saldo < ultimo - 0.009 -> { /* repasse/saque: só reposiciona */ }
-                else -> return@comTrava null   // igual: nada a fazer
+    /** Chamado a cada leitura da tela de rota concluída. */
+    fun observarConclusao(ctx: Context, principal: Double, bonus: Double) {
+        val agora = SystemClock.uptimeMillis()
+        val key = String.format(java.util.Locale.US, "%.2f|%.2f", principal, bonus)
+        if (key != candKey) { candKey = key; candDesde = agora; return }
+        if (agora - candDesde < 1500) return
+
+        val mesmaTela = Math.abs(principal - ultPrincipal) < 0.005 && agora - ultVisto < 120_000
+        if (mesmaTela) {
+            ultVisto = agora
+            if (bonus > ultBonus + 0.005) {          // bônus apareceu depois: lança só ele
+                enfileirar(ctx, 0.0, Math.round((bonus - ultBonus) * 100) / 100.0)
+                ultBonus = bonus
             }
-            est.put("ultimo", saldo).put("ts", agora)
-            gravar(fEst, est.toString())
-            if (credito != null && credito > 0) {
+            return
+        }
+        ultPrincipal = principal
+        ultBonus = bonus
+        ultVisto = agora
+        enfileirar(ctx, principal, bonus)
+    }
+
+    private fun enfileirar(ctx: Context, valor: Double, bonus: Double) {
+        if (valor <= 0 && bonus <= 0) return
+        runCatching {
+            comTrava(ctx) {
+                val agora = System.currentTimeMillis()
                 val fFila = File(dir(ctx), ARQ_FILA)
                 val fila = lerJson(fFila)?.let { runCatching { JSONArray(it) }.getOrNull() } ?: JSONArray()
                 fila.put(JSONObject()
                     .put("id", agora.toString(36) + (Math.random() * 1e6).toLong().toString(36))
-                    .put("valor", credito)
-                    .put("saldo", saldo)
+                    .put("valor", valor)
+                    .put("bonus", bonus)
                     .put("ts", agora))
                 gravar(fFila, fila.toString())
+                gravar(File(dir(ctx), ARQ_ESTADO), JSONObject()
+                    .put("valor", valor).put("bonus", bonus).put("ts", agora).toString())
             }
-            credito
         }
-    }.getOrNull()?.also { avisarApp(ctx) }
+        avisarApp(ctx)
+    }
 
     /** Acorda a tela do Prismo Drive (se estiver aberta em segundo plano) para lançar na hora. */
     private fun avisarApp(ctx: Context) {
@@ -164,7 +187,7 @@ object IfoodSaldo {
         }
     }
 
-    /** Situação para a tela do assistente: último saldo lido e quando. */
+    /** Situação para a tela do assistente: último recebimento lançado e quando. */
     fun estado(ctx: Context): JSONObject = runCatching {
         lerJson(File(dir(ctx), ARQ_ESTADO))?.let { JSONObject(it) }
     }.getOrNull() ?: JSONObject()

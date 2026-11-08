@@ -613,20 +613,21 @@ class RotasActivity : Activity() {
         body.addView(pageHeader("🍔", "iFood", "Rotas disponíveis · coleta + entregas"), lp(4))
 
         val rec = card()
-        rec.addView(title("Recebimentos automáticos", "Saldo da tela inicial do iFood → faturamento do dia e carteira", "💰", GREEN))
+        rec.addView(title("Recebimentos automáticos", "Rota concluída no iFood → faturamento do dia e carteira", "💰", GREEN))
         rec.addView(
-            switchRow("Lançar o saldo do iFood", "Cada aumento do saldo vira \"Recebimento iFood\"", prefs.ifoodSaldoAuto) {
+            switchRow("Lançar rotas concluídas", "\"Você ganhou R$ …\" vira \"Recebimento iFood\"", prefs.ifoodSaldoAuto) {
                 prefs.ifoodSaldoAuto = it
             }, lp(14)
         )
         val est = IfoodSaldo.estado(this)
-        val txtEst = if (est.has("ultimo")) {
+        val txtEst = if (est.has("ts")) {
             val quando = java.text.SimpleDateFormat("dd/MM 'às' HH:mm", java.util.Locale("pt", "BR"))
                 .format(java.util.Date(est.optLong("ts")))
-            "Último saldo lido: ${money(est.optDouble("ultimo"))} · $quando"
-        } else "Abra a tela inicial do iFood com o assistente ligado para começar."
+            val b = est.optDouble("bonus", 0.0)
+            "Último lançado: ${money(est.optDouble("valor", 0.0))}" + (if (b > 0) " + ${money(b)} de bônus" else "") + " · $quando"
+        } else "Ainda nenhuma rota concluída lançada."
         rec.addView(tx(txtEst, 12f, MUTED), lp(10))
-        rec.addView(tx("Só o que AUMENTA no saldo é lançado (o valor que já estava lá na primeira leitura não entra de novo). Repasse ou saque apenas zeram a referência.", 11.5f, MUTED), lp(6))
+        rec.addView(tx("Quando aparece \"Oba, mais uma rota concluída!\", o valor ganho entra no Faturamento do dia e no Saldo em conta. O bônus verde (+ R$) entra junto, como \"Bônus iFood\" no extrato. Cada tela é lançada uma vez só.", 11.5f, MUTED), lp(6))
         body.addView(rec, lp(12))
 
         val ifRecs = MonthRef.monthRecs(this, route = true)
