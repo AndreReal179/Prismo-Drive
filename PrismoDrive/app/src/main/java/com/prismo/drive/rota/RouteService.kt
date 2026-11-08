@@ -201,6 +201,7 @@ class RouteService : AccessibilityService() {
         }
         if (root == null || offers.isEmpty()) {
             overlay.hideSoon()
+            runCatching { lerSaldoIfood(roots) }
             return
         }
         root.packageName?.toString()?.let { p ->
@@ -215,6 +216,20 @@ class RouteService : AccessibilityService() {
         fab.update(Evaluator.best(results))
         runCatching { overlay.show(results) }
         runCatching { maybeAutoAccept(results) }
+    }
+
+    /** Tela inicial do iFood aberta: lê o saldo e lança os aumentos como "Recebimento iFood". */
+    private fun lerSaldoIfood(roots: List<AccessibilityNodeInfo>) {
+        if (!prefs.ifoodSaldoAuto) return
+        val h = resources.displayMetrics.heightPixels
+        for (r in roots) {
+            val p = r.packageName?.toString().orEmpty()
+            val ehIfood = p.contains("ifood", true) || (p.isNotEmpty() && p == prefs.ifoodPkg)
+            if (!ehIfood) continue
+            val saldo = IfoodSaldo.lerDaTela(r, h) ?: continue
+            IfoodSaldo.observar(this, saldo)
+            return
+        }
     }
 
     private fun maybeAutoAccept(results: List<Result>) {

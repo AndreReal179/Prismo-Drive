@@ -612,6 +612,23 @@ class RotasActivity : Activity() {
     private fun buildIfood() {
         body.addView(pageHeader("🍔", "iFood", "Rotas disponíveis · coleta + entregas"), lp(4))
 
+        val rec = card()
+        rec.addView(title("Recebimentos automáticos", "Saldo da tela inicial do iFood → faturamento do dia e carteira", "💰", GREEN))
+        rec.addView(
+            switchRow("Lançar o saldo do iFood", "Cada aumento do saldo vira \"Recebimento iFood\"", prefs.ifoodSaldoAuto) {
+                prefs.ifoodSaldoAuto = it
+            }, lp(14)
+        )
+        val est = IfoodSaldo.estado(this)
+        val txtEst = if (est.has("ultimo")) {
+            val quando = java.text.SimpleDateFormat("dd/MM 'às' HH:mm", java.util.Locale("pt", "BR"))
+                .format(java.util.Date(est.optLong("ts")))
+            "Último saldo lido: ${money(est.optDouble("ultimo"))} · $quando"
+        } else "Abra a tela inicial do iFood com o assistente ligado para começar."
+        rec.addView(tx(txtEst, 12f, MUTED), lp(10))
+        rec.addView(tx("Só o que AUMENTA no saldo é lançado (o valor que já estava lá na primeira leitura não entra de novo). Repasse ou saque apenas zeram a referência.", 11.5f, MUTED), lp(6))
+        body.addView(rec, lp(12))
+
         val ifRecs = MonthRef.monthRecs(this, route = true)
         val cls = card()
         cls.addView(title("Classificação", "R$ por km da rota inteira (coleta + entregas)", "🎯"))

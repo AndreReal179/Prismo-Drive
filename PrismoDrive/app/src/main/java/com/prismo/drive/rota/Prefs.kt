@@ -16,6 +16,11 @@ class Prefs(ctx: Context) {
     @Suppress("DEPRECATION")
     private val sp get() = app.getSharedPreferences("rotaguru", Context.MODE_MULTI_PROCESS)
 
+    /** Lê o saldo da tela inicial do iFood e lança cada aumento como "Recebimento iFood". */
+    var ifoodSaldoAuto: Boolean
+        get() = sp.getBoolean("ifoodSaldoAuto", true)
+        set(v) { sp.edit().putBoolean("ifoodSaldoAuto", v).apply() }
+
     /** Pacote do app de entregas visto mostrando "Rotas disponíveis" (iFood). */
     var ifoodPkg: String
         get() = sp.getString("ifoodPkg", "") ?: ""

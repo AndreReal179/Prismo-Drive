@@ -1,2 +1,2 @@
-• Botão flutuante agora aparece no iFood mesmo quando não tem rota na tela
-• Verificação de atualização sem o limite de consultas do GitHub
+• Novo: Recebimento iFood automático — o Assistente de rotas lê o saldo da tela inicial do iFood e cada aumento entra no Faturamento do dia, vai na hora para o Saldo em conta da Carteira e aparece no extrato como "Recebimento iFood"
+• Botão flutuante aparece no iFood mesmo sem rota na tela

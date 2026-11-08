@@ -166,6 +166,16 @@ class PrismoBridge(private val activity: Activity) {
         "{\"suportado\":true,\"ligado\":false}"
     }
 
+    // ── Recebimentos do iFood lidos pelo assistente (fila entre processos) ──
+
+    @JavascriptInterface
+    fun ifoodPendentes(): String = com.prismo.drive.rota.IfoodSaldo.pendentes(activity)
+
+    @JavascriptInterface
+    fun ifoodConfirmar(ids: String?) {
+        if (!ids.isNullOrEmpty()) com.prismo.drive.rota.IfoodSaldo.confirmar(activity, ids)
+    }
+
     /** Compartilha a imagem do fechamento (PNG em base64) pelo WhatsApp, etc. */
     @JavascriptInterface
     fun compartilharImagem(base64: String?, nome: String?): Boolean {

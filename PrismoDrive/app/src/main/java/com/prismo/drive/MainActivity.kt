@@ -40,6 +40,18 @@ class MainActivity : Activity() {
     private var barraProgresso: ProgressBar? = null
     private var textoProgresso: TextView? = null
 
+    /** Recebimento novo do iFood lido pelo assistente (outro processo): lança na hora. */
+    private val receptorIfood = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: android.content.Context, i: Intent) { sincronizarIfood() }
+    }
+
+    private fun sincronizarIfood() {
+        try {
+            web.evaluateJavascript("try{window.PrismoIfood&&PrismoIfood.sincronizar();}catch(e){}", null)
+        } catch (_: Throwable) {
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,6 +93,15 @@ class MainActivity : Activity() {
             web.loadUrl(PAGINA)
         }
 
+        try {
+            ContextCompat.registerReceiver(
+                this, receptorIfood,
+                android.content.IntentFilter(com.prismo.drive.rota.IfoodSaldo.ACTION_NOVO),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        } catch (_: Throwable) {
+        }
+
         // Procura atualização sozinho alguns segundos depois de abrir (depois da tela de carregamento)
         if (savedInstanceState == null) {
             handler.postDelayed({ verificarAtualizacao(automatico = true) }, 6000)
@@ -95,6 +116,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         web.onResume()
+        handler.postDelayed({ sincronizarIfood() }, 1500)
         // Voltou da tela "instalar apps desconhecidos": se liberou, instala o APK já baixado
         val pendente = Atualizador.apkPendente
         if (pendente != null && pendente.exists() &&
@@ -111,6 +133,10 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        try {
+            unregisterReceiver(receptorIfood)
+        } catch (_: Throwable) {
+        }
         try {
             dlgProgresso?.dismiss()
         } catch (_: Throwable) {

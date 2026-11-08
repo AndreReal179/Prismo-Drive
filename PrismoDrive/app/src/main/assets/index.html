@@ -2026,7 +2026,7 @@ function carteiraDiaria(e,sinal){
     if(sinal>0){
       if(ext.some(x=>x&&x.diariaId===e.id))return;
       const d=new Date(e.criadoEm),p=n=>String(n).padStart(2,'0');
-      ext.push({id:'dia_'+e.id,debtId:null,desc:'Diária',cat:'',valor:v,ts:e.criadoEm,mes:d.getFullYear()+'-'+p(d.getMonth()+1),tipo:'entrada',diariaId:e.id});
+      ext.push({id:'dia_'+e.id,debtId:null,desc:(e.origem==='ifood'?'Recebimento iFood':'Diária'),cat:(e.origem==='ifood'?'iFood':''),valor:v,ts:e.criadoEm,mes:d.getFullYear()+'-'+p(d.getMonth()+1),tipo:'entrada',diariaId:e.id});
     }else{
       if(!ext.some(x=>x&&x.diariaId===e.id))return; // só estorna o que foi creditado
       ext=ext.filter(x=>!(x&&x.diariaId===e.id));
@@ -2063,7 +2063,7 @@ function renderDiariaLista(){
   const total=lista.reduce((a,e)=>a+(Number(e.valor)||0),0);
   if(totalEl)totalEl.innerText=moeda(total);
   if(!lista.length){cont.innerHTML='<p class="pr-dia-vazio">Nenhum lançamento diário ainda hoje.</p>';return;}
-  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
+  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${e.origem==='ifood'?'iFood · ':''}${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
 }
 function getTotalDiariaValor(){
   return getDiariaEntries().reduce((a,e)=>a+(Number(e.valor)||0),0);
@@ -3912,6 +3912,46 @@ window.PrismoRotas=(function(){
   window.addEventListener('focus',function(){setTimeout(atualizar,300);});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(atualizar,1600);});else setTimeout(atualizar,1600);
   return {abrir:abrir,power:power,atualizar:atualizar};
+})();
+
+
+/* ═══ RECEBIMENTO iFOOD — saldo lido da tela do iFood pelo Assistente de rotas ═══
+   O assistente (processo nativo) guarda cada AUMENTO do saldo numa fila. Aqui ele vira um
+   lançamento do tipo Diária: entra no Faturamento do dia, vai na hora para o Saldo em conta
+   da Carteira e aparece no extrato como "Recebimento iFood". */
+window.PrismoIfood=(function(){
+  function nat(){try{return (typeof window.PrismoNative!=='undefined'&&window.PrismoNative)?window.PrismoNative:null;}catch(e){return null;}}
+  var ocupado=false;
+  function pronto(){try{return typeof perfilAtivo!=='undefined'&&!!perfilAtivo&&typeof addDiariaEntry==='function';}catch(e){return false;}}
+  function sincronizar(){
+    var n=nat();if(!n||typeof n.ifoodPendentes!=='function'||ocupado)return;
+    if(!pronto())return;
+    ocupado=true;
+    try{
+      var fila=[];try{fila=JSON.parse(n.ifoodPendentes()||'[]');}catch(e){fila=[];}
+      if(!Array.isArray(fila)||!fila.length){ocupado=false;return;}
+      var feitos=[],total=0,hist=[];try{hist=getDiariaHist();}catch(e){}
+      fila.forEach(function(p){
+        if(!p||!p.id)return;
+        var id='if_'+p.id,v=Math.round((Number(p.valor)||0)*100)/100;
+        if(v<=0||hist.some(function(h){return h&&h.id===id;})){feitos.push(p.id);return;}
+        var ts=Number(p.ts)||Date.now();
+        addDiariaEntry({id:id,valor:v,km:0,consumo:(typeof getConsumo==='function'?getConsumo():0),preco:(typeof getPreco==='function'?getPreco():0),criadoEm:ts,diaISO:_isoLocal(new Date(ts)),origem:'ifood'});
+        feitos.push(p.id);total+=v;
+      });
+      if(feitos.length)n.ifoodConfirmar(JSON.stringify(feitos));
+      if(total>0){
+        try{renderDiariaLista();}catch(e){}
+        try{atualizarFaturamentoDia();}catch(e){}
+        try{showToast('💰 Recebimento iFood: +'+moeda(total)+' no faturamento e na carteira');}catch(e){}
+      }
+    }catch(e){console.warn('PrismoIfood',e);}
+    ocupado=false;
+  }
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(sincronizar,800);});
+  setInterval(sincronizar,30000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(sincronizar,3500);});else setTimeout(sincronizar,3500);
+  return {sincronizar:sincronizar};
 })();
 
 /* ═══ WIDGET NATIVO v1.56 — envia o resumo do dia para os widgets da tela inicial ═══ */
