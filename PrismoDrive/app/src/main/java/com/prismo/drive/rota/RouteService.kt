@@ -52,7 +52,7 @@ class RouteService : AccessibilityService() {
                 if (ap.isNotEmpty() && ap != packageName && !ignoredPkg(ap)) lastPkg = ap
                 val rides = prefs.ridePkgs
                 fab.pkgAtual = lastPkg
-                fab.setVisible(rides.isEmpty() || lastPkg in rides)
+                fab.setVisible(rides.isEmpty() || appDeCorrida(lastPkg, rides))
             } catch (_: Throwable) {
             }
             // relatório: grava as ofertas que já saíram da tela
@@ -167,6 +167,20 @@ class RouteService : AccessibilityService() {
             if (rr.packageName != packageName) return rr
         }
         return null
+    }
+
+    /**
+     * O app em primeiro plano é um app de corridas/entregas? Além dos pacotes já aprendidos (onde uma
+     * oferta foi lida), reconhece o iFood e o InDrive pelo nome — assim o botão aparece no iFood
+     * mesmo sem nenhuma rota na tela — e outros pacotes da mesma empresa (ex.: br.com.ifood.*).
+     */
+    private fun appDeCorrida(p: String, rides: Set<String>): Boolean {
+        if (p.isEmpty()) return false
+        if (p in rides) return true
+        val l = p.lowercase()
+        if (l.contains("ifood") || l.contains("indrive") || l.contains("indriver")) return true
+        val prefixo = p.split('.').take(3).joinToString(".")
+        return rides.any { it.split('.').take(3).joinToString(".") == prefixo }
     }
 
     private fun ignoredPkg(p: String) =
