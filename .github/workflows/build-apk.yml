@@ -30,8 +30,18 @@ jobs:
           "$SDKM" --install "platforms;android-35" "build-tools;34.0.0" "platform-tools" > /dev/null
           echo "SDK pronto em $ANDROID_HOME"
 
-      - name: Gradle
+      - name: Gradle 8.14.3
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Localizar o projeto
+        run: |
+          ARQ=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n1)
+          if [ -z "$ARQ" ]; then echo "::error::settings.gradle.kts não encontrado. Envie a pasta do projeto para o repositório."; exit 1; fi
+          PROJ=$(dirname "$ARQ")
+          echo "PROJ=$PROJ" >> "$GITHUB_ENV"
+          echo "Projeto em: $PROJ"; ls -la "$PROJ"
 
       - name: Preparar keystore (assinatura)
         env:
@@ -51,12 +61,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          cd "$PROJ"
+          gradle assembleRelease --no-daemon --stacktrace
 
       - name: Conferir assinatura
         run: |
-          APK=$(ls app/build/outputs/apk/release/*.apk | head -n1)
+          APK=$(ls "$PROJ"/app/build/outputs/apk/release/*.apk | head -n1)
           SIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n1)apksigner
           "$SIGNER" verify --print-certs "$APK" | tee certs.txt
           ESPERADO="cd18a0a039b563724f2edcdb17d101793f92f49de8c0d3996ee6d7dd0cdb61c6"
@@ -69,9 +79,9 @@ jobs:
 
       - name: Renomear APK
         run: |
-          VERSAO=$(grep -m1 'versionName' app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
+          VERSAO=$(grep -m1 'versionName' "$PROJ"/app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
           mkdir -p saida
-          cp app/build/outputs/apk/release/*.apk "saida/PrismoDrive_v${VERSAO}.apk"
+          cp "$PROJ"/app/build/outputs/apk/release/*.apk "saida/PrismoDrive_v${VERSAO}.apk"
           ls -la saida
 
       - name: Enviar APK (Artifacts)
