@@ -15,6 +15,7 @@ import android.provider.Settings
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import androidx.core.content.FileProvider
+import org.json.JSONObject
 import java.io.File
 
 /**
@@ -75,6 +76,40 @@ class PrismoBridge(private val activity: Activity) {
             if (json != null) WidgetUtil.salvar(activity, json)
         } catch (_: Throwable) {
         }
+    }
+
+    // ── Atualização automática (aba Atualizações) ──
+
+    @JavascriptInterface
+    fun verificarAtualizacao() {
+        val a = activity as? MainActivity ?: return
+        main.post { a.verificarAtualizacao(automatico = false) }
+    }
+
+    @JavascriptInterface
+    fun baixarAtualizacao() {
+        val a = activity as? MainActivity ?: return
+        main.post { a.baixarAtualizacao() }
+    }
+
+    @JavascriptInterface
+    fun instalarAtualizacao() {
+        val a = activity as? MainActivity ?: return
+        main.post { a.instalarAtualizacao() }
+    }
+
+    /** Estado atual para a página desenhar a aba ao abrir. */
+    @JavascriptInterface
+    fun estadoAtualizacao(): String = try {
+        JSONObject()
+            .put("app", Atualizador.infoApp())
+            .put("ultimo", Atualizador.ultimo ?: JSONObject.NULL)
+            .put("verificando", Atualizador.verificando)
+            .put("baixando", Atualizador.baixando)
+            .put("pendente", Atualizador.apkPendente?.exists() == true)
+            .toString()
+    } catch (_: Throwable) {
+        "{}"
     }
 
     /** Compartilha a imagem do fechamento (PNG em base64) pelo WhatsApp, etc. */

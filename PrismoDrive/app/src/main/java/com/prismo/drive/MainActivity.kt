@@ -2,17 +2,28 @@ package com.prismo.drive
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.content.ContextCompat
+import org.json.JSONObject
+import java.io.File
 
 /**
  * Tela principal do Prismo Drive.
@@ -24,6 +35,10 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private var fileCallback: ValueCallback<Array<Uri>>? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var dlgProgresso: AlertDialog? = null
+    private var barraProgresso: ProgressBar? = null
+    private var textoProgresso: TextView? = null
 
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +80,11 @@ class MainActivity : Activity() {
         if (web.url == null) {
             web.loadUrl(PAGINA)
         }
+
+        // Procura atualização sozinho alguns segundos depois de abrir (depois da tela de carregamento)
+        if (savedInstanceState == null) {
+            handler.postDelayed({ verificarAtualizacao(automatico = true) }, 6000)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -75,6 +95,13 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         web.onResume()
+        // Voltou da tela "instalar apps desconhecidos": se liberou, instala o APK já baixado
+        val pendente = Atualizador.apkPendente
+        if (pendente != null && pendente.exists() &&
+            (Build.VERSION.SDK_INT < 26 || packageManager.canRequestPackageInstalls())
+        ) {
+            handler.postDelayed({ instalarAtualizacao() }, 400)
+        }
     }
 
     override fun onPause() {
@@ -83,6 +110,11 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
+        try {
+            dlgProgresso?.dismiss()
+        } catch (_: Throwable) {
+        }
         try {
             web.removeJavascriptInterface("PrismoNative")
             web.destroy()
@@ -118,6 +150,140 @@ class MainActivity : Activity() {
             web.evaluateJavascript(
                 "try{window.dispatchEvent(new Event('prismo-permissao'));}catch(e){}", null
             )
+        }
+    }
+
+    // ───────────────────── Atualização automática (GitHub Releases) ─────────────────────
+
+    fun verificarAtualizacao(automatico: Boolean) {
+        Atualizador.verificar(this) { ev -> runOnUiThread { tratarAtualizacao(ev, automatico) } }
+    }
+
+    fun baixarAtualizacao() {
+        if (Atualizador.baixando) {
+            mostrarProgresso()
+            return
+        }
+        mostrarProgresso()
+        Atualizador.baixar(this) { ev -> runOnUiThread { tratarAtualizacao(ev, false) } }
+    }
+
+    fun instalarAtualizacao() {
+        val f = Atualizador.apkPendente ?: File(cacheDir, "atualizacao/PrismoDrive.apk")
+        if (!f.exists()) {
+            baixarAtualizacao()
+            return
+        }
+        try {
+            if (Atualizador.instalar(this, f)) {
+                enviarParaPagina(JSONObject().put("tipo", "instalando"))
+            } else {
+                enviarParaPagina(JSONObject().put("tipo", "permissao"))
+                Toast.makeText(this, "Ative \"Permitir desta fonte\" e volte ao app", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Throwable) {
+            enviarParaPagina(JSONObject().put("tipo", "erro").put("msg", "Não foi possível abrir o instalador"))
+        }
+    }
+
+    private fun tratarAtualizacao(ev: JSONObject, automatico: Boolean) {
+        if (isFinishing || isDestroyed) return
+        enviarParaPagina(ev)
+        when (ev.optString("tipo")) {
+            "resultado" -> {
+                if (automatico && ev.optBoolean("nova") && Atualizador.podeAvisar(this, ev.optLong("codigo"))) {
+                    perguntarAtualizar(ev)
+                }
+            }
+            "progresso" -> {
+                val pct = ev.optInt("pct", -1)
+                barraProgresso?.isIndeterminate = pct < 0
+                if (pct >= 0) barraProgresso?.progress = pct
+                val mb = ev.optLong("baixado") / 1048576.0
+                val totalMb = ev.optLong("total") / 1048576.0
+                textoProgresso?.text = if (totalMb > 0)
+                    String.format("Baixando… %.1f de %.1f MB", mb, totalMb)
+                else String.format("Baixando… %.1f MB", mb)
+            }
+            "baixado" -> {
+                fecharProgresso()
+                instalarAtualizacao()
+            }
+            "erro" -> {
+                if (dlgProgresso != null) {
+                    fecharProgresso()
+                    AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                        .setTitle("Não foi possível atualizar")
+                        .setMessage(ev.optString("msg"))
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            }
+        }
+    }
+
+    private fun perguntarAtualizar(ev: JSONObject) {
+        val notas = ev.optString("notas").trim()
+        val msg = buildString {
+            append("A versão ").append(ev.optString("versao")).append(" do Prismo Drive está disponível.")
+            append("\nVocê está na ").append(BuildConfig.VERSION_NAME).append(".")
+            if (notas.isNotEmpty()) append("\n\nNovidades:\n").append(notas.take(700))
+        }
+        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Nova atualização disponível")
+            .setMessage(msg)
+            .setPositiveButton("Atualizar agora") { _, _ -> baixarAtualizacao() }
+            .setNegativeButton("Depois") { _, _ -> Atualizador.adiar(this, ev.optLong("codigo")) }
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun mostrarProgresso() {
+        if (dlgProgresso?.isShowing == true) return
+        val d = resources.displayMetrics.density
+        val caixa = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((24 * d).toInt(), (16 * d).toInt(), (24 * d).toInt(), (8 * d).toInt())
+        }
+        val txt = TextView(this).apply {
+            text = "Preparando download…"
+            gravity = Gravity.START
+        }
+        val barra = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            isIndeterminate = true
+        }
+        caixa.addView(txt)
+        caixa.addView(barra, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (20 * d).toInt()).apply {
+            topMargin = (12 * d).toInt()
+        })
+        textoProgresso = txt
+        barraProgresso = barra
+        dlgProgresso = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Atualizando o Prismo Drive")
+            .setView(caixa)
+            .setCancelable(false)
+            .setNegativeButton("Segundo plano") { _, _ -> fecharProgresso() }
+            .show()
+    }
+
+    private fun fecharProgresso() {
+        try {
+            dlgProgresso?.dismiss()
+        } catch (_: Throwable) {
+        }
+        dlgProgresso = null
+        barraProgresso = null
+        textoProgresso = null
+    }
+
+    /** Entrega o evento para a aba Atualizações da página. */
+    private fun enviarParaPagina(ev: JSONObject) {
+        try {
+            web.evaluateJavascript(
+                "try{window.prismoAtualizacao&&window.prismoAtualizacao(" + ev.toString() + ");}catch(e){}", null
+            )
+        } catch (_: Throwable) {
         }
     }
 

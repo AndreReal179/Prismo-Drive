@@ -11,6 +11,16 @@ val ksAlias: String = (System.getenv("KEY_ALIAS") ?: "").ifBlank { "prismo" }
 val ksKeyPass: String = (System.getenv("KEY_PASSWORD") ?: "").ifBlank { ksPass }
 val temAssinatura: Boolean = ksPath.isNotBlank() && file(ksPath).exists() && ksPass.isNotBlank()
 
+// Atualização automática: repositório do GitHub onde ficam os Releases (dono/repo).
+// O workflow preenche sozinho; pode ser trocado pela variável REPO_ATUALIZACAO.
+val repoAtualizacao: String = (System.getenv("REPO_ATUALIZACAO") ?: "").trim()
+    .ifBlank { (System.getenv("GITHUB_REPOSITORY") ?: "").trim() }
+
+// versionCode sobe sozinho a cada build (minutos desde 01/11/2026), sempre maior que o anterior.
+// O workflow envia o mesmo número em VERSION_CODE para escrever no Release.
+val codigoVersao: Int = (System.getenv("VERSION_CODE") ?: "").toIntOrNull()
+    ?: (100 + (System.currentTimeMillis() / 60000L - 29891520L)).toInt()
+
 android {
     namespace = "com.prismo.drive"
     compileSdk = 35
@@ -19,9 +29,11 @@ android {
         applicationId = "com.prismo.drive"
         minSdk = 24
         targetSdk = 34
-        // versionCode precisa ser MAIOR que o do APK instalado (v1.6 = 29)
-        versionCode = 30
+        // versionName: mude aqui quando quiser uma nova versão "com nome" (1.8, 1.9…)
         versionName = "1.7"
+        // versionCode é automático (sempre maior que o da v1.6 = 29)
+        versionCode = codigoVersao
+        buildConfigField("String", "UPDATE_REPO", "\"$repoAtualizacao\"")
     }
 
     signingConfigs {

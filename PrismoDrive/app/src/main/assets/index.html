@@ -1134,12 +1134,17 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
             <div><p class="upd-l">Sua versão</p><p class="upd-v" id="upd-versao">v1.6</p></div>
             <button type="button" class="upd-btn" onclick="abrirNovidades()">✨ Novidades<span class="nv-tag n">Novo</span></button>
           </div>
-          <div style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
-            <p style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nova atualização disponível</p>
-            <p style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Receba a nova atualização do nosso aplicativo por apenas</p>
-            <p style="font-size:26px;font-weight:900;color:#fff;margin:4px 0 12px;letter-spacing:-0.5px;">R$ 15,00</p>
-            <button type="button" onclick="comprarAtualizacao()" style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" style="font-size:18px;">shopping_cart</span>Comprar atualização</button>
-            <p style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">Você fala com a gente pelo WhatsApp e recebe o arquivo da última versão.</p>
+          <div id="upd-card" style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
+            <p id="upd-st-l" style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Atualização automática</p>
+            <p id="upd-st-t" style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Toque em verificar para procurar uma nova versão.</p>
+            <p id="upd-st-v" style="display:none;font-size:26px;font-weight:900;color:#fff;margin:4px 0 4px;letter-spacing:-0.5px;"></p>
+            <div id="upd-notas" style="display:none;margin:8px 0 4px;max-height:180px;overflow:auto;font-size:12px;line-height:1.5;color:#c9d1d9;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;white-space:pre-wrap;"></div>
+            <div id="upd-prog" style="display:none;margin:10px 0 2px;">
+              <div style="height:8px;border-radius:99px;background:#1b2026;overflow:hidden;"><div id="upd-prog-b" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#1a7a3a,#4ade80);transition:width .2s;"></div></div>
+              <p id="upd-prog-t" style="font-size:0.62rem;color:var(--muted);margin-top:6px;text-align:center;">Baixando…</p>
+            </div>
+            <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
+            <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
           </div>
         </div>
       </div>
@@ -3742,6 +3747,74 @@ function comprarAtualizacao(){
   window.location.href='https://wa.me/5561985198540?text='+encodeURIComponent(msg);
 }
 
+
+
+/* ═══ ATUALIZAÇÃO AUTOMÁTICA v1.7 — GitHub Releases via PrismoNative ═══ */
+window.PrismoUpdate=(function(){
+  var est={fase:'ocioso',res:null,msg:''};
+  function nat(){try{return (typeof window.PrismoNative!=='undefined'&&window.PrismoNative)?window.PrismoNative:null;}catch(e){return null;}}
+  function $u(id){return document.getElementById(id);}
+  function txt(id,t){var e=$u(id);if(e)e.textContent=t;}
+  function show(id,on){var e=$u(id);if(e)e.style.display=on?'':'none';}
+  function mb(b){return (b/1048576).toFixed(1).replace('.',',')+' MB';}
+  function botao(icone,texto,ativo){txt('upd-acao-i',icone);txt('upd-acao-t',texto);var b=$u('upd-acao');if(b){b.disabled=!ativo;b.style.opacity=ativo?'1':'.6';}}
+  function tag(nova){var t=document.querySelector('.pd-acc-upd .nv-tag');if(t){t.textContent=nova?'1 nova':'Novo';}
+    var d=$u('upd-dot');if(nova&&!d){var bt=document.querySelector('.pd-acc-upd > button');if(bt){d=document.createElement('span');d.id='upd-dot';d.style.cssText='width:9px;height:9px;border-radius:50%;background:#f85149;box-shadow:0 0 8px #f85149;flex-shrink:0;';bt.appendChild(d);}}
+    if(!nova&&d)d.remove();}
+  function render(){
+    var r=est.res;show('upd-prog',est.fase==='baixando');show('upd-notas',false);show('upd-st-v',false);
+    if(est.fase==='verificando'){txt('upd-st-l','Verificando…');txt('upd-st-t','Procurando uma nova versão do Prismo Drive.');botao('hourglass_top','Verificando…',false);return;}
+    if(est.fase==='baixando'){txt('upd-st-l','Baixando atualização');txt('upd-st-t','Não feche o app. O instalador abre sozinho no final.');botao('downloading','Baixando…',false);return;}
+    if(est.fase==='permissao'){txt('upd-st-l','Falta uma permissão');txt('upd-st-t','Ative "Permitir desta fonte" para o Prismo Drive e toque em instalar.');botao('install_mobile','Instalar atualização',true);return;}
+    if(est.fase==='instalando'){txt('upd-st-l','Instalando');txt('upd-st-t','Confirme na tela do Android. Seus dados continuam salvos.');botao('install_mobile','Abrir instalador de novo',true);return;}
+    if(est.fase==='erro'){txt('upd-st-l','Não foi possível verificar');txt('upd-st-t',est.msg||'Tente de novo.');botao('refresh','Tentar de novo',true);return;}
+    if(r&&r.nova){
+      txt('upd-st-l','Nova atualização disponível');txt('upd-st-t','Versão nova pronta para instalar, grátis:');
+      txt('upd-st-v','v'+r.versao);show('upd-st-v',true);
+      if(r.notas){txt('upd-notas',r.notas);show('upd-notas',true);}
+      botao('system_update','Atualizar agora'+(r.tamanho?' ('+mb(r.tamanho)+')':''),true);tag(true);return;
+    }
+    if(r){txt('upd-st-l','Tudo em dia');txt('upd-st-t','Você já está com a versão mais recente (v'+(r.atual||APP_VERSAO)+').');botao('refresh','Verificar de novo',true);tag(false);return;}
+    txt('upd-st-l','Atualização automática');txt('upd-st-t','Toque em verificar para procurar uma nova versão.');botao('refresh','Verificar atualização',true);
+  }
+  window.prismoAtualizacao=function(ev){
+    if(!ev||!ev.tipo)return;
+    switch(ev.tipo){
+      case 'verificando':est.fase='verificando';break;
+      case 'resultado':est.fase='ocioso';est.res=ev;break;
+      case 'erro':est.fase=(est.res&&est.fase!=='verificando')?'ocioso':'erro';est.msg=ev.msg;if(est.fase==='ocioso'){try{showToast(ev.msg,true);}catch(e){}}break;
+      case 'progresso':est.fase='baixando';var p=ev.pct;var b=$u('upd-prog-b');if(b)b.style.width=(p>=0?p:50)+'%';txt('upd-prog-t',(p>=0?p+'% · ':'')+mb(ev.baixado||0)+(ev.total?' de '+mb(ev.total):''));break;
+      case 'baixado':est.fase='instalando';break;
+      case 'permissao':est.fase='permissao';break;
+      case 'instalando':est.fase='instalando';break;
+    }
+    render();
+  };
+  function acao(){
+    var n=nat();
+    if(!n||typeof n.verificarAtualizacao!=='function'){try{showToast('Atualização automática disponível a partir da v1.7',true);}catch(e){}return;}
+    if(est.fase==='permissao'||est.fase==='instalando'){n.instalarAtualizacao();return;}
+    if(est.res&&est.res.nova&&est.fase==='ocioso'){n.baixarAtualizacao();return;}
+    if(est.fase!=='verificando'&&est.fase!=='baixando')n.verificarAtualizacao();
+  }
+  function boot(){
+    var n=nat();if(!n||typeof n.estadoAtualizacao!=='function'){render();return;}
+    try{var e=JSON.parse(n.estadoAtualizacao()||'{}');
+      if(e.ultimo)est.res=e.ultimo;
+      if(e.verificando)est.fase='verificando';else if(e.baixando)est.fase='baixando';else if(e.pendente)est.fase='permissao';
+      if(e.app&&e.app.configurado===false){render();txt('upd-st-t','Este APK não tem atualização automática configurada.');botao('block','Indisponível',false);return;}
+    }catch(x){}
+    render();
+  }
+  /* ao abrir a aba: verifica se a última consulta tem mais de 30 min */
+  var _tg=window.toggleAccordion;
+  if(typeof _tg==='function'){window.toggleAccordion=function(id){var r=_tg.apply(this,arguments);
+    if(id==='acc-upd'){boot();var n=nat();var ult=0;try{ult=est.res?1:0;}catch(e){}
+      if(n&&n.verificarAtualizacao&&est.fase==='ocioso'&&(!est.res||Date.now()-(window._updUlt||0)>1800000)){window._updUlt=Date.now();n.verificarAtualizacao();}}
+    return r;};}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,1500);});else setTimeout(boot,1500);
+  return {acao:acao,render:render,boot:boot};
+})();
 
 /* ═══ WIDGET NATIVO v1.56 — envia o resumo do dia para os widgets da tela inicial ═══ */
 function _ganhoRowsDia(off){

@@ -8,9 +8,10 @@ App nativo Android (Kotlin) do Prismo Drive. As telas ficam dentro do APK
 - Compartilhar a imagem do fechamento (WhatsApp etc.)
 - Escolher foto da galeria (perfil)
 - Botão voltar: fecha carteira, guia, janelas e menu antes de minimizar o app
-- Links externos (WhatsApp de "Comprar atualização") abrem fora do app
+- **Atualização automática** pela aba Atualizações (GitHub Releases): o app avisa, baixa e abre o instalador
+- Links externos abrem fora do app
 
-Pacote `com.prismo.drive` · versão **1.7** (versionCode 30).
+Pacote `com.prismo.drive` · versão **1.7** (o versionCode sobe sozinho a cada build).
 
 ## Gerar o APK no GitHub
 
@@ -30,8 +31,30 @@ Pacote `com.prismo.drive` · versão **1.7** (versionCode 30).
 O passo "Conferir assinatura" avisa se a chave usada é a mesma da v1.6.
 Se for a mesma, o APK instala por cima e **mantém todos os dados**.
 
+## Como publicar uma atualização para os usuários
+1. Faça as mudanças (ex.: no `index.html`).
+2. Escreva o que mudou em `NOVIDADES.md` — aparece no aviso e na aba Atualizações.
+3. Se quiser um número novo, mude `versionName` em `app/build.gradle.kts` (ex.: "1.8")
+   e `var APP_VERSAO='1.8'` no `index.html`.
+4. Envie (commit) para a branch `main`. O GitHub gera o APK e publica um Release.
+   Em até alguns segundos depois de abrirem o app, os usuários recebem o aviso
+   "Nova atualização disponível" e atualizam com um toque, sem perder dados.
+
+Só é publicado como atualização o APK assinado com a keystore (secrets configurados).
+Para gerar sem publicar: Actions → Run workflow → desmarque "Publicar".
+
+### O app só lê Releases de repositório PÚBLICO
+Se este repositório for privado (recomendado, para não expor o código), faça assim:
+1. Crie um segundo repositório **público**, ex.: `prismo-drive-atualizacoes`, com um README.
+2. Crie um token em GitHub → Settings → Developer settings → Fine-grained tokens,
+   com acesso só a esse repositório e permissão **Contents: Read and write**.
+3. No repositório do código: Settings → Secrets and variables → Actions:
+   - aba **Variables**: `REPO_ATUALIZACAO` = `seu-usuario/prismo-drive-atualizacoes`
+   - aba **Secrets**: `RELEASE_TOKEN` = o token criado
+O código fica privado e só o APK vai para o repositório público.
+
 ## Nova versão
-Em `app/build.gradle.kts`, aumente `versionCode` (+1) e `versionName`; e no
-`index.html` atualize `var APP_VERSAO='…'`.
+O `versionCode` é automático. Para mudar o nome da versão, altere `versionName`
+em `app/build.gradle.kts` e `var APP_VERSAO='…'` no `index.html`.
 
 Nunca envie a keystore (.p12) para o repositório — ela fica só no Secret.
