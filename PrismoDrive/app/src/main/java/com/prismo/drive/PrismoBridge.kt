@@ -176,6 +176,12 @@ class PrismoBridge(private val activity: Activity) {
         if (!ids.isNullOrEmpty()) com.prismo.drive.rota.IfoodSaldo.confirmar(activity, ids)
     }
 
+    /** Totais por dia lançados no app (sem o iFood automático), para o Relatório do assistente. */
+    @JavascriptInterface
+    fun sincronizarGanhos(json: String?) {
+        if (!json.isNullOrEmpty()) com.prismo.drive.rota.Ganhos.salvarManuais(activity, json)
+    }
+
     /** Compartilha a imagem do fechamento (PNG em base64) pelo WhatsApp, etc. */
     @JavascriptInterface
     fun compartilharImagem(base64: String?, nome: String?): Boolean {

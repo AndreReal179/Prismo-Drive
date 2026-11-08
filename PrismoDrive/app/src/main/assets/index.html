@@ -1904,7 +1904,7 @@ function renderizarDashboard(dados){
   atualizarComparativoCombustivel(dados.historico,custo);
   atualizarFaturamentoDia();
   const saldo=Number(dados.kpis.saldoCarteira)||0;
-  const elCart=$('btn-carteira-status');$('top-saldo-carteira').innerText=moeda(saldo);if(elCart)elCart.classList.toggle('neg',saldo<0);
+  const elCart=$('btn-carteira-status');$('top-saldo-carteira').innerText=moeda(saldoCarteiraReal());if(elCart)elCart.classList.toggle('neg',saldo<0);
   dadosRelatorioCache=dados.kpis.relatorioPassado;
   renderizarHistorico(dados.historico);renderizarGrafico(dados.historico);
 }
@@ -2072,6 +2072,15 @@ function getTotalDiariaValor(){
 }
 // Recalcula o card "Faturamento do Dia" somando o que veio da planilha (backend) + o que está na Diária (só local).
 // A Diária nunca é enviada pro backend, então nunca entra no fechamento semanal — só soma aqui, na visão do dia.
+/* Saldo em conta da Carteira (o mesmo da tela Minha Carteira): fica para sempre, inclusive o que veio das diárias. */
+function saldoCarteiraReal(){
+  try{
+    const base=parseFloat(localStorage.getItem('fin_saldo')||'0')||0;
+    const d=new Date(),mes=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    let pago=0;try{const o=JSON.parse(localStorage.getItem('fin_pagoMes')||'{}');if(o.mes===mes)pago=Number(o.total)||0;}catch(e){}
+    return Math.round((base-pago)*100)/100;
+  }catch(e){return 0;}
+}
 function atualizarFaturamentoDia(){
   const kpis=ultimoKpisCache||{};
   const ganhoBackend=Number(kpis.ganhoHoje)||0;
@@ -2084,13 +2093,15 @@ function atualizarFaturamentoDia(){
   if(kmHoje>0&&ganho>0){const v=$('kpi-eficiencia-valor');if(v)v.innerText=`${(ganho/kmHoje).toFixed(2).replace('.',',')} R$/km · ${kmHoje.toFixed(1)} km`;if(elEfic)elEfic.style.display='flex';}
   else if(elEfic)elEfic.style.display='none';
   const saldo=Number(kpis.saldoCarteira)||0,total=ganho+saldo,pct=Math.min(Math.round((total/metaDiariaAtiva)*100),100);
+  const saldoReal=saldoCarteiraReal();
+  try{const ts=$('top-saldo-carteira');if(ts)ts.innerText=moeda(saldoReal);}catch(e){}
   const barra=$('meta-barra-progresso'),pctEl=$('meta-porcentagem'),status=$('meta-texto-status');
   if(barra)barra.style.width=`${pct}%`;if(pctEl)pctEl.innerText=`${pct}%`;
   if(total>=metaDiariaAtiva){
     if(status)status.innerHTML=`🎉 Meta batida! +${moeda(total-metaDiariaAtiva)}`;try{PrismoNotif.metaBatida(total,metaDiariaAtiva);}catch(e){}
     if(barra)barra.classList.add('done');
   }else{
-    let txt=`${moeda(metaDiariaAtiva)} · carteira: ${moeda(saldo)}`;
+    let txt=`${moeda(metaDiariaAtiva)} · carteira: ${moeda(saldoReal)}`;
     if(ganhoDiaria>0)txt+=` · diária: ${moeda(ganhoDiaria)}`;
     if(status)status.innerText=txt;
     if(barra)barra.classList.remove('done');
@@ -4291,6 +4302,43 @@ window.PrismoIfood=(function(){
   setInterval(sincronizar,30000);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(sincronizar,3500);});else setTimeout(sincronizar,3500);
   return {sincronizar:sincronizar};
+})();
+
+
+/* ═══ GANHOS POR DIA → Relatório do Assistente de rotas (rendimento do dia e calendário) ═══
+   Envia ao lado nativo o total lançado no app por dia (rotas, extras e diárias), SEM os recebimentos
+   automáticos do iFood (esses o assistente já registra sozinho). */
+window.PrismoGanhos=(function(){
+  function nat(){try{return (typeof window.PrismoNative!=='undefined'&&window.PrismoNative)?window.PrismoNative:null;}catch(e){return null;}}
+  function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function enviar(){
+    var n=nat();if(!n||typeof n.sincronizarGanhos!=='function')return;
+    try{
+      var perfil='';try{perfil=String(perfilAtivo||'').trim();}catch(e){}
+      var lim=Date.now()-100*86400000,mapa={};
+      var rows=[];try{rows=JSON.parse(localStorage.getItem('prismo_rows_v1'))||[];}catch(e){}
+      rows.forEach(function(r){
+        if(!r||!r[0])return;
+        if(perfil&&String(r[8]).trim()!==perfil)return;
+        var tipo=String(r[7]).toUpperCase().trim();if(tipo!=='CORRIDA'&&tipo!=='EXTRA')return;
+        var d=new Date(r[0]);if(isNaN(d.getTime())||d.getTime()<lim)return;
+        var v=parseFloat(r[2])||0;if(!v)return;
+        var k=iso(d);mapa[k]=(mapa[k]||0)+v;
+      });
+      var hist=[];try{hist=getDiariaHist();}catch(e){}
+      (hist||[]).forEach(function(h){
+        if(!h||!h.id||/^ifb?_/.test(String(h.id)))return;   /* iFood automático fica de fora */
+        if((Number(h.ts)||0)<lim)return;
+        var k=h.iso||iso(new Date(h.ts));mapa[k]=(mapa[k]||0)+(Number(h.valor)||0);
+      });
+      Object.keys(mapa).forEach(function(k){mapa[k]=Math.round(mapa[k]*100)/100;});
+      n.sincronizarGanhos(JSON.stringify(mapa));
+    }catch(e){console.warn('PrismoGanhos',e);}
+  }
+  document.addEventListener('visibilitychange',function(){if(document.hidden)enviar();});
+  setInterval(enviar,60000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(enviar,4000);});else setTimeout(enviar,4000);
+  return {enviar:enviar};
 })();
 
 /* ═══ WIDGET NATIVO v1.56 — envia o resumo do dia para os widgets da tela inicial ═══ */

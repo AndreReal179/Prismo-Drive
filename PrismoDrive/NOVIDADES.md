@@ -1,4 +1,4 @@
-• Manutenção nova: na primeira vez o app pergunta seu veículo (carro, moto ou bicicleta, marca, modelo e ano) e monta a lista de peças e serviços dele
-• Pesquisa e filtros (Monitorados, Peças, Serviços) no topo da lista
-• Cada item tem KM da última troca, da próxima, valor do serviço e barra de progresso que anda com o odômetro
-• Botão "Troquei" recomeça a contagem com um toque
+• Relatório do Assistente de rotas: novo cartão "Ganhos de hoje" com a % em relação a ontem (muda com os filtros Dia/Semana/Mês e Todos/iFood/InDrive)
+• Valor médio, R$/km e Por pedido agora lado a lado numa só fileira
+• Histórico mensal: toque no mês para abrir o calendário com o rendimento de cada dia, a % vs dia anterior e os dias mais lucrativos
+• Correção: o dinheiro da Diária continua na Carteira depois que a rota some da lista (o card mostra o saldo real da Carteira)

@@ -148,6 +148,7 @@ object IfoodSaldo {
                     .put("bonus", bonus)
                     .put("ts", agora))
                 gravar(fFila, fila.toString())
+                Ganhos.registrarIfood(ctx, agora, valor + bonus)   // rendimento do dia / calendário
                 gravar(File(dir(ctx), ARQ_ESTADO), JSONObject()
                     .put("valor", valor).put("bonus", bonus).put("ts", agora).toString())
             }

@@ -194,6 +194,10 @@ class ReportScreen(private val act: Activity) {
         box.addView(View(act).apply { setBackgroundColor(LINE) }, LinearLayout.LayoutParams(MATCH, 1).apply { topMargin = dp(16) })
         box.addView(head, lp(14))
 
+        // rendimento: ganhos do período x período anterior (por filtro de app)
+        val ganhos = Ganhos.porDia(act, app)
+        box.addView(ganhosCard(Ganhos.soma(ganhos, cur[0], cur[1]), Ganhos.soma(ganhos, prv[0], prv[1])), lp(12))
+
         if (a.isEmpty()) {
             box.addView(emptyCard(all.isEmpty()), lp(12))
         } else {
@@ -380,7 +384,7 @@ class ReportScreen(private val act: Activity) {
     }
 
     /**
-     * Cartões de resumo (2 × 2): selo colorido com ícone, rótulo discreto, valor grande e
+     * Cartões de resumo (3 na mesma fileira: valor médio, R$/km e por pedido): selo colorido, valor e
      * a variação para o período anterior numa "pílula" verde/vermelha.
      */
     private fun kpis(a: S, b: S): View {
@@ -390,26 +394,29 @@ class ReportScreen(private val act: Activity) {
         fun tile(icon: String, accent: Int, label: String, value: String, sub: Pair<String, Int>) =
             LinearLayout(act).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(14), dp(14), dp(14), dp(14))
+                setPadding(dp(10), dp(12), dp(10), dp(12))
                 background = rounded(CARD, 16, LINE)
                 val top = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
                 top.addView(tx(icon, 11f, accent, true).apply {
                     gravity = Gravity.CENTER
                     includeFontPadding = false
                     background = rounded((accent and 0x00FFFFFF) or 0x24000000, 8)
-                }, LinearLayout.LayoutParams(dp(26), dp(26)).apply { rightMargin = dp(8) })
-                top.addView(tx(label.uppercase(BR), 10f, MUTED, true).apply {
+                }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { rightMargin = dp(6) })
+                top.addView(tx(label.uppercase(BR), 9f, MUTED, true).apply {
                     letterSpacing = 0.06f
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                 }, LinearLayout.LayoutParams(0, WRAP, 1f))
                 addView(top)
-                addView(tx(value, 21f, TXT, true).apply { maxLines = 1 }, lp(10))
+                addView(tx(value, 16f, TXT, true).apply {
+                    maxLines = 1
+                    setAutoSizeTextTypeUniformWithConfiguration(11, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
+                }, lp(8))
                 // variação em pílula (verde sobe, vermelho desce, cinza igual/sem dados)
                 val pillBg = if (sub.second == MUTED) CARD2 else (sub.second and 0x00FFFFFF) or 0x1F000000
                 addView(LinearLayout(act).apply {
-                    addView(tx(sub.first, 10.5f, sub.second, true).apply {
-                        setPadding(dp(8), dp(3), dp(8), dp(3))
+                    addView(tx(sub.first, 9.5f, sub.second, true).apply {
+                        setPadding(dp(6), dp(3), dp(6), dp(3))
                         background = rounded(pillBg, 10)
                         maxLines = 1
                         ellipsize = android.text.TextUtils.TruncateAt.END
@@ -423,21 +430,14 @@ class ReportScreen(private val act: Activity) {
             addView(r, LinearLayout.LayoutParams(0, MATCH, 1f).apply { leftMargin = dp(5) })
         }
 
-        val diffN = a.n - b.n
-        val nSub = when {
-            b.n == 0 && a.n == 0 -> Pair("sem dados $vs", MUTED)
-            diffN == 0 -> Pair("= igual a $vs", MUTED)
-            diffN > 0 -> Pair("▲ $diffN vs $vs", GREEN)
-            else -> Pair("▼ ${-diffN} vs $vs", RED)
-        }
-        col.addView(row(
-            tile("✓", GOLD, "Rotas analisadas", a.n.toString(), nSub),
-            tile("R$", GREEN, "Valor médio", a.price?.let { m2(it) } ?: "—", delta(a.price, b.price, { m2(it) }, vs))
-        ), lp(0))
-        col.addView(row(
-            tile("km", 0xFF42A5F5.toInt(), "R$/km médio", a.rpk?.let { m2(it) } ?: "—", delta(a.rpk, b.rpk, { m2(it) }, vs)),
-            tile("▤", 0xFF4ADE80.toInt(), "Por pedido", a.per?.let { m2(it) } ?: "—", delta(a.per, b.per, { m2(it) }, vs))
-        ), lp(10))
+        val row3 = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL }
+        row3.addView(tile("R$", GREEN, "Valor médio", a.price?.let { m2(it) } ?: "—", delta(a.price, b.price, { m2(it) }, vs)),
+            LinearLayout.LayoutParams(0, MATCH, 1f).apply { rightMargin = dp(4) })
+        row3.addView(tile("km", 0xFF42A5F5.toInt(), "R$/km", a.rpk?.let { m2(it) } ?: "—", delta(a.rpk, b.rpk, { m2(it) }, vs)),
+            LinearLayout.LayoutParams(0, MATCH, 1f).apply { leftMargin = dp(4); rightMargin = dp(4) })
+        row3.addView(tile("▤", 0xFF4ADE80.toInt(), "Por pedido", a.per?.let { m2(it) } ?: "—", delta(a.per, b.per, { m2(it) }, vs)),
+            LinearLayout.LayoutParams(0, MATCH, 1f).apply { leftMargin = dp(4) })
+        col.addView(row3, lp(0))
         return col
     }
 
@@ -579,13 +579,194 @@ class ReportScreen(private val act: Activity) {
         return r
     }
 
+
+    // ------------------------------------------------------------------ rendimento (ganhos)
+    private fun pctTxt(cur: Double, prv: Double): Pair<String, Int> = when {
+        prv <= 0.0 && cur <= 0.0 -> Pair("sem ganhos", MUTED)
+        prv <= 0.0 -> Pair("novo", GREEN)
+        else -> {
+            val p = Math.round((cur - prv) / prv * 100).toInt()
+            when {
+                p > 0 -> Pair("▲ $p%", GREEN)
+                p < 0 -> Pair("▼ ${-p}%", RED)
+                else -> Pair("= 0%", MUTED)
+            }
+        }
+    }
+
+    /** Cartão "Ganhos de hoje · ▲ 23% vs ontem" (muda com o filtro de período e de app). */
+    private fun ganhosCard(cur: Double, prv: Double): View {
+        val (ptxt, pcol) = pctTxt(cur, prv)
+        val c = LinearLayout(act).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF0F2A1A.toInt(), 0xFF0B1210.toInt())).apply {
+                cornerRadius = dp(20).toFloat(); setStroke(dp(1), 0x553FB950)
+            }
+        }
+        val rot = when (per) { Per.DAY -> "GANHOS DE HOJE"; Per.WEEK -> "GANHOS DA SEMANA"; Per.MONTH -> "GANHOS DO MÊS" }
+        c.addView(tx(rot, 10.5f, 0xFF7EE2A0.toInt(), true).apply { letterSpacing = 0.12f })
+        val linha = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        linha.addView(tx(m2(cur), 30f, TXT, true).apply { maxLines = 1 }, LinearLayout.LayoutParams(0, WRAP, 1f))
+        linha.addView(tx(ptxt, 14f, pcol, true).apply {
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+            background = rounded(if (pcol == MUTED) CARD2 else (pcol and 0x00FFFFFF) or 0x26000000, 14)
+        })
+        c.addView(linha, lp(4))
+        c.addView(tx("${vsLabel().replaceFirstChar { it.uppercase() }}: ${m2(prv)}" +
+            (if (app == 2) " · lançamentos do app (InDrive e outros)" else if (app == 1) " · rotas concluídas do iFood" else ""), 12f, MUTED), lp(6))
+        return c
+    }
+
+    /** Calendário do mês: ganho de cada dia e % em relação ao dia anterior; destaca os dias mais lucrativos. */
+    private fun abrirCalendario(monthIdx: Int) {
+        val ano = monthIdx / 12
+        val mes = monthIdx % 12
+        val ganhos = Ganhos.porDia(act, app)
+        val cal = Calendar.getInstance().apply { clear(); set(ano, mes, 1) }
+        val diasNoMes = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val valores = (1..diasNoMes).map { d -> cal.set(Calendar.DAY_OF_MONTH, d); ganhos[Ganhos.iso(cal.timeInMillis)] ?: 0.0 }
+        val anterior = run {   // último dia do mês anterior (para o % do dia 1)
+            val c = Calendar.getInstance().apply { clear(); set(ano, mes, 1); add(Calendar.DAY_OF_YEAR, -1) }
+            ganhos[Ganhos.iso(c.timeInMillis)] ?: 0.0
+        }
+        val top = valores.withIndex().filter { it.value > 0 }.sortedByDescending { it.value }.take(3).map { it.index }
+        val total = valores.sum()
+        val diasComGanho = valores.count { it > 0 }
+        val hoje = Calendar.getInstance()
+        val ehMesAtual = hoje.get(Calendar.YEAR) == ano && hoje.get(Calendar.MONTH) == mes
+
+        val dlg = android.app.Dialog(act, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val root = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(BG) }
+        val barra = LinearLayout(act).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(28), dp(16), dp(8))
+        }
+        barra.addView(tx("←", 22f, TXT, true).apply { setPadding(dp(12), dp(4), dp(12), dp(4)); setOnClickListener { dlg.dismiss() } })
+        val tc = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL }
+        tc.addView(tx("${MONTHS[mes]} $ano", 19f, TXT, true))
+        tc.addView(tx("Rendimento do dia · " + when (app) { 1 -> "iFood"; 2 -> "InDrive e outros"; else -> "Todos os apps" }, 12f, MUTED))
+        barra.addView(tc, LinearLayout.LayoutParams(0, WRAP, 1f))
+        root.addView(barra)
+
+        val corpo = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(4), dp(14), dp(28)) }
+
+        // resumo do mês
+        val res = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL }
+        fun resumo(l: String, v: String, cor: Int) = LinearLayout(act).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = rounded(CARD, 14, LINE)
+            addView(tx(l, 9.5f, MUTED, true).apply { letterSpacing = 0.08f })
+            addView(tx(v, 14.5f, cor, true).apply { maxLines = 1 }, lp(4))
+        }
+        val melhor = top.firstOrNull()
+        res.addView(resumo("TOTAL", m2(total), TXT), LinearLayout.LayoutParams(0, WRAP, 1f).apply { rightMargin = dp(4) })
+        res.addView(resumo("MÉDIA/DIA", if (diasComGanho > 0) m2(total / diasComGanho) else "—", TXT),
+            LinearLayout.LayoutParams(0, WRAP, 1f).apply { leftMargin = dp(4); rightMargin = dp(4) })
+        res.addView(resumo("MELHOR DIA", melhor?.let { "dia ${it + 1}" } ?: "—", 0xFFFFD166.toInt()),
+            LinearLayout.LayoutParams(0, WRAP, 1f).apply { leftMargin = dp(4) })
+        corpo.addView(res, lp(6))
+
+        // cabeçalho dos dias da semana (segunda a domingo)
+        val sem = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL }
+        listOf("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM").forEach {
+            sem.addView(tx(it, 9.5f, MUTED, true).apply { gravity = Gravity.CENTER }, LinearLayout.LayoutParams(0, WRAP, 1f))
+        }
+        corpo.addView(sem, lp(16))
+
+        cal.set(Calendar.DAY_OF_MONTH, 1)
+        val offset = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7   // segunda = 0
+        val celulas = offset + diasNoMes
+        val linhas = (celulas + 6) / 7
+        for (r in 0 until linhas) {
+            val linha = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL }
+            for (cc in 0 until 7) {
+                val pos = r * 7 + cc
+                val dia = pos - offset + 1
+                val cell = LinearLayout(act).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(dp(2), dp(6), dp(2), dp(6))
+                }
+                if (dia in 1..diasNoMes) {
+                    val v = valores[dia - 1]
+                    val prev = if (dia == 1) anterior else valores[dia - 2]
+                    val futuro = ehMesAtual && dia > hoje.get(Calendar.DAY_OF_MONTH)
+                    val rank = top.indexOf(dia - 1)
+                    val ehHoje = ehMesAtual && dia == hoje.get(Calendar.DAY_OF_MONTH)
+                    val (pt, pc) = if (v > 0 || prev > 0) pctTxt(v, prev) else Pair("", MUTED)
+                    val fundo = when {
+                        rank == 0 -> 0x40FFD166
+                        rank > 0 -> 0x26FFD166
+                        v > 0 -> 0x1A3FB950
+                        else -> CARD
+                    }
+                    val borda = when { ehHoje -> GOLD; rank >= 0 -> 0x99FFD166.toInt(); else -> LINE }
+                    cell.background = rounded(fundo, 12, borda)
+                    cell.alpha = if (futuro) 0.4f else 1f
+                    cell.addView(tx((if (rank >= 0) "★ " else "") + dia, 11.5f, if (rank >= 0) 0xFFFFD166.toInt() else TXT, true).apply { gravity = Gravity.CENTER })
+                    cell.addView(tx(if (v > 0) String.format(BR, "%.0f", v) else "—", 10.5f, if (v > 0) TXT else MUTED, v > 0).apply {
+                        gravity = Gravity.CENTER; maxLines = 1
+                    }, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = dp(2) })
+                    cell.addView(tx(if (futuro) "" else pt.replace("sem ganhos", "").replace("novo", "novo"), 8.5f, pc, true).apply {
+                        gravity = Gravity.CENTER; maxLines = 1
+                    }, LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = dp(1) })
+                    cell.setOnClickListener {
+                        val det = if (v <= 0) "Sem ganhos registrados." else
+                            "Ganhou ${m2(v)}" + (if (prev > 0) " · ${pctTxt(v, prev).first} vs dia anterior (${m2(prev)})" else "")
+                        android.widget.Toast.makeText(act, "Dia $dia: $det", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+                linha.addView(cell, LinearLayout.LayoutParams(0, dp(66), 1f).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) })
+            }
+            corpo.addView(linha, lp(2))
+        }
+
+        // legenda + ranking
+        corpo.addView(tx("Valor do dia em R$ · % comparado ao dia anterior (▲ subiu, ▼ caiu) · ★ dias mais lucrativos", 11f, MUTED), lp(14))
+        if (top.isNotEmpty()) {
+            val rk = card()
+            rk.addView(tx("🏆  Dias mais lucrativos", 15f, TXT, true))
+            val nomes = arrayOf("domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado")
+            top.forEachIndexed { i, idx ->
+                val c2 = Calendar.getInstance().apply { clear(); set(ano, mes, idx + 1) }
+                val l = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+                l.addView(tx("${i + 1}º", 14f, 0xFFFFD166.toInt(), true), LinearLayout.LayoutParams(dp(34), WRAP))
+                l.addView(tx("Dia ${idx + 1} · ${nomes[c2.get(Calendar.DAY_OF_WEEK) - 1]}", 13.5f, TXT), LinearLayout.LayoutParams(0, WRAP, 1f))
+                l.addView(tx(m2(valores[idx]), 14f, GREEN, true))
+                rk.addView(l, lp(if (i == 0) 12 else 8))
+            }
+            corpo.addView(rk, lp(14))
+        } else {
+            corpo.addView(tx("Ainda sem ganhos registrados neste mês. Eles entram aqui pelas rotas concluídas do iFood e pelos lançamentos do Prismo Drive.", 12.5f, MUTED), lp(14))
+        }
+
+        root.addView(android.widget.ScrollView(act).apply { addView(corpo) }, LinearLayout.LayoutParams(MATCH, 0, 1f))
+        dlg.setContentView(root)
+        dlg.window?.let { w -> w.statusBarColor = BG; w.navigationBarColor = BG }
+        dlg.show()
+    }
+
     // ------------------------------------------------------------------ histórico mensal
     private fun history(all: List<Rec>): View {
         val c = card()
         c.addView(tx("Histórico mensal", 17f, TXT, true))
-        c.addView(tx("Compare os meses guardados (mês atual + 2 anteriores)", 12.5f, MUTED), lp(2))
+        c.addView(tx("Toque num mês para abrir o calendário com o rendimento de cada dia", 12.5f, MUTED), lp(2))
 
-        val groups: Map<Int, List<Rec>> = all.groupBy { ReportStore.monthIdx(it.t) }
+        val groups0: Map<Int, List<Rec>> = all.groupBy { ReportStore.monthIdx(it.t) }
+        val ganhosMes = HashMap<Int, Double>()
+        Ganhos.porDia(act, app).forEach { (k, v) ->
+            runCatching {
+                val p = k.split("-")
+                val idx = p[0].toInt() * 12 + (p[1].toInt() - 1)
+                ganhosMes[idx] = (ganhosMes[idx] ?: 0.0) + v
+            }
+        }
+        val curMonth = ReportStore.monthIdx(System.currentTimeMillis())
+        val groups: Map<Int, List<Rec>> = HashMap(groups0).apply {
+            ganhosMes.keys.filter { it > curMonth - ReportStore.KEEP_MONTHS && it <= curMonth }.forEach { if (it !in this) put(it, emptyList()) }
+        }
         if (groups.isEmpty()) {
             c.addView(tx("Ainda sem dados guardados.", 13f, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(16), 0, dp(8)) }, lp(0))
         } else {
@@ -606,7 +787,7 @@ class ReportScreen(private val act: Activity) {
                     tx(MONTHS[idx % 12] + " " + (idx / 12), 14.5f, TXT, true),
                     LinearLayout.LayoutParams(0, WRAP, 1f)
                 )
-                h.addView(tx("${s.n} rotas", 11.5f, MUTED))
+                h.addView(tx(ganhosMes[idx]?.let { "ganhos " + m2(it) } ?: "${s.n} rotas", 11.5f, if (ganhosMes[idx] != null) GREEN else MUTED, ganhosMes[idx] != null))
                 if (idx == curIdx) h.addView(chip("ATUAL", GOLD, 0xFFFFFFFF.toInt()), LinearLayout.LayoutParams(WRAP, WRAP).apply { leftMargin = dp(8) })
                 box.addView(h)
 
@@ -625,6 +806,9 @@ class ReportScreen(private val act: Activity) {
                 m.addView(cell("Por pedido", s.per, older?.per), LinearLayout.LayoutParams(0, WRAP, 1f))
                 box.addView(m, lp(10))
                 s.rpk?.let { box.addView(bar(Math.round(it / maxRpk * 100).toInt(), GOLD, 4), lp(10)) }
+                box.addView(tx("📅  Ver calendário do mês  ›", 12f, 0xFF7EE2A0.toInt(), true), lp(10))
+                box.isClickable = true
+                box.setOnClickListener { abrirCalendario(idx) }
                 c.addView(box, lp(if (i == 0) 14 else 10))
             }
             if (idxs.size >= 2) {
