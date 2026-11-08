@@ -3592,7 +3592,7 @@ window.getPerfilAtivo=function(){try{return perfilAtivo;}catch(e){return '';}};
    entrega para a camada nativa (PrismoNative), que agenda no Android e
    continua avisando mesmo com o app fechado.
    ═══════════════════════════════════════════════════════════════════ */
-var APP_VERSAO='1.7';
+var APP_VERSAO=(function(){try{var n=window.PrismoNative;var v=n&&n.versao&&n.versao();if(v)return String(v);}catch(e){}return '1.7';})();
 window.PrismoNotif=(function(){
   var DIA=86400000, F='\u0001', R='\u0002';
   var timer=null;

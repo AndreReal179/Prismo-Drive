@@ -29,10 +29,12 @@ android {
         applicationId = "com.prismo.drive"
         minSdk = 24
         targetSdk = 34
-        // versionName: mude aqui quando quiser uma nova versão "com nome" (1.8, 1.9…)
+        // versionName = "1.7" é a versão BASE. O GitHub completa sozinho: 1.7.1, 1.7.2, 1.7.3…
+        // Para começar uma versão nova (1.8.1, 1.8.2…), troque só o número aqui.
         versionName = "1.7"
         // versionCode é automático (sempre maior que o da v1.6 = 29)
         versionCode = codigoVersao
+        System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { versionName = it }
         buildConfigField("String", "UPDATE_REPO", "\"$repoAtualizacao\"")
     }
 
