@@ -2702,36 +2702,50 @@ function renderListaPecas(){
   carregarPecasStorage();
   const wrap=$('manut-lista'),empty=$('manut-empty'),resumo=$('manut-resumo');
   if(!wrap)return;
-  if(!pecasManut.length){wrap.innerHTML='';empty.style.display='block';if(resumo)resumo.style.display='none';return;}
-  empty.style.display='none';
-  if(resumo){resumo.style.display='flex';const criticos=pecasManut.filter(p=>calcPctPeca(p)>=85).length;$('resumo-manut-total').innerText=pecasManut.length;$('resumo-manut-alerta').innerText=criticos;}
-  wrap.innerHTML=pecasManut.map(p=>{
+  const v=manutVeiculo();
+  const vt=$('manut-veic');if(vt){vt.innerHTML=v?`<span class="material-icons">${MANUT_TIPOS[v.tipo]?.icone||'directions_car'}</span>${escaparHtml(manutVeiculoTxt(v))}<button onclick="abrirWizardVeiculo(true)">trocar</button>`:'';vt.style.display=v?'flex':'none';}
+  const cat=v?manutCatalogo(v.tipo):[];
+  const q=_normTxt($('manut-busca')?.value);
+  const bx=$('manut-busca-x');if(bx)bx.style.display=q?'flex':'none';
+  let itens=cat.map(c=>({c,p:pecasManut.find(x=>x.catId===c.id)||null}));
+  pecasManut.filter(p=>!p.catId||!cat.some(c=>c.id===p.catId)).forEach(p=>itens.push({c:null,p}));
+  const monitorados=pecasManut.length;
+  if(resumo){resumo.style.display=monitorados?'flex':'none';if(monitorados){const criticos=pecasManut.filter(p=>calcPctPeca(p)>=85).length;$('resumo-manut-total').innerText=monitorados;$('resumo-manut-alerta').innerText=criticos;}}
+  itens=itens.filter(it=>{
+    const nome=it.p?it.p.nome:it.c.nome,tipo=it.c?it.c.tipo:(it.p.tipoItem||'peca');
+    if(q&&!_normTxt(nome).includes(q))return false;
+    if(manutFiltro==='monitorados')return !!it.p;
+    if(manutFiltro==='pecas')return tipo==='peca';
+    if(manutFiltro==='servicos')return tipo==='servico';
+    return true;
+  });
+  const ativos=itens.filter(it=>it.p).sort((a,b)=>calcPctPeca(b.p)-calcPctPeca(a.p));
+  const livres=itens.filter(it=>!it.p);
+  if(!itens.length){wrap.innerHTML='';empty.style.display='block';
+    $('manut-empty-t').innerText=q?'Nada encontrado para essa pesquisa.':(manutFiltro==='monitorados'?'Nenhum item monitorado ainda.':'Nenhum item nesta lista.');
+    $('manut-empty-s').innerText=q?'Tente outro nome ou adicione um item personalizado.':'Toque numa peça ou serviço da lista para começar.';
+  }else empty.style.display='none';
+  const cardAtivo=({c,p})=>{
     const pct=calcPctPeca(p);
     const restante=Math.max(0,Number(p.kmProxima)-Number(p.kmAtual||p.kmTroca));
     const cls=pct>=85?'crit':(pct>=60?'warn':'');
-    const alerta=pct>=85;
+    const tipo=c?c.tipo:(p.tipoItem||'peca');
     return `
       <article class="peca-card ${cls}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;">
-          <div style="min-width:0;flex:1;">
-            <p style="font-size:0.55rem;color:var(--muted);font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">Peça</p>
-            <h4 style="font-size:15px;font-weight:900;color:#e6edf3;margin-top:3px;line-height:1.15;">${escaparHtml(p.nome)}</h4>
+          <div style="display:flex;gap:10px;min-width:0;flex:1;">
+            <div class="mt-ic"><span class="material-icons">${c?c.ic:'handyman'}</span></div>
+            <div style="min-width:0;flex:1;">
+              <p style="font-size:0.55rem;color:var(--muted);font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">${tipo==='servico'?'Serviço':'Peça'}${p.valor?` · ${moedaManut(p.valor)}`:''}</p>
+              <h4 style="font-size:15px;font-weight:900;color:#e6edf3;margin-top:3px;line-height:1.15;">${escaparHtml(p.nome)}</h4>
+            </div>
           </div>
-          ${alerta?`<span class="peca-alerta-chip"><span class="material-icons" style="font-size:11px;">notifications_active</span>${pct>=100?'Trocar agora':'Atenção'}</span>`:''}
+          ${pct>=85?`<span class="peca-alerta-chip"><span class="material-icons" style="font-size:11px;">notifications_active</span>${pct>=100?'Trocar agora':'Atenção'}</span>`:''}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
-          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:7px 8px;">
-            <p style="font-size:0.5rem;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Última</p>
-            <p style="font-size:11px;font-weight:900;color:#e6edf3;margin-top:2px;">${fmtKm(p.kmTroca)}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:7px 8px;">
-            <p style="font-size:0.5rem;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Atual</p>
-            <p style="font-size:11px;font-weight:900;color:#3fb950;margin-top:2px;">${fmtKm(p.kmAtual||p.kmTroca)}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:7px 8px;">
-            <p style="font-size:0.5rem;color:var(--muted);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Próxima</p>
-            <p style="font-size:11px;font-weight:900;color:#58a6ff;margin-top:2px;">${fmtKm(p.kmProxima)}</p>
-          </div>
+          <div class="mt-km"><p>Última</p><p>${fmtKm(p.kmTroca)}</p></div>
+          <div class="mt-km"><p>Atual</p><p style="color:#3fb950;">${fmtKm(p.kmAtual||p.kmTroca)}</p></div>
+          <div class="mt-km"><p>Próxima</p><p style="color:#58a6ff;">${fmtKm(p.kmProxima)}</p></div>
         </div>
         <div class="peca-progress"><div class="peca-progress-fill ${cls}" style="width:${pct}%;"></div></div>
         <div style="display:flex;justify-content:space-between;margin-top:7px;">
@@ -2739,32 +2753,51 @@ function renderListaPecas(){
           <span style="font-size:0.6rem;color:#8b949e;font-weight:700;">${fmtKm(restante)} restantes</span>
         </div>
         <div style="display:flex;gap:6px;margin-top:12px;">
+          <button onclick="trocarPecaAgora('${p.id}')" class="btn-manut-ghost" style="flex:1.3;color:#3fb950;border-color:rgba(63,185,80,0.3);">Troquei</button>
           <button onclick="editarPeca('${p.id}')" class="btn-manut-ghost" style="flex:1;">Editar</button>
           <button onclick="removerPeca('${p.id}')" class="btn-manut-ghost" style="flex:1;color:#f85149;border-color:rgba(248,81,73,0.25);">Remover</button>
         </div>
       </article>`;
-  }).join('');
+  };
+  const linhaLivre=({c})=>`
+      <button class="mt-item" onclick="abrirModalPecaForm(null,'${c.id}')">
+        <div class="mt-ic"><span class="material-icons">${c.ic}</span></div>
+        <div class="mt-item-t"><b>${escaparHtml(c.nome)}</b><span>${c.tipo==='servico'?'Serviço':'Peça'} · a cada ${fmtKm(c.km)}</span></div>
+        <span class="material-icons mt-add">add_circle_outline</span>
+      </button>`;
+  let html='';
+  if(ativos.length)html+=`<p class="mt-sec">Monitorando (${ativos.length})</p>`+ativos.map(cardAtivo).join('');
+  if(livres.length)html+=`<p class="mt-sec">${ativos.length?'Adicionar mais':'Toque para começar a monitorar'}</p><div class="mt-lista">`+livres.map(linhaLivre).join('')+'</div>';
+  html+=`<button class="mt-custom" onclick="abrirModalPecaForm()"><span class="material-icons">add</span>Adicionar item personalizado</button>`;
+  wrap.innerHTML=html;
 }
-
 function abrirModalManutencao(){
   fecharDrawer&&fecharDrawer();
   fecharModais();
+  if(!manutVeiculo()){abrirWizardVeiculo(false);return;}
   const el=$('modal-manutencao');if(!el)return;
   el.style.display='flex';el.classList.remove('hidden');
   requestAnimationFrame(()=>{const sh=$('manut-sheet');if(sh)sh.style.transform='translateY(0)';renderListaPecas();});
 }
 function fecharModalManutencao(){const sh=$('manut-sheet');if(sh)sh.style.transform='translateY(100%)';setTimeout(()=>{const el=$('modal-manutencao');if(el){el.style.display='none';el.classList.add('hidden');}},400);}
 
-function abrirModalPecaForm(id){
+function abrirModalPecaForm(id,catId){
   editandoPecaId=id||null;
+  carregarPecasStorage();
   const p=id?pecasManut.find(x=>x.id===id):null;
-  $('modal-peca-form-titulo').innerText=p?'Editar peça':'Nova peça';
-  $('peca-nome').value=p?p.nome:'';
-  $('peca-km-troca').value=p?p.kmTroca:'';
-  $('peca-km-proxima').value=p?p.kmProxima:'';
-  $('peca-km-atual').value=p?(p.kmAtual||p.kmTroca):(ultimoOdometro||'');
+  const c=manutCatItem(catId||(p&&p.catId));
+  editandoCatId=c?c.id:null;
+  const odo=Number(ultimoOdometro)||0;
+  $('modal-peca-form-titulo').innerText=p?'Editar':(c?c.nome:'Novo item');
+  const tg=$('peca-form-tag');if(tg)tg.innerText=(c?c.tipo:(p&&p.tipoItem)||'peca')==='servico'?'Serviço':'Peça';
+  const nome=$('peca-nome');nome.value=p?p.nome:(c?c.nome:'');nome.readOnly=!!c;nome.style.opacity=c?'.75':'1';
+  $('peca-km-troca').value=p?p.kmTroca:(odo||'');
+  const px=$('peca-km-proxima');px.value=p?p.kmProxima:(c&&odo?odo+c.km:'');px.dataset.manual=p?'1':'0';
+  $('peca-km-atual').value=p?(p.kmAtual||p.kmTroca):(odo||'');
+  $('peca-valor').value=p&&p.valor?p.valor:'';
+  const d=$('peca-dica');if(d){d.style.display=c?'flex':'none';if(c)d.querySelector('span:last-child').innerHTML=`Recomendado: a cada <b>${fmtKm(c.km)}</b>.${c.dica?' '+escaparHtml(c.dica):''}`;}
   const el=$('modal-peca-form');el.style.display='flex';el.classList.remove('hidden');
-  requestAnimationFrame(()=>{const sh=$('peca-form-sheet');if(sh)sh.style.transform='translateY(0)';setTimeout(()=>$('peca-nome')?.focus(),300);});
+  requestAnimationFrame(()=>{const sh=$('peca-form-sheet');if(sh)sh.style.transform='translateY(0)';setTimeout(()=>(c?$('peca-km-troca'):$('peca-nome'))?.focus(),300);});
 }
 function fecharModalPecaForm(){const sh=$('peca-form-sheet');if(sh)sh.style.transform='translateY(100%)';setTimeout(()=>{const el=$('modal-peca-form');if(el){el.style.display='none';el.classList.add('hidden');}},400);}
 
@@ -2773,18 +2806,20 @@ function salvarPeca(){
   const kmTroca=Number($('peca-km-troca').value)||0;
   const kmProxima=Number($('peca-km-proxima').value)||0;
   const kmAtual=Number($('peca-km-atual').value)||kmTroca;
+  const valor=Math.max(0,parseFloat(String($('peca-valor').value||'').replace(',','.'))||0);
   if(!nome)return showToast('Digite o nome da peça',true);
-  if(!kmTroca||!kmProxima||kmProxima<=kmTroca)return showToast('Verifique os KM (próxima deve ser maior que a última)',true);
+  if(kmTroca<0||!kmProxima||kmProxima<=kmTroca)return showToast('Verifique os KM (próxima deve ser maior que a última)',true);
   if(kmAtual<kmTroca)return showToast('KM atual não pode ser menor que a última troca',true);
   carregarPecasStorage();
   if(editandoPecaId){
     const p=pecasManut.find(x=>x.id===editandoPecaId);
-    if(p){p.nome=nome;p.kmTroca=kmTroca;p.kmProxima=kmProxima;p.kmAtual=kmAtual;}
+    if(p){p.nome=nome;p.kmTroca=kmTroca;p.kmProxima=kmProxima;p.kmAtual=kmAtual;p.valor=valor;}
   } else {
-    pecasManut.push({id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),nome,kmTroca,kmProxima,kmAtual,criadoEm:new Date().toISOString()});
+    const c=manutCatItem(editandoCatId);
+    pecasManut.push({id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),nome,kmTroca,kmProxima,kmAtual,valor,catId:c?c.id:null,tipoItem:c?c.tipo:'peca',criadoEm:new Date().toISOString()});
   }
   salvarPecasStorage();fecharModalPecaForm();renderListaPecas();atualizarIndicadoresManut();
-  showToast(editandoPecaId?'Peça atualizada!':'Peça cadastrada!');
+  showToast(editandoPecaId?'Item atualizado!':'Monitoramento iniciado!');
 }
 function editarPeca(id){abrirModalPecaForm(id);}
 function removerPeca(id){
@@ -2810,6 +2845,7 @@ function abrirConfirmacao(msg,onOk){
         <div>
           <p style="font-size:0.55rem;font-weight:900;color:var(--orange);letter-spacing:0.18em;text-transform:uppercase;line-height:1;">Prismo Drive</p>
           <p style="font-size:15px;color:#e6edf3;font-weight:900;margin-top:4px;line-height:1;">Manutenção</p>
+          <p id="manut-veic" class="mt-veic" style="display:none;"></p>
         </div>
       </div>
       <button onclick="fecharModalManutencao()" style="width:34px;height:34px;border-radius:11px;background:#161b22;border:1px solid #21262d;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);"><span class="material-icons" style="font-size:17px;">close</span></button>
@@ -2826,17 +2862,21 @@ function abrirConfirmacao(msg,onOk){
         </div>
       </div>
     </div>
-    <div style="padding:0 20px 12px;flex-shrink:0;">
-      <button onclick="abrirModalPecaForm()" class="btn-manut-primary" style="width:100%;">
-        <span class="material-icons" style="font-size:16px;">add_circle</span>Adicionar peça
-      </button>
+    <div style="padding:0 20px 10px;flex-shrink:0;">
+      <div class="mt-search"><span class="material-icons">search</span><input id="manut-busca" type="search" placeholder="Pesquisar peça ou serviço..." oninput="renderListaPecas()" autocomplete="off"><button id="manut-busca-x" onclick="limparBuscaManut()" style="display:none;"><span class="material-icons">close</span></button></div>
+      <div id="manut-filtros" class="mt-chips">
+        <button class="mt-chip on" data-f="todos" onclick="setFiltroManut('todos')">Todos</button>
+        <button class="mt-chip" data-f="monitorados" onclick="setFiltroManut('monitorados')">Monitorados</button>
+        <button class="mt-chip" data-f="pecas" onclick="setFiltroManut('pecas')">Peças</button>
+        <button class="mt-chip" data-f="servicos" onclick="setFiltroManut('servicos')">Serviços</button>
+      </div>
     </div>
     <div style="flex:1;overflow-y:auto;padding:4px 20px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;">
       <div id="manut-lista" style="display:flex;flex-direction:column;gap:10px;"></div>
       <div id="manut-empty" style="display:none;text-align:center;padding:40px 12px;">
         <span class="material-icons" style="font-size:38px;color:#21262d;">handyman</span>
-        <p style="font-size:13px;color:#8b949e;font-weight:700;margin-top:8px;">Nenhuma peça cadastrada.</p>
-        <p style="font-size:11px;color:var(--muted);margin-top:4px;">Toque em "Adicionar peça" para começar o monitoramento.</p>
+        <p id="manut-empty-t" style="font-size:13px;color:#8b949e;font-weight:700;margin-top:8px;">Nenhuma peça cadastrada.</p>
+        <p id="manut-empty-s" style="font-size:11px;color:var(--muted);margin-top:4px;">Toque numa peça ou serviço da lista para começar.</p>
       </div>
       <div style="margin-top:6px;background:rgba(56,139,253,0.06);border:1px solid rgba(56,139,253,0.18);border-radius:12px;padding:10px 12px;display:flex;align-items:flex-start;gap:8px;">
         <span class="material-icons" style="color:#58a6ff;font-size:15px;margin-top:1px;">lightbulb</span>
@@ -2846,6 +2886,290 @@ function abrirConfirmacao(msg,onOk){
   </div>
 </div>
 
+<!-- ═══════════════ ASSISTENTE: QUAL SEU VEÍCULO? ═══════════════ -->
+<style>
+#manut-wizard{position:fixed;inset:0;z-index:86;background:rgba(4,8,12,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:none;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s ease;}
+#manut-wizard.mw-open{opacity:1;}
+#manut-wizard .mw-sheet{width:100%;max-width:460px;height:88dvh;background:linear-gradient(180deg,#0d1117,#06090d);border-top-left-radius:28px;border-top-right-radius:28px;border:1px solid rgba(240,136,62,.2);border-bottom:0;display:flex;flex-direction:column;overflow:hidden;transform:translateY(30px);transition:transform .28s cubic-bezier(.2,.9,.3,1);}
+#manut-wizard.mw-open .mw-sheet{transform:translateY(0);}
+.mw-top{display:flex;align-items:center;gap:10px;padding:16px 20px 6px;}
+.mw-top button{width:36px;height:36px;border-radius:12px;background:#161b22;border:1px solid #21262d;color:#8b949e;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.mw-passos{display:flex;gap:6px;flex:1;justify-content:flex-end;}
+.mw-step{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:900;color:#6e7681;padding:4px 8px;border-radius:99px;border:1px solid #21262d;}
+.mw-step em{font-style:normal;display:none;}
+.mw-step .material-icons{font-size:12px;}
+.mw-step.on{color:#ffb87a;border-color:rgba(240,136,62,.5);background:rgba(240,136,62,.1);}
+.mw-step.on em{display:inline;}
+.mw-step.ok{color:#3fb950;border-color:rgba(63,185,80,.4);}
+.mw-head{padding:10px 20px 14px;}
+.mw-head h3{font-size:22px;font-weight:900;color:#f2f6fa;letter-spacing:-.02em;}
+.mw-head p{font-size:12px;color:#8b949e;margin-top:4px;}
+#mw-body{flex:1;overflow-y:auto;padding:0 20px calc(24px + env(safe-area-inset-bottom));}
+.mw-tipos{display:grid;gap:12px;}
+.mw-tipo{display:flex;align-items:center;gap:16px;padding:20px;border-radius:20px;background:linear-gradient(160deg,rgba(22,27,34,.95),rgba(13,17,23,.98));border:1px solid rgba(255,255,255,.08);color:#e6edf3;cursor:pointer;text-align:left;}
+.mw-tipo .material-icons{font-size:34px;color:#ffb87a;width:58px;height:58px;border-radius:18px;background:rgba(240,136,62,.1);border:1px solid rgba(240,136,62,.3);display:flex;align-items:center;justify-content:center;}
+.mw-tipo b{font-size:17px;font-weight:900;}
+.mw-tipo.on,.mw-tipo:active{border-color:rgba(240,136,62,.6);background:rgba(240,136,62,.08);}
+.mw-busca,.mt-search{display:flex;align-items:center;gap:8px;background:#0d1117;border:1px solid #21262d;border-radius:14px;padding:0 12px;margin-bottom:12px;}
+.mw-busca .material-icons,.mt-search>.material-icons{color:#6e7681;font-size:19px;}
+.mw-busca input,.mt-search input{flex:1;background:transparent;border:0;outline:0;color:#e6edf3;font-size:14px;padding:12px 0;min-width:0;}
+.mt-search button{background:transparent;border:0;color:#8b949e;display:flex;cursor:pointer;padding:4px;}
+.mt-search button .material-icons{font-size:17px;}
+.mw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.mw-grid.anos{grid-template-columns:repeat(4,1fr);}
+.mw-chip{padding:13px 10px;border-radius:14px;background:#161b22;border:1px solid #21262d;color:#e6edf3;font-size:13px;font-weight:800;cursor:pointer;text-align:center;}
+.mw-chip.on,.mw-chip:active{border-color:rgba(240,136,62,.6);color:#ffb87a;background:rgba(240,136,62,.08);}
+.mw-lbl{font-size:.6rem;font-weight:900;color:#6e7681;letter-spacing:.12em;text-transform:uppercase;margin:18px 0 8px;}
+.mw-linha{display:flex;gap:8px;}
+.mw-linha input{flex:1;}
+.mw-ok{width:50px;border-radius:14px;background:linear-gradient(135deg,#b35a12,#f0883e);border:0;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.mt-veic{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;font-weight:700;color:#c9d1d9;}
+.mt-veic .material-icons{font-size:14px;color:#ffb87a;}
+.mt-veic button{margin-left:4px;font-size:10px;font-weight:900;color:#ffb87a;background:rgba(240,136,62,.1);border:1px solid rgba(240,136,62,.3);border-radius:99px;padding:2px 8px;cursor:pointer;}
+.mt-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+.mt-chips::-webkit-scrollbar{display:none;}
+.mt-chip{flex-shrink:0;padding:7px 12px;border-radius:99px;background:#0d1117;border:1px solid #21262d;color:#8b949e;font-size:11.5px;font-weight:800;cursor:pointer;}
+.mt-chip.on{color:#ffb87a;border-color:rgba(240,136,62,.5);background:rgba(240,136,62,.1);}
+.mt-sec{font-size:.58rem;font-weight:900;color:#6e7681;letter-spacing:.12em;text-transform:uppercase;margin:6px 2px 0;}
+.mt-lista{display:flex;flex-direction:column;border:1px solid rgba(240,246,252,.07);border-radius:18px;overflow:hidden;background:rgba(22,27,34,.6);}
+.mt-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:transparent;border:0;border-bottom:1px solid rgba(240,246,252,.05);color:#e6edf3;text-align:left;cursor:pointer;width:100%;}
+.mt-item:last-child{border-bottom:0;}
+.mt-item:active{background:rgba(240,136,62,.06);}
+.mt-item-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.mt-item-t b{font-size:13.5px;font-weight:800;}
+.mt-item-t span{font-size:11px;color:#8b949e;}
+.mt-add{color:#ffb87a;font-size:22px;}
+.mt-ic{width:34px;height:34px;border-radius:11px;background:rgba(240,136,62,.08);border:1px solid rgba(240,136,62,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mt-ic .material-icons{font-size:18px;color:#ffb87a;}
+.mt-km{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:7px 8px;}
+.mt-km p:first-child{font-size:.5rem;color:var(--muted);font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+.mt-km p:last-child{font-size:11px;font-weight:900;color:#e6edf3;margin-top:2px;}
+.mt-custom{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-radius:16px;background:transparent;border:1px dashed rgba(240,136,62,.35);color:#ffb87a;font-size:12.5px;font-weight:800;cursor:pointer;margin-top:4px;}
+.mt-dica{display:flex;gap:8px;align-items:flex-start;background:rgba(56,139,253,.06);border:1px solid rgba(56,139,253,.18);border-radius:12px;padding:10px 12px;}
+.mt-dica .material-icons{color:#58a6ff;font-size:16px;}
+.mt-dica span:last-child{font-size:11.5px;color:#c9d1d9;line-height:1.45;}
+</style>
+<div id="manut-wizard" onclick="if(event.target===this)fecharWizardVeiculo()">
+  <div class="mw-sheet">
+    <div class="mw-top"><button id="mw-voltar" onclick="mwVoltar()"><span class="material-icons">close</span></button><div id="mw-passos" class="mw-passos"></div></div>
+    <div class="mw-head"><h3 id="mw-titulo">Qual seu veículo?</h3><p id="mw-sub"></p></div>
+    <div id="mw-body"></div>
+  </div>
+</div>
+<script>
+/* ═══════════════ MANUTENÇÃO 2.0 — veículo, catálogo de peças/serviços, pesquisa e valor ═══════════════
+   1ª vez: pergunta o veículo (Carro / Moto / Bicicleta → marca → modelo → ano) e gera a lista de
+   peças e serviços daquele tipo. Cada item escolhido vira uma peça monitorada (pecasManut), com KM
+   da última troca, KM da próxima, valor do serviço e barra de progresso que anda com o odômetro. */
+const MANUT_TIPOS={
+  carro:{nome:'Carro',icone:'directions_car'},
+  moto:{nome:'Moto',icone:'two_wheeler'},
+  bike:{nome:'Bicicleta',icone:'pedal_bike'}
+};
+const MANUT_MARCAS={
+  carro:{'Fiat':['Argo','Mobi','Cronos','Uno','Palio','Siena','Grand Siena','Strada','Toro','Pulse','Fastback','Fiorino'],
+    'Volkswagen':['Gol','Voyage','Polo','Virtus','Fox','Up!','T-Cross','Nivus','Saveiro','Jetta'],
+    'Chevrolet':['Onix','Onix Plus','Prisma','Cobalt','Spin','Tracker','Cruze','Celta','Classic','Montana','S10'],
+    'Toyota':['Etios','Yaris','Corolla','Corolla Cross','Hilux'],
+    'Hyundai':['HB20','HB20S','Creta','i30'],
+    'Renault':['Kwid','Sandero','Logan','Stepway','Duster','Captur','Oroch'],
+    'Honda':['Fit','City','Civic','HR-V','WR-V'],
+    'Jeep':['Renegade','Compass','Commander'],
+    'Nissan':['Versa','March','Kicks','Sentra'],
+    'Ford':['Ka','Ka Sedan','Fiesta','EcoSport','Focus','Ranger'],
+    'Peugeot':['208','2008','207','308'],
+    'Citroën':['C3','C4 Cactus','C3 Aircross'],
+    'Caoa Chery':['Tiggo 5x','Tiggo 7','Arrizo 6'],
+    'BYD':['Dolphin','Dolphin Mini','Song Plus','Yuan Plus'],
+    'Mitsubishi':['L200','ASX','Pajero'],
+    'Kia':['Sportage','Cerato','Stonic'],
+    'GWM':['Haval H6','Ora 03']},
+  moto:{'Honda':['CG 160 Fan','CG 160 Titan','CG 160 Start','Biz 125','Pop 110i','Bros 160','XRE 300','CB 300F Twister','PCX 160','Elite 125','NXR 160'],
+    'Yamaha':['Factor 150','Fazer 250','FZ25','Crosser 150','NMax 160','Lander 250','XTZ 250','Neo 125'],
+    'Suzuki':['Yes 125','Intruder 125','GSR 150'],
+    'Shineray':['Jet 50','XY 150','Worker 125'],
+    'Haojue':['DK 150','NK 150','Chopper Road 150'],
+    'Dafra':['Apache 160','NH 190','Citycom 300'],
+    'Mottu':['Sport 110i'],
+    'Royal Enfield':['Meteor 350','Hunter 350','Classic 350'],
+    'BMW':['G 310 R','G 310 GS'],
+    'Kawasaki':['Ninja 400','Z400'],
+    'Triumph':['Speed 400'],
+    'Voltz':['EV1','EVS']},
+  bike:{'Caloi':['Elite','Explorer','Vulcan','Easy Rider'],
+    'Oggi':['Hacker','Big Wheel 7.0','Agile'],
+    'Sense':['Fun','Impact','Rock'],
+    'Specialized':['Rockhopper','Sirrus'],
+    'Trek':['Marlin','FX'],
+    'Houston':['Foxer','Discovery'],
+    'TSW':['Ride','Hurry'],
+    'Groove':['Ska','Hype'],
+    'Audax':['Havok','ADX'],
+    'Elleven':['Rocker','Gravity']}
+};
+/* km = intervalo sugerido de troca/revisão (uso intenso de motorista de app) */
+const MANUT_CATALOGO={
+  carro:[
+    {id:'oleo',nome:'Troca de óleo do motor',tipo:'servico',km:10000,ic:'oil_barrel',dica:'Uso severo (app, trânsito): a cada 5.000 km.'},
+    {id:'filtro_oleo',nome:'Filtro de óleo',tipo:'peca',km:10000,ic:'filter_alt',dica:'Troque junto com o óleo.'},
+    {id:'filtro_ar',nome:'Filtro de ar do motor',tipo:'peca',km:10000,ic:'air'},
+    {id:'filtro_comb',nome:'Filtro de combustível',tipo:'peca',km:20000,ic:'local_gas_station'},
+    {id:'filtro_cabine',nome:'Filtro de cabine (ar-condicionado)',tipo:'peca',km:15000,ic:'ac_unit'},
+    {id:'higien_ac',nome:'Higienização do ar-condicionado',tipo:'servico',km:15000,ic:'mode_fan_off'},
+    {id:'velas',nome:'Velas de ignição',tipo:'peca',km:40000,ic:'bolt'},
+    {id:'cabos_vela',nome:'Cabos de vela',tipo:'peca',km:60000,ic:'cable'},
+    {id:'correia_dentada',nome:'Correia dentada',tipo:'peca',km:50000,ic:'settings',dica:'Se arrebentar pode danificar o motor. Troque tensor e bomba d\'água junto.'},
+    {id:'correia_acess',nome:'Correia do alternador / acessórios',tipo:'peca',km:50000,ic:'settings_input_component'},
+    {id:'bomba_agua',nome:'Bomba d\'água',tipo:'peca',km:50000,ic:'water_drop'},
+    {id:'pastilha_d',nome:'Pastilhas de freio dianteiras',tipo:'peca',km:30000,ic:'radio_button_checked'},
+    {id:'pastilha_t',nome:'Pastilhas / lonas de freio traseiras',tipo:'peca',km:40000,ic:'radio_button_unchecked'},
+    {id:'disco_freio',nome:'Discos de freio',tipo:'peca',km:60000,ic:'album'},
+    {id:'fluido_freio',nome:'Fluido de freio',tipo:'servico',km:20000,ic:'opacity',dica:'Ou a cada 2 anos, o que vier primeiro.'},
+    {id:'arrefecimento',nome:'Líquido de arrefecimento',tipo:'servico',km:40000,ic:'thermostat'},
+    {id:'oleo_cambio',nome:'Óleo do câmbio',tipo:'servico',km:60000,ic:'settings_suggest'},
+    {id:'embreagem',nome:'Kit embreagem',tipo:'peca',km:80000,ic:'tune'},
+    {id:'amortecedores',nome:'Amortecedores',tipo:'peca',km:60000,ic:'height'},
+    {id:'suspensao',nome:'Revisão da suspensão (bieletas, buchas, terminais)',tipo:'servico',km:30000,ic:'build_circle'},
+    {id:'pneus',nome:'Pneus',tipo:'peca',km:50000,ic:'trip_origin'},
+    {id:'rodizio',nome:'Rodízio de pneus',tipo:'servico',km:10000,ic:'autorenew'},
+    {id:'alinhamento',nome:'Alinhamento e balanceamento',tipo:'servico',km:10000,ic:'straighten'},
+    {id:'bateria',nome:'Bateria',tipo:'peca',km:60000,ic:'battery_charging_full',dica:'Dura em média de 2 a 3 anos.'},
+    {id:'palhetas',nome:'Palhetas do limpador',tipo:'peca',km:15000,ic:'water'},
+    {id:'bicos',nome:'Limpeza de bicos injetores',tipo:'servico',km:30000,ic:'cleaning_services'},
+    {id:'sonda',nome:'Sonda lambda (sensor de oxigênio)',tipo:'peca',km:80000,ic:'sensors'},
+    {id:'homocinetica',nome:'Junta homocinética',tipo:'peca',km:80000,ic:'join_inner'},
+    {id:'revisao',nome:'Revisão geral',tipo:'servico',km:10000,ic:'fact_check'}
+  ],
+  moto:[
+    {id:'oleo',nome:'Troca de óleo do motor',tipo:'servico',km:3000,ic:'oil_barrel',dica:'Motos de entrega rodam muito: confira o nível toda semana.'},
+    {id:'filtro_oleo',nome:'Filtro de óleo',tipo:'peca',km:6000,ic:'filter_alt'},
+    {id:'filtro_ar',nome:'Filtro de ar',tipo:'peca',km:6000,ic:'air'},
+    {id:'filtro_comb',nome:'Filtro de combustível',tipo:'peca',km:15000,ic:'local_gas_station'},
+    {id:'vela',nome:'Vela de ignição',tipo:'peca',km:10000,ic:'bolt'},
+    {id:'relacao',nome:'Kit relação (corrente, coroa e pinhão)',tipo:'peca',km:20000,ic:'link'},
+    {id:'lub_corrente',nome:'Lubrificação e ajuste da corrente',tipo:'servico',km:500,ic:'water_drop'},
+    {id:'pastilha_d',nome:'Pastilhas de freio dianteiras',tipo:'peca',km:10000,ic:'radio_button_checked'},
+    {id:'freio_t',nome:'Pastilha / lona de freio traseira',tipo:'peca',km:12000,ic:'radio_button_unchecked'},
+    {id:'fluido_freio',nome:'Fluido de freio',tipo:'servico',km:20000,ic:'opacity'},
+    {id:'pneu_d',nome:'Pneu dianteiro',tipo:'peca',km:20000,ic:'trip_origin'},
+    {id:'pneu_t',nome:'Pneu traseiro',tipo:'peca',km:15000,ic:'trip_origin'},
+    {id:'cabo_embreagem',nome:'Cabo de embreagem',tipo:'peca',km:20000,ic:'cable'},
+    {id:'embreagem',nome:'Discos de embreagem',tipo:'peca',km:30000,ic:'tune'},
+    {id:'oleo_bengala',nome:'Óleo da suspensão (bengala)',tipo:'servico',km:20000,ic:'height'},
+    {id:'retentores',nome:'Retentores da bengala',tipo:'peca',km:20000,ic:'donut_small'},
+    {id:'rolamentos',nome:'Rolamentos de roda e caixa de direção',tipo:'peca',km:25000,ic:'settings'},
+    {id:'valvulas',nome:'Regulagem de válvulas',tipo:'servico',km:12000,ic:'tune'},
+    {id:'bicos',nome:'Limpeza do bico injetor / carburador',tipo:'servico',km:10000,ic:'cleaning_services'},
+    {id:'arrefecimento',nome:'Líquido de arrefecimento',tipo:'servico',km:20000,ic:'thermostat',dica:'Só para motos refrigeradas a líquido.'},
+    {id:'bateria',nome:'Bateria',tipo:'peca',km:30000,ic:'battery_charging_full'},
+    {id:'revisao',nome:'Revisão geral',tipo:'servico',km:6000,ic:'fact_check'}
+  ],
+  bike:[
+    {id:'lub_corrente',nome:'Lubrificação da corrente',tipo:'servico',km:300,ic:'water_drop'},
+    {id:'corrente',nome:'Corrente',tipo:'peca',km:2000,ic:'link'},
+    {id:'cassete',nome:'Cassete / catraca',tipo:'peca',km:6000,ic:'settings'},
+    {id:'coroa',nome:'Coroas / pedivela',tipo:'peca',km:10000,ic:'adjust'},
+    {id:'freio',nome:'Pastilhas / sapatas de freio',tipo:'peca',km:1500,ic:'radio_button_checked'},
+    {id:'sangria',nome:'Sangria do freio hidráulico',tipo:'servico',km:5000,ic:'opacity'},
+    {id:'cabos',nome:'Cabos e conduítes',tipo:'peca',km:3000,ic:'cable'},
+    {id:'pneus',nome:'Pneus',tipo:'peca',km:3000,ic:'trip_origin'},
+    {id:'camaras',nome:'Câmaras de ar',tipo:'peca',km:2000,ic:'donut_large'},
+    {id:'cambio',nome:'Regulagem de câmbio',tipo:'servico',km:1000,ic:'tune'},
+    {id:'rolamentos',nome:'Rolamentos (movimento central e cubos)',tipo:'peca',km:5000,ic:'settings_input_component'},
+    {id:'suspensao',nome:'Manutenção da suspensão',tipo:'servico',km:3000,ic:'height'},
+    {id:'manoplas',nome:'Manoplas / fita de guidão',tipo:'peca',km:5000,ic:'pan_tool'},
+    {id:'revisao',nome:'Revisão geral',tipo:'servico',km:1500,ic:'fact_check'}
+  ]
+};
+let manutFiltro='todos',editandoCatId=null,_mwEstado=null;
+
+function _keyVeiculo(){return 'prismo_veiculo_'+(perfilAtivo||'guest');}
+function manutVeiculo(){try{const v=JSON.parse(localStorage.getItem(_keyVeiculo()));return v&&v.tipo?v:null;}catch(e){return null;}}
+function manutCatalogo(tipo){return MANUT_CATALOGO[tipo]||[];}
+function manutCatItem(id){const v=manutVeiculo();return id&&v?manutCatalogo(v.tipo).find(c=>c.id===id)||null:null;}
+function _normTxt(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+function manutVeiculoTxt(v){return v?`${MANUT_TIPOS[v.tipo]?.nome||''} · ${[v.marca,v.modelo,v.ano].filter(Boolean).join(' ')}`:'';}
+function moedaManut(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function setFiltroManut(f){manutFiltro=f;document.querySelectorAll('#manut-filtros .mt-chip').forEach(b=>b.classList.toggle('on',b.dataset.f===f));renderListaPecas();}
+function limparBuscaManut(){const i=$('manut-busca');if(i){i.value='';i.focus();}renderListaPecas();}
+
+/* ── Assistente "Qual seu veículo?" ── */
+function abrirWizardVeiculo(editar){
+  const v=editar?manutVeiculo():null;
+  _mwEstado={passo:1,tipo:v?v.tipo:null,marca:v?v.marca:'',modelo:v?v.modelo:'',ano:v?v.ano:'',editar:!!editar};
+  const m=$('manut-wizard');if(!m)return;
+  m.style.display='flex';requestAnimationFrame(()=>m.classList.add('mw-open'));
+  renderWizardVeiculo();
+}
+function fecharWizardVeiculo(){const m=$('manut-wizard');if(!m)return;m.classList.remove('mw-open');setTimeout(()=>{m.style.display='none';},220);}
+function mwVoltar(){if(!_mwEstado)return;if(_mwEstado.passo<=1){fecharWizardVeiculo();return;}_mwEstado.passo--;renderWizardVeiculo();}
+function mwTipo(t){_mwEstado.tipo=t;if(!MANUT_MARCAS[t]||!MANUT_MARCAS[t][_mwEstado.marca]){_mwEstado.marca='';_mwEstado.modelo='';}_mwEstado.passo=2;renderWizardVeiculo();}
+function mwMarca(m){_mwEstado.marca=m;_mwEstado.passo=3;renderWizardVeiculo();}
+function mwMarcaOutra(){const t=($('mw-marca-outra')?.value||'').trim();if(!t)return showToast('Digite a marca',true);mwMarca(t);}
+function mwModelo(m){_mwEstado.modelo=m;_mwEstado.passo=4;renderWizardVeiculo();}
+function mwModeloDigitado(){const t=($('mw-modelo')?.value||'').trim();if(!t)return showToast('Digite o modelo',true);mwModelo(t);}
+function mwAno(a){_mwEstado.ano=String(a);mwConcluir();}
+function mwFiltrar(){const q=_normTxt($('mw-busca')?.value);document.querySelectorAll('#mw-lista .mw-chip').forEach(b=>{b.style.display=_normTxt(b.dataset.t).includes(q)?'':'none';});}
+function mwConcluir(){
+  const e=_mwEstado,mudouTipo=(manutVeiculo()||{}).tipo!==e.tipo;
+  localStorage.setItem(_keyVeiculo(),JSON.stringify({tipo:e.tipo,marca:e.marca,modelo:e.modelo,ano:e.ano,criadoEm:new Date().toISOString()}));
+  fecharWizardVeiculo();
+  manutFiltro='todos';
+  showToast(e.editar&&!mudouTipo?'Veículo atualizado!':`Lista de peças e serviços do seu ${MANUT_TIPOS[e.tipo].nome.toLowerCase()} pronta!`);
+  setTimeout(()=>{abrirModalManutencao();},250);
+}
+function renderWizardVeiculo(){
+  const e=_mwEstado,b=$('mw-body');if(!b||!e)return;
+  const passos=['Veículo','Marca','Modelo','Ano'];
+  $('mw-passos').innerHTML=passos.map((p,i)=>`<span class="mw-step ${i+1<e.passo?'ok':(i+1===e.passo?'on':'')}">${i+1<e.passo?'<span class="material-icons">check</span>':(i+1)}<em>${p}</em></span>`).join('');
+  $('mw-voltar').innerHTML=e.passo<=1?'<span class="material-icons">close</span>':'<span class="material-icons">arrow_back</span>';
+  if(e.passo===1){
+    $('mw-titulo').innerText='Qual seu veículo?';
+    $('mw-sub').innerText='Vamos montar a lista de peças e serviços certa para ele.';
+    b.innerHTML=`<div class="mw-tipos">${Object.keys(MANUT_TIPOS).map(k=>`<button class="mw-tipo ${e.tipo===k?'on':''}" onclick="mwTipo('${k}')"><span class="material-icons">${MANUT_TIPOS[k].icone}</span><b>${MANUT_TIPOS[k].nome}</b></button>`).join('')}</div>`;
+  }else if(e.passo===2){
+    const marcas=Object.keys(MANUT_MARCAS[e.tipo]||{});
+    $('mw-titulo').innerText='Qual a marca?';
+    $('mw-sub').innerText=MANUT_TIPOS[e.tipo].nome;
+    b.innerHTML=`<div class="mw-busca"><span class="material-icons">search</span><input id="mw-busca" placeholder="Pesquisar marca..." oninput="mwFiltrar()"></div>
+      <div id="mw-lista" class="mw-grid">${marcas.map(m=>`<button class="mw-chip ${e.marca===m?'on':''}" data-t="${escaparHtml(m)}" onclick="mwMarca(this.dataset.t)">${escaparHtml(m)}</button>`).join('')}</div>
+      <p class="mw-lbl">Não achou? Digite a marca</p>
+      <div class="mw-linha"><input id="mw-marca-outra" class="input-premium" placeholder="Ex: ${e.tipo==='bike'?'Soul':'Outra marca'}"><button class="mw-ok" onclick="mwMarcaOutra()"><span class="material-icons">arrow_forward</span></button></div>`;
+  }else if(e.passo===3){
+    const modelos=(MANUT_MARCAS[e.tipo]||{})[e.marca]||[];
+    $('mw-titulo').innerText='Qual o modelo?';
+    $('mw-sub').innerText=`${MANUT_TIPOS[e.tipo].nome} · ${e.marca}`;
+    b.innerHTML=`<div class="mw-linha"><input id="mw-modelo" class="input-premium" placeholder="Digite o modelo" value="${escaparHtml(e.modelo||'')}" onkeydown="if(event.key==='Enter')mwModeloDigitado()"><button class="mw-ok" onclick="mwModeloDigitado()"><span class="material-icons">arrow_forward</span></button></div>
+      ${modelos.length?`<p class="mw-lbl">Mais comuns</p><div id="mw-lista" class="mw-grid">${modelos.map(m=>`<button class="mw-chip ${e.modelo===m?'on':''}" data-t="${escaparHtml(m)}" onclick="mwModelo(this.dataset.t)">${escaparHtml(m)}</button>`).join('')}</div>`:''}`;
+  }else{
+    const ano=new Date().getFullYear()+1,anos=[];for(let a=ano;a>=1985;a--)anos.push(a);
+    $('mw-titulo').innerText='Qual o ano?';
+    $('mw-sub').innerText=`${e.marca} ${e.modelo}`;
+    b.innerHTML=`<div id="mw-lista" class="mw-grid anos">${anos.map(a=>`<button class="mw-chip ${String(e.ano)===String(a)?'on':''}" onclick="mwAno(${a})">${a}</button>`).join('')}</div>`;
+  }
+  const sc=$('mw-body');if(sc)sc.scrollTop=0;
+}
+
+/* ── "Troquei agora": recomeça a contagem a partir do KM atual ── */
+function trocarPecaAgora(id){
+  carregarPecasStorage();const p=pecasManut.find(x=>x.id===id);if(!p)return;
+  const c=p.catId?manutCatItem(p.catId):null;
+  const intervalo=c?c.km:Math.max(1,Number(p.kmProxima)-Number(p.kmTroca));
+  const km=Math.max(Number(p.kmAtual)||0,Number(ultimoOdometro)||0)||Number(p.kmTroca)||0;
+  abrirConfirmacao(`Registrar troca de "${p.nome}" com ${fmtKm(km)}? A próxima fica em ${fmtKm(km+intervalo)}.`,()=>{
+    carregarPecasStorage();const q=pecasManut.find(x=>x.id===id);if(!q)return;
+    q.kmTroca=km;q.kmAtual=km;q.kmProxima=km+intervalo;q.ultimaTrocaEm=new Date().toISOString();
+    salvarPecasStorage();renderListaPecas();atualizarIndicadoresManut();showToast('Troca registrada!');
+  });
+}
+function pecaKmTrocaMudou(){
+  const c=editandoCatId?manutCatItem(editandoCatId):null;if(!c)return;
+  const t=Number($('peca-km-troca').value)||0,px=$('peca-km-proxima');
+  if(t>0&&px&&px.dataset.manual!=='1')px.value=t+c.km;
+}
+
+</script>
+
 <!-- ═══════════════ MODAL FORMULÁRIO PEÇA ═══════════════ -->
 <div id="modal-peca-form" class="hidden" style="position:fixed;inset:0;z-index:85;background:rgba(4,8,12,0.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)fecharModalPecaForm()">
   <div id="peca-form-sheet" style="width:100%;max-width:440px;background:linear-gradient(180deg,#161b22,#0d1117);border-top-left-radius:28px;border-top-right-radius:28px;border:1px solid rgba(240,136,62,0.18);border-bottom:0;padding:18px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform 0.42s cubic-bezier(0.16,1,0.3,1);box-shadow:0 -20px 60px rgba(0,0,0,0.6);">
@@ -2854,7 +3178,7 @@ function abrirConfirmacao(msg,onOk){
       <div style="display:flex;align-items:center;gap:11px;">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(240,136,62,0.1);border:1px solid rgba(240,136,62,0.28);display:flex;align-items:center;justify-content:center;"><span class="material-icons" style="color:var(--orange);font-size:19px;">settings_suggest</span></div>
         <div>
-          <p style="font-size:0.55rem;font-weight:900;color:var(--orange);letter-spacing:0.16em;text-transform:uppercase;line-height:1;">Peça</p>
+          <p id="peca-form-tag" style="font-size:0.55rem;font-weight:900;color:var(--orange);letter-spacing:0.16em;text-transform:uppercase;line-height:1;">Peça</p>
           <p id="modal-peca-form-titulo" style="font-size:15px;color:#e6edf3;font-weight:900;margin-top:3px;line-height:1;">Nova peça</p>
         </div>
       </div>
@@ -2862,23 +3186,30 @@ function abrirConfirmacao(msg,onOk){
     </div>
     <div style="display:flex;flex-direction:column;gap:11px;">
       <div>
-        <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome da peça</p>
+        <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome</p>
         <input id="peca-nome" type="text" class="input-premium" placeholder="Ex: Óleo do motor, Pastilha, Pneu...">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div>
           <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">KM da última troca</p>
-          <input id="peca-km-troca" type="number" inputmode="numeric" class="input-premium" placeholder="45000">
+          <input id="peca-km-troca" type="number" inputmode="numeric" class="input-premium" placeholder="45000" oninput="pecaKmTrocaMudou()">
         </div>
         <div>
           <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">KM da próxima troca</p>
-          <input id="peca-km-proxima" type="number" inputmode="numeric" class="input-premium" placeholder="55000">
+          <input id="peca-km-proxima" type="number" inputmode="numeric" class="input-premium" placeholder="55000" oninput="this.dataset.manual='1'">
         </div>
       </div>
-      <div>
-        <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">KM atual do veículo</p>
-        <input id="peca-km-atual" type="number" inputmode="numeric" class="input-premium" placeholder="Preenchido pelo odômetro">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">KM atual do veículo</p>
+          <input id="peca-km-atual" type="number" inputmode="numeric" class="input-premium" placeholder="Pelo odômetro">
+        </div>
+        <div>
+          <p style="font-size:0.56rem;color:var(--muted);font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Valor do serviço (R$)</p>
+          <input id="peca-valor" type="number" inputmode="decimal" step="0.01" class="input-premium" placeholder="0,00">
+        </div>
       </div>
+      <div id="peca-dica" class="mt-dica" style="display:none;"><span class="material-icons">tips_and_updates</span><span></span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
       <button onclick="fecharModalPecaForm()" style="padding:14px;border-radius:16px;background:#0d1117;border:1px solid #21262d;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>

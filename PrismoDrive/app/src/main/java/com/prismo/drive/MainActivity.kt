@@ -378,6 +378,7 @@ class MainActivity : Activity() {
  var c=el('carteira-app');
  if(c&&c.style.display==='block'&&typeof fecharCarteira==='function'){fecharCarteira();return '1';}
  if(vis(el('guia-app'))&&typeof fecharGuia==='function'){fecharGuia();return '1';}
+ if(vis(el('manut-wizard'))&&typeof mwVoltar==='function'){mwVoltar();return '1';}
  if(vis(el('modal-peca-form'))&&typeof fecharModalPecaForm==='function'){fecharModalPecaForm();return '1';}
  if(vis(el('modal-novidades'))&&typeof fecharNovidades==='function'){fecharNovidades();return '1';}
  if(vis(el('modal-tanque'))&&typeof fecharModalTanque==='function'){fecharModalTanque();return '1';}
