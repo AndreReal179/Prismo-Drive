@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Prismo Drive</string>
+    <string name="wdg_desc_2x2">Ganho e lucro do dia</string>
+    <string name="wdg_desc_4x2">Ganho do dia, meta, rotas, km, combustível e lucro</string>
+    <string name="canal_nome">Avisos do Prismo Drive</string>
+    <string name="canal_desc">Vencimentos, manutenção, metas e lembretes</string>
+</resources>
