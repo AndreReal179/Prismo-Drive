@@ -132,3 +132,16 @@ jobs:
           make_latest: true
           repository: ${{ vars.REPO_ATUALIZACAO || github.repository }}
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - name: Resumo
+        if: always()
+        run: |
+          if [ "${{ job.status }}" != "success" ]; then
+            echo "::error::O build falhou. Se o erro fala em 'keystore password was incorrect' ou 'Failed to read key', a senha em KEYSTORE_PASSWORD não bate com a keystore de KEYSTORE_BASE64."
+            echo "### ❌ Build falhou — nenhuma atualização publicada" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$ASSINADO" != "1" ]; then
+            echo "::error::APK gerado, mas a atualização NÃO foi publicada: faltam os secrets KEYSTORE_BASE64 e KEYSTORE_PASSWORD."
+            echo "### ⚠️ Atualização NÃO publicada (faltam os secrets da keystore)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ✅ Prismo Drive $VERSAO publicado (versionCode $VERSION_CODE)" >> "$GITHUB_STEP_SUMMARY"
+          fi
