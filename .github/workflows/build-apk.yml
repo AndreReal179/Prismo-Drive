@@ -2,16 +2,29 @@ name: Gerar APK Prismo Drive
 
 on:
   workflow_dispatch:
+    inputs:
+      publicar:
+        description: 'Publicar como atualização para os usuários (Release)?'
+        type: boolean
+        default: true
   push:
     branches: [ main, master ]
-    tags: [ 'v*' ]
+    paths-ignore:
+      - 'README.md'
+      - '**/README.md'
 
 permissions:
   contents: write
 
+concurrency:
+  group: gerar-apk
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      REPO_ATUALIZACAO: ${{ vars.REPO_ATUALIZACAO }}
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
@@ -35,13 +48,21 @@ jobs:
         with:
           gradle-version: '8.14.3'
 
-      - name: Localizar o projeto
+      - name: Localizar o projeto e definir versão
         run: |
           ARQ=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n1)
           if [ -z "$ARQ" ]; then echo "::error::settings.gradle.kts não encontrado. Envie a pasta do projeto para o repositório."; exit 1; fi
           PROJ=$(dirname "$ARQ")
+          VERSAO=$(grep -m1 -E '^\s*versionName\s*=' "$PROJ/app/build.gradle.kts" | sed -E 's/.*"(.*)".*/\1/')
+          # versionCode automático: minutos desde 01/11/2026 (sempre maior que o anterior)
+          CODIGO=$(( 100 + $(date +%s) / 60 - 29891520 ))
           echo "PROJ=$PROJ" >> "$GITHUB_ENV"
-          echo "Projeto em: $PROJ"; ls -la "$PROJ"
+          echo "VERSAO=$VERSAO" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$CODIGO" >> "$GITHUB_ENV"
+          echo "Projeto: $PROJ | versão $VERSAO | versionCode $CODIGO"
+          if [ "${{ github.event.repository.private }}" = "true" ] && [ -z "$REPO_ATUALIZACAO" ]; then
+            echo "::warning::Este repositório é PRIVADO: o app não consegue ler os Releases daqui. Torne o repositório público ou configure a variável REPO_ATUALIZACAO (veja o README)."
+          fi
 
       - name: Preparar keystore (assinatura)
         env:
@@ -50,9 +71,10 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | tr -d ' \r\n' | base64 -d > "$RUNNER_TEMP/prismo-drive-key.p12"
             echo "KEYSTORE_FILE=$RUNNER_TEMP/prismo-drive-key.p12" >> "$GITHUB_ENV"
+            echo "ASSINADO=1" >> "$GITHUB_ENV"
             echo "Keystore carregada."
           else
-            echo "::warning::Secret KEYSTORE_BASE64 não configurado — o APK sairá com assinatura de TESTE e não vai atualizar o app instalado."
+            echo "::warning::Secret KEYSTORE_BASE64 não configurado — o APK sai com assinatura de TESTE e NÃO será publicado como atualização."
           fi
 
       - name: Compilar APK (release)
@@ -72,14 +94,13 @@ jobs:
           ESPERADO="cd18a0a039b563724f2edcdb17d101793f92f49de8c0d3996ee6d7dd0cdb61c6"
           ATUAL=$(grep -m1 "SHA-256 digest" certs.txt | awk '{print $NF}' | tr -d ':' | tr 'A-F' 'a-f')
           if [ "$ATUAL" = "$ESPERADO" ]; then
-            echo "::notice::Assinatura igual à da v1.6 — o APK atualiza o app instalado sem perder dados."
+            echo "::notice::Assinatura igual à da v1.6 — instala por cima sem perder dados."
           else
-            echo "::warning::Assinatura DIFERENTE da v1.6 ($ATUAL). O Android não vai atualizar por cima do app instalado; será preciso desinstalar (os dados salvos no app serão perdidos)."
+            echo "::warning::Assinatura diferente da v1.6 ($ATUAL). Quem tem a v1.6 precisa desinstalar uma vez; daqui pra frente as atualizações automáticas usam esta chave."
           fi
 
       - name: Renomear APK
         run: |
-          VERSAO=$(grep -m1 'versionName' "$PROJ"/app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
           mkdir -p saida
           cp "$PROJ"/app/build/outputs/apk/release/*.apk "saida/PrismoDrive_v${VERSAO}.apk"
           ls -la saida
@@ -87,12 +108,27 @@ jobs:
       - name: Enviar APK (Artifacts)
         uses: actions/upload-artifact@v4
         with:
-          name: PrismoDrive-apk
+          name: PrismoDrive_v${{ env.VERSAO }}
           path: saida/*.apk
           retention-days: 30
 
-      - name: Publicar Release (quando for tag v*)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Montar notas da atualização
+        run: |
+          {
+            echo "<!-- versionCode: $VERSION_CODE -->"
+            echo "<!-- versionName: $VERSAO -->"
+            if [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi
+          } > notas.md
+          cat notas.md
+
+      - name: Publicar atualização (Release)
+        if: env.ASSINADO == '1' && (github.event_name == 'push' || inputs.publicar)
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.VERSAO }}-b${{ github.run_number }}
+          name: Prismo Drive ${{ env.VERSAO }} (build ${{ github.run_number }})
+          body_path: notas.md
           files: saida/*.apk
+          make_latest: true
+          repository: ${{ vars.REPO_ATUALIZACAO || github.repository }}
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
