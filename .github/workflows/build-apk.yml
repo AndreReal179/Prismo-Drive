@@ -49,16 +49,26 @@ jobs:
           gradle-version: '8.14.3'
 
       - name: Localizar o projeto e definir versão
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
           ARQ=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n1)
           if [ -z "$ARQ" ]; then echo "::error::settings.gradle.kts não encontrado. Envie a pasta do projeto para o repositório."; exit 1; fi
           PROJ=$(dirname "$ARQ")
-          VERSAO=$(grep -m1 -E '^\s*versionName\s*=' "$PROJ/app/build.gradle.kts" | sed -E 's/.*"(.*)".*/\1/')
+          BASE=$(grep -m1 -E '^\s*versionName\s*=' "$PROJ/app/build.gradle.kts" | sed -E 's/.*"(.*)".*/\1/')
+          # Número da atualização dentro da versão base: 1.7 → 1.7.1, 1.7.2, 1.7.3…
+          # (conta quantos Releases v1.7.N já existem; build que falha não publica, então não pula número)
+          REPO_REL="${REPO_ATUALIZACAO:-${{ github.repository }}}"
+          N=$(gh release list --repo "$REPO_REL" --limit 1000 --json tagName \
+                --jq "[.[] | select(.tagName | test(\"^v${BASE//./\\\\.}\\\\.[0-9]+$\"))] | length" 2>/dev/null || echo 0)
+          [ -z "$N" ] && N=0
+          VERSAO="$BASE.$((N + 1))"
           # versionCode automático: minutos desde 01/11/2026 (sempre maior que o anterior)
           CODIGO=$(( 100 + $(date +%s) / 60 - 29891520 ))
           echo "PROJ=$PROJ" >> "$GITHUB_ENV"
           echo "VERSAO=$VERSAO" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$CODIGO" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=$VERSAO" >> "$GITHUB_ENV"
           echo "Projeto: $PROJ | versão $VERSAO | versionCode $CODIGO"
           if [ "${{ github.event.repository.private }}" = "true" ] && [ -z "$REPO_ATUALIZACAO" ]; then
             echo "::warning::Este repositório é PRIVADO: o app não consegue ler os Releases daqui. Torne o repositório público ou configure a variável REPO_ATUALIZACAO (veja o README)."
@@ -125,8 +135,8 @@ jobs:
         if: env.ASSINADO == '1' && (github.event_name == 'push' || inputs.publicar)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSAO }}-b${{ github.run_number }}
-          name: Prismo Drive ${{ env.VERSAO }} (build ${{ github.run_number }})
+          tag_name: v${{ env.VERSAO }}
+          name: Prismo Drive ${{ env.VERSAO }}
           body_path: notas.md
           files: saida/*.apk
           make_latest: true
