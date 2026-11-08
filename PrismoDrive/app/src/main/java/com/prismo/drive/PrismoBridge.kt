@@ -112,6 +112,60 @@ class PrismoBridge(private val activity: Activity) {
         "{}"
     }
 
+    // ── Assistente de rotas (avaliador de corridas iFood / InDrive) ──
+
+    /** Abre a tela nativa do Assistente de rotas. */
+    @JavascriptInterface
+    fun abrirAssistenteRotas(): Boolean {
+        if (Build.VERSION.SDK_INT < 26) return false
+        main.post {
+            try {
+                activity.startActivity(Intent(activity, com.prismo.drive.rota.RotasActivity::class.java))
+            } catch (_: Throwable) {
+            }
+        }
+        return true
+    }
+
+    /** Liga ou desliga o serviço. Retorna o estado novo (JSON). */
+    @JavascriptInterface
+    fun rotasLigarDesligar(): String {
+        if (Build.VERSION.SDK_INT < 26) return rotasEstado()
+        main.post {
+            try {
+                if (com.prismo.drive.rota.RouteService.running) com.prismo.drive.rota.Power.turnOff(activity)
+                else com.prismo.drive.rota.Power.turnOn(activity)
+            } catch (_: Throwable) {
+            }
+        }
+        return rotasEstado()
+    }
+
+    /** Situação do assistente + resumo de hoje, para a aba do menu. */
+    @JavascriptInterface
+    fun rotasEstado(): String = try {
+        val o = JSONObject().put("suportado", Build.VERSION.SDK_INT >= 26)
+        if (Build.VERSION.SDK_INT >= 26) {
+            val ligado = com.prismo.drive.rota.RouteService.running
+            val ativado = com.prismo.drive.rota.Power.isEnabled(activity)
+            o.put("ligado", ligado).put("ativado", ativado).put("travado", ativado && !ligado)
+            val ini = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val hoje = com.prismo.drive.rota.ReportStore.load(activity).filter { it.t >= ini }
+            val rpks = hoje.mapNotNull { it.rpk }
+            o.put("hoje", hoje.size)
+                .put("ifood", hoje.count { it.route })
+                .put("indrive", hoje.count { !it.route })
+                .put("rpkMedio", if (rpks.isEmpty()) JSONObject.NULL else rpks.average())
+                .put("melhor", hoje.maxOfOrNull { it.price } ?: JSONObject.NULL)
+        }
+        o.toString()
+    } catch (_: Throwable) {
+        "{\"suportado\":true,\"ligado\":false}"
+    }
+
     /** Compartilha a imagem do fechamento (PNG em base64) pelo WhatsApp, etc. */
     @JavascriptInterface
     fun compartilharImagem(base64: String?, nome: String?): Boolean {

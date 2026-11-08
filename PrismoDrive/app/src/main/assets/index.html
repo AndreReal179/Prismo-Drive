@@ -810,6 +810,27 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
   box-shadow:0 14px 30px -10px rgba(46,164,79,.85),inset 0 1px 0 rgba(255,255,255,.35) !important;text-shadow:0 1px 3px rgba(0,60,20,.5);}
 #btn-salvar-drawer:active{transform:scale(.98);}
 </style>
+
+<style>
+#drawer-menu .acc-item.pd-acc-rotas > button > div:first-child{background:rgba(88,166,255,.12) !important;border-color:rgba(88,166,255,.32) !important;}
+#drawer-menu .acc-item.pd-acc-rotas > button > div:first-child .material-icons{color:#79b8ff !important;}
+.rt-box{background:#161b22;border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.rt-ic{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(110,118,129,.15);border:1px solid rgba(110,118,129,.45);color:#8b949e;}
+.rt-ic.on{background:rgba(63,185,80,.14);border-color:rgba(63,185,80,.55);color:#3fb950;}
+.rt-ic.off{background:rgba(248,81,73,.12);border-color:rgba(248,81,73,.5);color:#f85149;}
+.rt-ic.warn{background:rgba(240,136,62,.13);border-color:rgba(240,136,62,.5);color:#f0883e;}
+.rt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.rt-k{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 6px;text-align:center;}
+.rt-k p:first-child{font-size:0.52rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.rt-k p:last-child{font-size:13px;font-weight:900;color:#e6edf3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rt-btn{width:100%;padding:12px;border-radius:14px;background:#0d1117;border:1px solid rgba(255,255,255,.1);color:#e6edf3;font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.rt-btn.pri{background:linear-gradient(135deg,#1a7a3a,#2ea44f);border-color:rgba(46,164,79,.4);color:#fff;}
+.rt-btn.desl{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.4);color:#ff7b72;}
+.rt-note{font-size:0.62rem;color:var(--muted);line-height:1.45;}
+.rt-como{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px;}
+.rt-como summary{font-size:12px;font-weight:800;color:#c9d1d9;cursor:pointer;}
+.rt-como p{font-size:0.68rem;color:var(--muted);line-height:1.5;margin-top:7px;}
+</style>
 </head>
 <body class="px-4 pt-4 pb-28 select-none" style="min-height:100dvh;">
 <!-- ══ TELA DE CARREGAMENTO (3s ao abrir o app e ao abrir a Carteira) ══ -->
@@ -1074,6 +1095,41 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
               <span class="material-icons" style="font-size:16px;">tune</span>Gerenciar peças
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- ABA ASSISTENTE DE ROTAS -->
+      <div class="acc-item pd-acc-rotas" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+        <button type="button" onclick="toggleAccordion('acc-rotas')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+          <div style="width:32px;height:32px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#58a6ff;">navigation</span></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Assistente de rotas</p><p id="acc-rotas-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">iFood e InDrive · avalia cada corrida</p></div>
+          <span id="acc-rotas-dot" style="width:9px;height:9px;border-radius:50%;background:#6e7681;flex-shrink:0;"></span>
+          <span id="acc-rotas-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+        </button>
+        <div id="acc-rotas" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
+          <div class="rt-box">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div id="rt-st-ic" class="rt-ic"><span class="material-icons" style="font-size:20px;">power_settings_new</span></div>
+              <div style="flex:1;min-width:0;">
+                <p id="rt-st-t" style="font-size:14px;font-weight:900;color:#e6edf3;">Verificando…</p>
+                <p id="rt-st-s" style="font-size:0.66rem;color:var(--muted);margin-top:2px;line-height:1.35;"></p>
+              </div>
+            </div>
+            <div id="rt-hoje" class="rt-grid" style="display:none;">
+              <div class="rt-k"><p>Hoje</p><p id="rt-n">0</p></div>
+              <div class="rt-k"><p>R$/km médio</p><p id="rt-rpk">—</p></div>
+              <div class="rt-k"><p>Melhor</p><p id="rt-best">—</p></div>
+            </div>
+            <button type="button" id="rt-abrir" onclick="PrismoRotas.abrir()" class="rt-btn pri"><span class="material-icons" style="font-size:18px;">open_in_new</span>Abrir assistente</button>
+            <button type="button" id="rt-power" onclick="PrismoRotas.power()" class="rt-btn"><span class="material-icons" id="rt-power-i" style="font-size:18px;">power_settings_new</span><span id="rt-power-t">Ligar</span></button>
+            <p class="rt-note"><span class="material-icons" style="font-size:13px;vertical-align:-2px;">account_balance</span> Vai abrir o app do banco? Desligue antes — com o assistente ligado alguns bancos não abrem.</p>
+          </div>
+          <details class="rt-como"><summary>Como funciona</summary>
+            <p>1. Toque em <b>Ligar</b> e ative <b>Assistente de Rotas (Prismo Drive)</b> na acessibilidade do Android.</p>
+            <p>2. Abra o iFood (Rotas disponíveis) ou o InDrive: cada oferta ganha um selo <b style="color:#3fb950">ÓTIMO</b>, <b style="color:#f0883e">MÉDIO</b> ou <b style="color:#f85149">RUIM</b> com o R$/km real, gasolina e lucro.</p>
+            <p>3. Ajuste seus limites, alerta de som e aceite automático em <b>Abrir assistente</b>. Tudo que foi analisado fica no Relatório.</p>
+            <p>Android 13+: se aparecer "configuração restrita", abra o assistente → Ajuda → "Não consigo ativar".</p>
+          </details>
         </div>
       </div>
 
@@ -1741,7 +1797,7 @@ function toggleAccordion(id){
   const icon=document.getElementById(id+'-icon');
   if(!panel)return;
   const isOpen=panel.style.display==='flex'||panel.style.display==='block';
-  ['acc-perfil','acc-manut','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
+  ['acc-perfil','acc-manut','acc-rotas','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
     const p=document.getElementById(k),i=document.getElementById(k+'-icon');
     if(p)p.style.display='none';
     if(i)i.style.transform='rotate(0deg)';
@@ -3814,6 +3870,47 @@ window.PrismoUpdate=(function(){
     return r;};}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,1500);});else setTimeout(boot,1500);
   return {acao:acao,render:render,boot:boot};
+})();
+
+
+/* ═══ ASSISTENTE DE ROTAS — avaliador de corridas nativo (PrismoNative.rotas*) ═══ */
+window.PrismoRotas=(function(){
+  function nat(){try{return (typeof window.PrismoNative!=='undefined'&&window.PrismoNative)?window.PrismoNative:null;}catch(e){return null;}}
+  function $r(id){return document.getElementById(id);}
+  function txt(id,t){var e=$r(id);if(e)e.textContent=t;}
+  function brl(v){return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+  var ult=null;
+  function estado(){var n=nat();if(!n||typeof n.rotasEstado!=='function')return null;try{return JSON.parse(n.rotasEstado()||'{}');}catch(e){return null;}}
+  function render(e){
+    ult=e;var ic=$r('rt-st-ic'),dot=$r('acc-rotas-dot'),pw=$r('rt-power'),ab=$r('rt-abrir');
+    if(!e){txt('rt-st-t','Disponível no app');txt('rt-st-s','Abra pelo Prismo Drive instalado no celular.');if(pw)pw.style.display='none';if(ab)ab.style.display='none';return;}
+    if(e.suportado===false){txt('rt-st-t','Precisa do Android 8 ou mais novo');txt('rt-st-s','Seu celular não tem suporte ao assistente.');if(pw)pw.style.display='none';if(ab)ab.style.display='none';if(dot)dot.style.background='#6e7681';return;}
+    var cls='off',t='Desligado',s='Bancos abrem normalmente. Ligue quando for rodar.',cor='#f85149';
+    if(e.ligado){cls='on';t='Ligado · lendo as corridas';s='O selo aparece em cada oferta do iFood e do InDrive.';cor='#3fb950';}
+    else if(e.travado){cls='warn';t='Serviço parado';s='Toque em Ligar para reiniciar o assistente.';cor='#f0883e';}
+    if(ic)ic.className='rt-ic '+cls;if(dot){dot.style.background=cor;dot.style.boxShadow='0 0 8px '+cor;}
+    txt('rt-st-t',t);txt('rt-st-s',s);
+    txt('acc-rotas-sub',e.ligado?('Ligado · '+(e.hoje||0)+' analisada'+((e.hoje||0)===1?'':'s')+' hoje'):'iFood e InDrive · avalia cada corrida');
+    if(pw){pw.className='rt-btn'+(e.ligado?' desl':'');}
+    txt('rt-power-t',e.ligado?'Desligar':'Ligar');
+    var h=$r('rt-hoje');if(h)h.style.display=(e.hoje>0)?'':'none';
+    txt('rt-n',String(e.hoje||0));
+    txt('rt-rpk',e.rpkMedio!=null?brl(e.rpkMedio):'—');
+    txt('rt-best',e.melhor!=null?brl(e.melhor):'—');
+  }
+  function atualizar(){render(estado());}
+  function abrir(){var n=nat();if(!n||typeof n.abrirAssistenteRotas!=='function'){try{showToast('Disponível no app instalado',true);}catch(e){}return;}
+    if(n.abrirAssistenteRotas()===false){try{showToast('O assistente precisa do Android 8 ou mais novo',true);}catch(e){}}}
+  function power(){var n=nat();if(!n||typeof n.rotasLigarDesligar!=='function')return;
+    var estava=ult&&ult.ligado;n.rotasLigarDesligar();
+    try{showToast(estava?'Assistente desligado. Já pode abrir o banco.':'Ligando… ative "Assistente de Rotas (Prismo Drive)" se o Android pedir.');}catch(e){}
+    setTimeout(atualizar,700);setTimeout(atualizar,1800);}
+  var _tg=window.toggleAccordion;
+  if(typeof _tg==='function'){window.toggleAccordion=function(id){var r=_tg.apply(this,arguments);if(id==='acc-rotas')atualizar();return r;};}
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(atualizar,300);});
+  window.addEventListener('focus',function(){setTimeout(atualizar,300);});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(atualizar,1600);});else setTimeout(atualizar,1600);
+  return {abrir:abrir,power:power,atualizar:atualizar};
 })();
 
 /* ═══ WIDGET NATIVO v1.56 — envia o resumo do dia para os widgets da tela inicial ═══ */

@@ -8,6 +8,7 @@ App nativo Android (Kotlin) do Prismo Drive. As telas ficam dentro do APK
 - Compartilhar a imagem do fechamento (WhatsApp etc.)
 - Escolher foto da galeria (perfil)
 - Botão voltar: fecha carteira, guia, janelas e menu antes de minimizar o app
+- **Assistente de rotas** (ex-Prismo Route): serviço de acessibilidade que avalia as ofertas do iFood e do InDrive — código em `app/src/main/java/com/prismo/drive/rota/`
 - **Atualização automática** pela aba Atualizações (GitHub Releases): o app avisa, baixa e abre o instalador
 - Links externos abrem fora do app
 

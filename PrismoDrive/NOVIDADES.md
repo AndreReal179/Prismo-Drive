@@ -1,4 +1,4 @@
-• Atualização automática: o app avisa quando sai versão nova e instala direto, sem precisar pedir o arquivo
+• Novo: Assistente de rotas no menu (abaixo de Manutenção) — avalia cada corrida do iFood e do InDrive com selo ÓTIMO / MÉDIO / RUIM, R$/km real, gasolina, lucro, alerta de som e relatório
+• Liga e desliga direto pelo menu do Prismo Drive (desligue antes de abrir o app do banco)
+• Atualização automática: o app avisa quando sai versão nova e instala direto
 • Botão voltar do celular fecha carteira, guia, janelas e menu antes de sair
-• Compartilhar o fechamento ficou mais rápido e não salva cópia na galeria
-• App reconstruído em Kotlin: notificações, lembretes e widgets mais estáveis
