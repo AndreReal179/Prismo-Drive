@@ -51,11 +51,14 @@ class RouteService : AccessibilityService() {
                 val ap = rootInActiveWindow?.packageName?.toString().orEmpty()
                 if (ap.isNotEmpty() && ap != packageName && !ignoredPkg(ap)) lastPkg = ap
                 val rides = prefs.ridePkgs
+                fab.pkgAtual = lastPkg
                 fab.setVisible(rides.isEmpty() || lastPkg in rides)
             } catch (_: Throwable) {
             }
             // relatório: grava as ofertas que já saíram da tela
             try { store.flush() } catch (_: Throwable) {}
+            // batimento: avisa o processo principal que o serviço está vivo
+            RotasStatus.batida(this@RouteService)
             handler.postDelayed(this, 900)
         }
     }
@@ -77,6 +80,7 @@ class RouteService : AccessibilityService() {
             handler.postDelayed(tick, 900)
         }
         Notif.show(this)    // notificação fixa com o botão Desligar
+        RotasStatus.batida(this)
     }
 
     /**
@@ -91,6 +95,7 @@ class RouteService : AccessibilityService() {
         if (::fab.isInitialized) runCatching { fab.remove() }
         running = false
         instance = null
+        RotasStatus.limpar(this)
         Notif.cancel(this)
         runCatching { disableSelf() }
     }
@@ -184,7 +189,11 @@ class RouteService : AccessibilityService() {
             overlay.hideSoon()
             return
         }
-        root.packageName?.toString()?.let { prefs.addRidePkg(it) }
+        root.packageName?.toString()?.let { p ->
+            prefs.addRidePkg(p)
+            // aprende qual app é qual: rotas com coletas/entregas = iFood; corridas = InDrive
+            if (offers.any { it.route }) prefs.ifoodPkg = p else prefs.indrivePkg = p
+        }
         offers.forEach { runCatching { keepStops(it) } }
         val results = offers.map { Evaluator.evaluate(it, prefs) }
         runCatching { store.observe(results) }   // relatório
@@ -235,6 +244,7 @@ class RouteService : AccessibilityService() {
 
     override fun onUnbind(intent: android.content.Intent?): Boolean {
         running = false
+        RotasStatus.limpar(this)
         if (instance === this) instance = null
         Notif.cancel(this)
         handler.removeCallbacks(tick)

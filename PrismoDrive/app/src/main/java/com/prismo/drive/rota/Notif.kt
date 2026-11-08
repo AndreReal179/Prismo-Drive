@@ -25,6 +25,7 @@ object Notif {
     private const val ID = 7701
     const val ACTION_OFF = "com.prismo.drive.rota.action.DESLIGAR"
     const val ACTION_DISMISSED = "com.prismo.drive.rota.action.NOTIF_REMOVIDA"
+    const val ACTION_SHUTDOWN = "com.prismo.drive.rota.action.ENCERRAR"
 
     fun canPost(ctx: Context) =
         Build.VERSION.SDK_INT < 33 ||
@@ -101,6 +102,10 @@ class PowerReceiver : BroadcastReceiver() {
                     "Assistente de Rotas desligado. Já pode abrir o app do banco.",
                     Toast.LENGTH_LONG
                 ).show()
+            }
+            Notif.ACTION_SHUTDOWN -> {
+                // pedido vindo da tela (outro processo): desliga sem repetir o aviso
+                RouteService.instance?.shutdown()
             }
             Notif.ACTION_DISMISSED -> {
                 // só sai da barra pelo botão Desligar

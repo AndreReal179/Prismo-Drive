@@ -452,7 +452,7 @@ class RotasActivity : Activity() {
      * Toque liga ou desliga o serviço na hora.
      */
     private fun powerButton(): View {
-        val on = RouteService.running
+        val on = RotasStatus.ligado(this)
         val color = if (on) GREEN else RED
         return FrameLayout(this).apply {
             background = GradientDrawable().apply {
@@ -847,7 +847,7 @@ class RotasActivity : Activity() {
             addView(tx(v, 13.5f, TXT, true))
         }
         info.addView(infoRow("Versão", "Prismo Drive " + BuildConfig.VERSION_NAME))
-        info.addView(infoRow("Serviço", if (RouteService.running) "Ligado" else "Desligado"), lp(8))
+        info.addView(infoRow("Serviço", if (RotasStatus.ligado(this)) "Ligado" else "Desligado"), lp(8))
         info.addView(infoRow("Rotas no relatório", ReportStore.load(this).size.toString()), lp(8))
         about.addView(info, lp(16))
         about.addView(button("✨ Novidades", true) { navigate(Page.NEWS) }, lp(16))
@@ -943,7 +943,7 @@ class RotasActivity : Activity() {
     // ------------------------------------------------------------------ status
     override fun onResume() {
         super.onResume()
-        if (RouteService.running) Notif.show(this)   // garante o aviso fixo na barra
+        if (RotasStatus.ligado(this)) Notif.show(this)   // garante o aviso fixo na barra
         if (homeShown) updateStatus()
         if (page == Page.REPORT) report.refresh()
         if (drawerOpen) buildDrawer()                // ícone liga/desliga sempre com o estado real
@@ -953,7 +953,7 @@ class RotasActivity : Activity() {
 
     override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, res: IntArray) {
         super.onRequestPermissionsResult(code, perms, res)
-        if (RouteService.running) Notif.show(this)
+        if (RotasStatus.ligado(this)) Notif.show(this)
         if (homeShown) updateStatus()
     }
 
@@ -979,7 +979,7 @@ class RotasActivity : Activity() {
         (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).areNotificationsEnabled()
 
     private fun onPowerClick() {
-        if (RouteService.running) {
+        if (RotasStatus.ligado(this)) {
             Power.turnOff(this)
             Toast.makeText(this, "Assistente de Rotas desligado. Já pode abrir o app do banco.", Toast.LENGTH_LONG).show()
         } else {
@@ -993,7 +993,7 @@ class RotasActivity : Activity() {
 
     private fun updateStatus() {
         val enabled = Power.isEnabled(this)
-        val on = RouteService.running
+        val on = RotasStatus.ligado(this)
         val stuck = enabled && !on
         val c = if (stuck) AMBER else if (on) GREEN else RED
         statusDot.background = GradientDrawable().apply {

@@ -1,4 +1,4 @@
-• Novo: Assistente de rotas no menu (abaixo de Manutenção) — avalia cada corrida do iFood e do InDrive com selo ÓTIMO / MÉDIO / RUIM, R$/km real, gasolina, lucro, alerta de som e relatório
-• Liga e desliga direto pelo menu do Prismo Drive (desligue antes de abrir o app do banco)
-• Atualização automática: o app avisa quando sai versão nova e instala direto
-• Botão voltar do celular fecha carteira, guia, janelas e menu antes de sair
+• Assistente de rotas continua funcionando mesmo com o Prismo Drive fechado (não precisa mais desligar e ligar a acessibilidade)
+• Botão flutuante no iFood: mostra só as configurações rápidas do iFood (RUIM abaixo de, ÓTIMO a partir de, mínimo por pedido) e o maior valor de hoje
+• Botão flutuante no InDrive: continua com o aceite automático e o maior valor de hoje
+• Ajustes feitos na tela do assistente valem na hora para o botão flutuante e os selos

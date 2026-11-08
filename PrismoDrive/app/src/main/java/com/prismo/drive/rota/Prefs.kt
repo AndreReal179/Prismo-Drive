@@ -6,7 +6,25 @@ import com.prismo.drive.BuildConfig
 import android.content.Context
 
 class Prefs(ctx: Context) {
-    private val sp = ctx.getSharedPreferences("rotaguru", Context.MODE_PRIVATE)
+    private val app: Context = ctx.applicationContext ?: ctx
+
+    /**
+     * O serviço roda num processo separado (":rotas") para não morrer quando o Prismo Drive é
+     * fechado. MODE_MULTI_PROCESS faz cada leitura conferir se o outro processo mudou o arquivo,
+     * então o que você ajusta na tela vale na hora para o botão flutuante e os selos.
+     */
+    @Suppress("DEPRECATION")
+    private val sp get() = app.getSharedPreferences("rotaguru", Context.MODE_MULTI_PROCESS)
+
+    /** Pacote do app de entregas visto mostrando "Rotas disponíveis" (iFood). */
+    var ifoodPkg: String
+        get() = sp.getString("ifoodPkg", "") ?: ""
+        set(v) { if (v != ifoodPkg) sp.edit().putString("ifoodPkg", v).apply() }
+
+    /** Pacote do app de corridas visto mostrando ofertas de corrida (InDrive). */
+    var indrivePkg: String
+        get() = sp.getString("indrivePkg", "") ?: ""
+        set(v) { if (v != indrivePkg) sp.edit().putString("indrivePkg", v).apply() }
 
     /** R$/km a partir do qual a rota é "Médio" */
     var medio: Float

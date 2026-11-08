@@ -80,13 +80,16 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- O assistente roda num processo próprio: fechar o Prismo Drive não derruba o serviço -->
         <receiver
             android:name=".rota.PowerReceiver"
-            android:exported="false" />
+            android:exported="false"
+            android:process=":rotas" />
 
         <service
             android:name=".rota.RouteService"
             android:exported="true"
+            android:process=":rotas"
             android:label="@string/rotas_servico"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

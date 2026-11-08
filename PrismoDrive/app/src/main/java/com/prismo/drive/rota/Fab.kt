@@ -76,6 +76,19 @@ class Fab(private val svc: AccessibilityService) {
     private fun screenW() = svc.resources.displayMetrics.widthPixels
     private fun screenH() = svc.resources.displayMetrics.heightPixels
 
+    /** App em primeiro plano agora (o serviço atualiza a cada batida). */
+    @Volatile var pkgAtual: String = ""
+
+    /** O app aberto é o iFood? (pelo nome do pacote, pelo que já foi aprendido ou pela última oferta) */
+    private fun modoIfood(): Boolean {
+        val p = pkgAtual
+        if (p.contains("ifood", ignoreCase = true)) return true
+        if (p.contains("indrive", ignoreCase = true) || p.contains("indriver", ignoreCase = true)) return false
+        if (p.isNotEmpty() && p == prefs.ifoodPkg) return true
+        if (p.isNotEmpty() && p == prefs.indrivePkg) return false
+        return lastBest?.offer?.route == true
+    }
+
     fun setVisible(v: Boolean) {
         if (v) showButton() else remove()
     }
@@ -513,7 +526,7 @@ class Fab(private val svc: AccessibilityService) {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             addView(statusDot, LinearLayout.LayoutParams(dp(7), dp(7)).apply { rightMargin = dp(6) })
-            addView(label("Ativo · analisando corridas", 11.5f, MUTED))
+            addView(label(if (modoIfood()) "Ativo · iFood" else "Ativo · InDrive", 11.5f, MUTED))
         }
         val titleCol = LinearLayout(svc).apply {
             orientation = LinearLayout.VERTICAL
@@ -562,6 +575,19 @@ class Fab(private val svc: AccessibilityService) {
             addView(col, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(toggle(prefs.autoAccept) { prefs.autoAccept = it; dim(it) })
         }
+
+        // ---------- iFood: configurações rápidas (mesmos valores da aba iFood do assistente)
+        val ifood = modoIfood()
+        val brl = { v: Float -> String.format(BR, "R$ %.2f", v) }
+        val ifoodGroup = group(
+            stepper("RUIM abaixo de", "R$ por km da rota",
+                { prefs.ifoodMedio }, { prefs.ifoodMedio = it }, 0.10f, 0.3f, 6f, brl),
+            stepper("ÓTIMO a partir de", "R$ por km da rota",
+                { prefs.ifoodOtimo }, { prefs.ifoodOtimo = it }, 0.10f, 0.3f, 8f, brl),
+            stepper("Mínimo por pedido", "valor ÷ entregas · abaixo = RUIM",
+                { prefs.ifoodMinPerOrder }, { prefs.ifoodMinPerOrder = it }, 0.5f, 0f, 60f
+            ) { if (it <= 0f) "sem mín." else String.format(BR, "R$ %.2f", it) }
+        )
 
         // ---------- maior valor do dia (atualiza sozinho enquanto o painel está aberto)
         val bestValue = label("—", 22f, GOLD, true)
@@ -635,10 +661,15 @@ class Fab(private val svc: AccessibilityService) {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(14))
             addView(header)
-            addView(section("Aceite automático"))
-            addView(autoRow)
-            addView(limits, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
+            if (ifood) {
+                addView(section("Configurações rápidas · iFood"))
+                addView(ifoodGroup)
+            } else {
+                addView(section("Aceite automático"))
+                addView(autoRow)
+                addView(limits, LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
+            }
             addView(section("Maior valor de hoje"))
             addView(bestCard)
             addView(actions, LinearLayout.LayoutParams(

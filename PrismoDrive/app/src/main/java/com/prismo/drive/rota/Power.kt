@@ -45,7 +45,12 @@ object Power {
     /** Desliga o Assistente de Rotas por completo (some o botão, o painel e a notificação). */
     fun turnOff(ctx: Context) {
         val app = ctx.applicationContext
-        RouteService.instance?.shutdown()
+        val inst = RouteService.instance
+        if (inst != null) inst.shutdown()
+        else runCatching {   // serviço está no processo ":rotas": pede para ele se desligar
+            app.sendBroadcast(Intent(app, PowerReceiver::class.java).setAction(Notif.ACTION_SHUTDOWN))
+        }
+        RotasStatus.limpar(app)
         // reforço: se tiver a permissão, também tira da lista do sistema
         if (hasSecure(app)) runCatching { writeList(app, enabledList(app).filterNot { isMine(app, it) }) }
         Notif.cancel(app)
@@ -61,7 +66,7 @@ object Power {
             val ok = runCatching {
                 val others = enabledList(app).filterNot { isMine(app, it) }
                 val me = component(app).flattenToString()
-                if (isEnabled(app) && !RouteService.running) {
+                if (isEnabled(app) && !RotasStatus.ligado(app)) {
                     // marcado como ligado mas travado: desliga e liga de novo
                     writeList(app, others)
                     Handler(Looper.getMainLooper()).postDelayed({

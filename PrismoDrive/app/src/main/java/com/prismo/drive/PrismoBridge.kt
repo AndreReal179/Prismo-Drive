@@ -133,7 +133,7 @@ class PrismoBridge(private val activity: Activity) {
         if (Build.VERSION.SDK_INT < 26) return rotasEstado()
         main.post {
             try {
-                if (com.prismo.drive.rota.RouteService.running) com.prismo.drive.rota.Power.turnOff(activity)
+                if (com.prismo.drive.rota.RotasStatus.ligado(activity)) com.prismo.drive.rota.Power.turnOff(activity)
                 else com.prismo.drive.rota.Power.turnOn(activity)
             } catch (_: Throwable) {
             }
@@ -146,7 +146,7 @@ class PrismoBridge(private val activity: Activity) {
     fun rotasEstado(): String = try {
         val o = JSONObject().put("suportado", Build.VERSION.SDK_INT >= 26)
         if (Build.VERSION.SDK_INT >= 26) {
-            val ligado = com.prismo.drive.rota.RouteService.running
+            val ligado = com.prismo.drive.rota.RotasStatus.ligado(activity)
             val ativado = com.prismo.drive.rota.Power.isEnabled(activity)
             o.put("ligado", ligado).put("ativado", ativado).put("travado", ativado && !ligado)
             val ini = java.util.Calendar.getInstance().apply {
