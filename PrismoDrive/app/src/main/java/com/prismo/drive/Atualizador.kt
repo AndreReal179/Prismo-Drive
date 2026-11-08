@@ -58,7 +58,7 @@ object Atualizador {
         val app = ctx.applicationContext
         thread(name = "prismo-verificar") {
             val r = try {
-                consultarRelease()
+                consultarArquivo() ?: consultarRelease()
             } catch (e: Throwable) {
                 erro(mensagemErro(e))
             }
@@ -72,6 +72,50 @@ object Atualizador {
         }
     }
 
+    /**
+     * Caminho principal: lê o versao.json anexado ao último Release pelo endereço
+     * github.com/<repo>/releases/latest/download/versao.json. Esse endereço NÃO passa pela API do
+     * GitHub, então não tem o limite de 60 consultas por hora (que acaba rápido em internet móvel,
+     * onde muita gente divide o mesmo IP). Retorna null se o Release não tiver o arquivo.
+     */
+    private fun consultarArquivo(): JSONObject? {
+        val url = "https://github.com/$repo/releases/latest/download/versao.json?t=" + (System.currentTimeMillis() / 60000)
+        val con = (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 15000
+            readTimeout = 20000
+            instanceFollowRedirects = true
+            useCaches = false
+            setRequestProperty("User-Agent", "PrismoDrive-Android")
+            setRequestProperty("Cache-Control", "no-cache")
+        }
+        try {
+            val code = con.responseCode
+            if (code == 404) return null
+            if (code !in 200..299) return null
+            val j = JSONObject(con.inputStream.bufferedReader().use { it.readText() })
+            val codigoRemoto = j.optLong("versionCode", 0L)
+            val apk = j.optString("url", "")
+            if (codigoRemoto <= 0 || apk.isEmpty()) return null
+            return JSONObject()
+                .put("tipo", "resultado")
+                .put("nova", codigoRemoto > BuildConfig.VERSION_CODE)
+                .put("atual", BuildConfig.VERSION_NAME)
+                .put("atualCodigo", BuildConfig.VERSION_CODE)
+                .put("versao", j.optString("versionName", ""))
+                .put("codigo", codigoRemoto)
+                .put("titulo", "Prismo Drive " + j.optString("versionName", ""))
+                .put("notas", j.optString("notas", "").trim())
+                .put("data", j.optString("data", ""))
+                .put("url", apk)
+                .put("tamanho", j.optLong("tamanho", 0L))
+        } catch (_: Throwable) {
+            return null
+        } finally {
+            con.disconnect()
+        }
+    }
+
+    /** Reserva: API do GitHub (tem limite de consultas por hora). */
     private fun consultarRelease(): JSONObject {
         val con = (URL("https://api.github.com/repos/$repo/releases/latest").openConnection() as HttpURLConnection).apply {
             connectTimeout = 15000
@@ -82,7 +126,7 @@ object Atualizador {
         try {
             val code = con.responseCode
             if (code == 404) return erro("Nenhuma versão publicada ainda.")
-            if (code == 403) return erro("Muitas consultas seguidas. Tente de novo em alguns minutos.")
+            if (code == 403 || code == 429) return erro("O GitHub limitou as consultas desta rede. Tente de novo mais tarde ou pelo Wi-Fi.")
             if (code !in 200..299) return erro("Servidor de atualização respondeu $code.")
             val json = JSONObject(con.inputStream.bufferedReader().use { it.readText() })
 
