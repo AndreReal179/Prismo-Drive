@@ -69,6 +69,19 @@ class PrismoBridge(private val activity: Activity) {
         ""
     }
 
+    /** ID único da conta (8 dígitos), gerado uma vez e guardado no aparelho. */
+    @JavascriptInterface
+    fun contaId(): String = try {
+        val sp = activity.getSharedPreferences("prismo_conta", Context.MODE_PRIVATE)
+        sp.getString("id", null)?.takeIf { it.length == 8 && it.all(Char::isDigit) } ?: run {
+            val novo = (10_000_000 + java.security.SecureRandom().nextInt(90_000_000)).toString()
+            sp.edit().putString("id", novo).apply()
+            novo
+        }
+    } catch (_: Throwable) {
+        ""
+    }
+
     /** Recebe o resumo do dia (JSON) e atualiza os widgets da tela inicial. */
     @JavascriptInterface
     fun widget(json: String?) {
