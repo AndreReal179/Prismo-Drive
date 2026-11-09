@@ -90,7 +90,10 @@ class Fab(private val svc: AccessibilityService) {
     }
 
     fun setVisible(v: Boolean) {
-        if (v) showButton() else remove()
+        if (v) { showButton(); return }
+        // durante a comemoração a moeda fica na tela mesmo fora do iFood (ex.: "Testar comemoração")
+        if (SystemClock.uptimeMillis() < comemorandoAte) return
+        remove()
     }
 
     fun remove() {
