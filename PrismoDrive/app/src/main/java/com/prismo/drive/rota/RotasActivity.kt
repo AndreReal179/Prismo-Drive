@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -41,9 +42,10 @@ class RotasActivity : Activity() {
     private lateinit var notifWarn: LinearLayout
     private lateinit var sampleBox: LinearLayout
 
-    private enum class Page { HOME, IFOOD, INDRIVE, REPORT, NEWS, CONFIG }
+    private enum class Page { HOME, REPORT, CONFIG }
+    private val REQ_LOC = 21
+    private val REQ_LOC_SEMPRE = 22
     private var page = Page.REPORT          // o Relatório é a tela inicial
-    private var rotasOpen = false
     private var sampleKind = 0            // 0 = sem simulação, 1 = iFood, 2 = InDrive
     private var homeShown = false
     private var drawerOpen = false
@@ -428,21 +430,9 @@ class RotasActivity : Activity() {
         drawer.addView(head, lp())
         drawer.addView(divider(), LinearLayout.LayoutParams(MATCH, dp(1)))
 
-        val inRotas = page == Page.IFOOD || page == Page.INDRIVE
-        drawer.addView(
-            drawerRow("🧭", "Rotas", inRotas && !rotasOpen, 0, if (rotasOpen) "▾" else "▸") {
-                rotasOpen = !rotasOpen
-                buildDrawer()
-            }, lp(10)
-        )
-        if (rotasOpen) {
-            drawer.addView(drawerRow("🍔", "iFood", page == Page.IFOOD, 18) { navigate(Page.IFOOD) }, lp(2))
-            drawer.addView(drawerRow("🚗", "InDrive", page == Page.INDRIVE, 18) { navigate(Page.INDRIVE) }, lp(2))
-        }
-        drawer.addView(drawerRow("📊", "Relatório", page == Page.REPORT, 0) { navigate(Page.REPORT) }, lp(4))
+        drawer.addView(drawerRow("📊", "Relatório", page == Page.REPORT, 0) { navigate(Page.REPORT) }, lp(10))
         drawer.addView(drawerRow("⚙️", "Configurações", page == Page.CONFIG, 0) { navigate(Page.CONFIG) }, lp(4))
         drawer.addView(drawerRow("❓", "Ajuda", page == Page.HOME, 0) { navigate(Page.HOME) }, lp(4))
-        drawer.addView(drawerRow("✨", "Novidades", page == Page.NEWS, 0) { navigate(Page.NEWS) }, lp(4))
         drawer.addView(divider(), LinearLayout.LayoutParams(MATCH, dp(1)).apply { topMargin = dp(12) })
         drawer.addView(drawerRow("🏠", "Voltar ao Prismo Drive", false, 0) { finish() }, lp(10))
     }
@@ -471,7 +461,6 @@ class RotasActivity : Activity() {
 
     private fun navigate(p: Page) {
         page = p
-        if (p == Page.IFOOD || p == Page.INDRIVE) rotasOpen = true
         setDrawer(false)
         showPage()
     }
@@ -491,10 +480,7 @@ class RotasActivity : Activity() {
         homeShown = false
         when (page) {
             Page.HOME -> { titleView.text = "Ajuda"; buildHome() }
-            Page.IFOOD -> { titleView.text = "iFood"; buildIfood() }
-            Page.INDRIVE -> { titleView.text = "InDrive"; buildIndrive() }
             Page.REPORT -> { titleView.text = "Relatório"; report.build(body) }
-            Page.NEWS -> { titleView.text = "Novidades"; buildNews() }
             Page.CONFIG -> { titleView.text = "Configurações"; buildConfig() }
         }
     }
@@ -551,7 +537,7 @@ class RotasActivity : Activity() {
             step(1, "Ligue o Assistente de Rotas",
                 "Toque em \"Ligar Assistente de Rotas\" acima. Na primeira vez abre a acessibilidade: escolha Assistente de Rotas e ligue a chave."),
             step(2, "Ajuste seus valores",
-                "Menu ☰ → Rotas → iFood ou InDrive: gasolina, consumo e os R$/km. O quadro \"No mês\" mostra valores de referência."),
+                "Menu ☰ → Configurações → aba iFood ou InDrive: gasolina, consumo e os R$/km. O quadro \"No mês\" mostra valores de referência."),
             step(3, "Escolha o alerta",
                 "Menu ☰ → Configurações: escolha o som e a vibração que tocam a cada rota nova."),
             step(4, "Abra o app de corridas",
@@ -606,107 +592,6 @@ class RotasActivity : Activity() {
 
         homeShown = true
         updateStatus()
-    }
-
-    // ------------------------------------------------------------------ iFood
-    private fun buildIfood() {
-        body.addView(pageHeader("🍔", "iFood", "Rotas disponíveis · coleta + entregas"), lp(4))
-
-        val rec = card()
-        rec.addView(title("Recebimentos automáticos", "Rota concluída no iFood → faturamento do dia e carteira", "💰", GREEN))
-        rec.addView(
-            switchRow("Lançar rotas concluídas", "\"Você ganhou R$ …\" vira \"Recebimento iFood\"", prefs.ifoodSaldoAuto) {
-                prefs.ifoodSaldoAuto = it
-            }, lp(14)
-        )
-        val est = IfoodSaldo.estado(this)
-        val txtEst = if (est.has("ts")) {
-            val quando = java.text.SimpleDateFormat("dd/MM 'às' HH:mm", java.util.Locale("pt", "BR"))
-                .format(java.util.Date(est.optLong("ts")))
-            val b = est.optDouble("bonus", 0.0)
-            "Último lançado: ${money(est.optDouble("valor", 0.0))}" + (if (b > 0) " + ${money(b)} de bônus" else "") + " · $quando"
-        } else "Ainda nenhuma rota concluída lançada."
-        rec.addView(tx(txtEst, 12f, MUTED), lp(10))
-        rec.addView(button("💰 Testar comemoração", false) {
-            if (!RotasStatus.ligado(this)) {
-                Toast.makeText(this, "Ligue o assistente para ver o botão flutuante", Toast.LENGTH_SHORT).show()
-            } else {
-                sendBroadcast(Intent(this, PowerReceiver::class.java).setAction(Notif.ACTION_TESTE_MOEDA))
-                Toast.makeText(this, "Olhe o botão flutuante 👀", Toast.LENGTH_SHORT).show()
-            }
-        }, lp(12))
-        rec.addView(tx("Quando aparece \"Oba, mais uma rota concluída!\", o valor ganho entra na hora no Faturamento do dia e no Saldo em conta — e o botão flutuante vira uma moeda com som de moedas para confirmar. O bônus verde (+ R$) entra junto, como \"Bônus iFood\" no extrato. Cada tela é lançada uma vez só.", 11.5f, MUTED), lp(6))
-        body.addView(rec, lp(12))
-
-        val ifRecs = MonthRef.monthRecs(this, route = true)
-        val cls = card()
-        cls.addView(title("Classificação", "R$ por km da rota inteira (coleta + entregas)", "🎯"))
-        cls.addView(
-            pair(
-                field("RUIM abaixo de", prefs.ifoodMedio) { prefs.ifoodMedio = it },
-                field("ÓTIMO a partir de", prefs.ifoodOtimo) { prefs.ifoodOtimo = it }
-            ), lp(16)
-        )
-        cls.addView(classRef(MonthRef.of(ifRecs.mapNotNull { it.rpk }), "rotas",
-            { prefs.ifoodMedio = it }, { prefs.ifoodOtimo = it }), lp(14))
-        body.addView(cls, lp(12))
-
-        val ped = card()
-        ped.addView(title("Valor por pedido", "Valor bruto ÷ nº de entregas. Abaixo do mínimo = RUIM.", "📦", BLUE))
-        ped.addView(field("Valor mínimo por pedido (R$, 0 = sem mínimo)", prefs.ifoodMinPerOrder) { prefs.ifoodMinPerOrder = it }, lp(16))
-        ped.addView(orderRef(MonthRef.of(ifRecs.mapNotNull { it.per })), lp(14))
-        body.addView(ped, lp(12))
-        body.addView(fuelCard(false), lp(12))
-    }
-
-    // ------------------------------------------------------------------ InDrive
-    private fun buildIndrive() {
-        body.addView(pageHeader("🚗", "InDrive", "Corridas · R$ por km rodado (busca + corrida)"), lp(4))
-
-        val cls = card()
-        cls.addView(title("Classificação", "R$ por km rodado (busca + corrida)", "🎯"))
-        cls.addView(
-            pair(
-                field("RUIM abaixo de", prefs.medio) { prefs.medio = it },
-                field("ÓTIMO a partir de", prefs.otimo) { prefs.otimo = it }
-            ), lp(16)
-        )
-        cls.addView(classRef(MonthRef.of(MonthRef.monthRecs(this, route = false).mapNotNull { it.rpk }), "corridas",
-            { prefs.medio = it }, { prefs.otimo = it }), lp(14))
-        cls.addView(divider(), LinearLayout.LayoutParams(MATCH, 1).apply { topMargin = dp(16) })
-        cls.addView(
-            switchRow("Somar a busca", "Conta a distância até o passageiro na nota", prefs.includePickup) {
-                prefs.includePickup = it
-            }, lp(14)
-        )
-        body.addView(cls, lp(12))
-        body.addView(fuelCard(true), lp(12))
-
-        val pick = card()
-        pick.addView(title("Cores da busca", "Distância até o passageiro", "📍", BLUE))
-        pick.addView(
-            pair(
-                field("Verde até (km)", prefs.pickupGood) { prefs.pickupGood = it },
-                field("Vermelho a partir de (km)", prefs.pickupBad) { prefs.pickupBad = it }
-            ), lp(16)
-        )
-        body.addView(pick, lp(12))
-
-        val auto = card()
-        auto.addView(title("Aceite automático", "Aceita sozinho só quando bate os 3 mínimos", "⚡", AMBER))
-        auto.addView(
-            switchRow("Aceitar corridas automaticamente", "Também dá para ligar pelo botão flutuante", prefs.autoAccept) {
-                prefs.autoAccept = it
-            }, lp(14)
-        )
-        auto.addView(field("Valor mínimo bruto (R$, 0 = sem mínimo)", prefs.autoMinPrice) { prefs.autoMinPrice = it }, lp(14))
-        auto.addView(
-            pair(
-                field("R$/km mínimo", prefs.autoMinRpk) { prefs.autoMinRpk = it },
-                field("Nota mínima", prefs.minRating) { prefs.minRating = it }
-            ), lp(12)
-        )
-        body.addView(auto, lp(12))
     }
 
     // ------------------------------------------------------------------ referência do mês (vinda do Relatório)
@@ -813,148 +698,250 @@ class RotasActivity : Activity() {
     }
 
     /** Gasolina e lucro: preço e consumo valem para todos os apps. */
-    private fun fuelCard(withMinRpk: Boolean): LinearLayout {
-        val fuel = card()
-        fuel.addView(title("Gasolina e lucro", "Gasto = km ÷ consumo × preço do litro · vale para todos os apps", "⛽", GREEN))
-        fuel.addView(
-            pair(
-                field("Gasolina (R$/litro)", prefs.fuelPrice) { prefs.fuelPrice = it },
-                field("Consumo (km/litro)", prefs.kmPerLiter) { prefs.kmPerLiter = it }
-            ), lp(16)
-        )
-        if (withMinRpk) {
-            fuel.addView(field("R$/km mínimo (abaixo disso sugere valor)", prefs.minRpk) { prefs.minRpk = it }, lp(12))
-        }
-        return fuel
-    }
-
     // ------------------------------------------------------------------ configurações
-    private fun buildConfig() {
-        body.addView(pageHeader("⚙️", "Configurações", "Alertas, cálculo e informações do app"), lp(4))
+    private var cfgApp = 0                       // 0 = iFood, 1 = InDrive
+    private val secAbertas = HashSet<String>()   // seções abertas (continuam abertas ao trocar de aba)
 
-        // alerta de rota nova
-        val al = card()
-        al.addView(title("Alerta de rota", "Som e vibração a cada rota nova", "🔔"))
-        al.addView(
-            switchRow("Avisar a cada rota nova", "Toca mesmo no Não perturbe e no silencioso", prefs.alertOn) {
-                prefs.alertOn = it
-            }, lp(16)
-        )
-        al.addView(divider(), LinearLayout.LayoutParams(MATCH, 1).apply { topMargin = dp(16) })
-        al.addView(caps("Som"), lp(16))
-        al.addView(optionGrid(RouteAlert.SOUNDS, prefs.alertSound) { i ->
-            prefs.alertSound = i
-            RouteAlert.play(this, i, 0)          // toca para você ouvir
-        }, lp(10))
-        al.addView(caps("Vibração"), lp(18))
-        al.addView(optionGrid(RouteAlert.VIBES, prefs.alertVibe) { i ->
-            prefs.alertVibe = i
-            RouteAlert.play(this, 0, i)          // vibra para você sentir
-        }, lp(10))
-        al.addView(button("▶  Testar alerta", false) {
-            RouteAlert.play(this, prefs.alertSound, prefs.alertVibe)
-        }, lp(18))
-        al.addView(tx("O som usa o volume de ALARME do celular. Se não ouvir, aumente o volume de alarme.", 11.5f, MUTED), lp(10))
-        body.addView(al, lp(12))
+    private fun br(v: Float) = String.format(java.util.Locale("pt", "BR"), "R$ %.2f", v)
+    private fun num1(v: Float) = String.format(java.util.Locale("pt", "BR"), "%.1f", v)
 
-        // cálculo
-        val calc = card()
-        calc.addView(title("Cálculo", "Usado quando o app de corridas não mostra o tempo", "🧮", BLUE))
-        calc.addView(field("Velocidade média (km/h)", prefs.avgSpeed) { prefs.avgSpeed = it.coerceIn(5f, 120f) }, lp(16))
-        body.addView(calc, lp(12))
-
-        // sobre
-        val about = card()
-        about.addView(title("Sobre", "Assistente de Rotas · Avaliador de corridas", "ℹ️", 0xFF7EE2A0.toInt()))
-        val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        fun infoRow(k: String, v: String) = LinearLayout(this).apply {
+    /** Abas iFood / InDrive no topo das Configurações. */
+    private fun abasApp(): View {
+        val box = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            addView(tx(k, 13.5f, MUTED), LinearLayout.LayoutParams(0, WRAP, 1f))
-            addView(tx(v, 13.5f, TXT, true))
+            setPadding(dp(4), dp(4), dp(4), dp(4))
+            background = rounded(0xFF0B0F14.toInt(), 16, LINE)
         }
-        info.addView(infoRow("Versão", "Prismo Drive " + BuildConfig.VERSION_NAME))
-        info.addView(infoRow("Serviço", if (RotasStatus.ligado(this)) "Ligado" else "Desligado"), lp(8))
-        info.addView(infoRow("Rotas no relatório", ReportStore.load(this).size.toString()), lp(8))
-        about.addView(info, lp(16))
-        about.addView(button("✨ Novidades", true) { navigate(Page.NEWS) }, lp(16))
-        body.addView(about, lp(12))
+        listOf("🍔  iFood", "🚗  InDrive").forEachIndexed { i, nome ->
+            val on = i == cfgApp
+            box.addView(tx(nome, 14f, if (on) TXT else MUTED, true).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(12), 0, dp(12))
+                background = if (on) brandGradient(12) else null
+                setOnClickListener { if (cfgApp != i) { cfgApp = i; showPage() } }
+            }, LinearLayout.LayoutParams(0, WRAP, 1f).apply { if (i == 0) rightMargin = dp(2) else leftMargin = dp(2) })
+        }
+        return box
     }
 
-    // ------------------------------------------------------------------ novidades
-    /** Tudo o que o Assistente de Rotas faz — escrito à mão para a versão 3.0. */
-    private val NEWS = listOf(
-        Triple("🎨", "Dentro do Prismo Drive", listOf(
-            "O avaliador de corridas agora mora no Prismo Drive: menu → Assistente de rotas",
-            "Mesmo visual do Prismo Drive: verde em fundo escuro",
-            "Relatório é a tela inicial do assistente",
-            "Menu lateral com botão liga/desliga e atalho para voltar ao Prismo Drive",
-            "Atualiza junto com o Prismo Drive, sem app separado"
-        )),
-        Triple("🔔", "Alerta de rota nova", listOf(
-            "Toca um som e vibra a cada rota/corrida nova identificada",
-            "4 sons para escolher: Pulso, Moeda, Sino e Radar",
-            "5 tipos de vibração: Curta, Dupla, Longa, Batida e Tripla",
-            "Funciona mesmo no Não perturbe e no modo silencioso (volume de alarme)",
-            "A mesma oferta não toca de novo enquanto continua na tela",
-            "Escolha e teste em Configurações → Alerta de rota"
-        )),
-        Triple("🎯", "Avaliação em tempo real", listOf(
-            "Lê as ofertas do iFood (Rotas disponíveis) e do InDrive direto da tela",
-            "Calcula o R$ por km de cada rota/corrida, contando a busca",
-            "Classifica em RUIM, MÉDIO ou ÓTIMO com os seus limites",
-            "iFood: valor por pedido (valor ÷ entregas) com mínimo configurável",
-            "Gasto de gasolina e lucro líquido de cada oferta",
-            "InDrive: sugere quanto pedir (\"PEÇA R$\") quando o valor está baixo",
-            "Nota do passageiro, tempo da corrida e cores da distância da busca",
-            "Destaca a melhor oferta da lista com ★"
-        )),
-        Triple("🟣", "Botão flutuante", listOf(
-            "Fica sobre o app de corridas e mostra a melhor oferta da tela",
-            "Painel rápido: aceite automático e seus 3 mínimos",
-            "Maior valor do dia, atualizado sozinho a cada oferta melhor",
-            "Atalhos para abrir o app e desligar"
-        )),
-        Triple("⚡", "Aceite automático", listOf(
-            "Aceita sozinho só as ofertas que batem valor mínimo, R$/km mínimo e nota mínima",
-            "Liga e desliga pelo botão flutuante ou pela aba InDrive"
-        )),
-        Triple("📊", "Relatório", listOf(
-            "Guarda cada rota analisada (mês atual + 2 anteriores)",
-            "Filtros Dia, Semana e Mês e por app: Todos, iFood ou InDrive",
-            "Cartões de resumo: rotas analisadas, valor médio, R$/km médio e valor por pedido",
-            "Comparação com o período anterior (▲ sobe / ▼ desce)",
-            "Gráficos de valor total, R$/km e valor por pedido em faixas Baixo, Médio e Alto",
-            "Cada faixa mostra a porcentagem e o valor médio (ex.: 44% ≈ R$ 10,00)",
-            "Faixas automáticas que se ajustam sozinhas a cada nova rota",
-            "Histórico dos meses guardados"
-        )),
-        Triple("🧭", "Referência do mês (iFood e InDrive)", listOf(
-            "Quadro \"No mês\" embaixo dos limites RUIM e ÓTIMO, com os valores reais do mês",
-            "Valor por pedido mais comum do mês (a faixa com mais pedidos)",
-            "Botão \"Usar\" que aplica o valor sugerido com um toque",
-            "Atualiza sozinho conforme o Relatório registra novas rotas"
-        )),
-        Triple("⏻", "Liga e desliga", listOf(
-            "Botão no menu: verde = ligado, vermelho = desligado",
-            "Notificação fixa com o botão Desligar enquanto está ligado",
-            "Desligado, os apps de banco abrem normalmente"
-        ))
-    )
-
-    private fun buildNews() {
-        body.addView(pageHeader("✨", "Novidades", "Assistente de Rotas ${BuildConfig.VERSION_NAME} · tudo o que o app faz"), lp(4))
-
-        val accents = intArrayOf(GOLD, BLUE, GREEN, 0xFF7EE2A0.toInt(), AMBER, BLUE, GREEN, RED, GOLD)
-        NEWS.forEachIndexed { idx, (icon, head, items) ->
-            val c = card()
-            c.addView(title(head, "${items.size} itens", icon, accents[idx % accents.size]))
-            items.forEachIndexed { i, line -> c.addView(bullet(line), lp(if (i == 0) 14 else 7)) }
-            body.addView(c, lp(12))
+    /**
+     * Seção que abre e fecha: selo com ícone, título, resumo da configuração atual e seta.
+     * O conteúdo só é montado quando abre (mais leve).
+     */
+    private fun secao(key: String, icon: String, accent: Int, head: String, resumo: String, build: (LinearLayout) -> Unit): View {
+        val c = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(CARD, 18, LINE)
         }
-        body.addView(tx("Assistente de Rotas · feito para quem roda todo dia.", 12f, MUTED).apply {
-            gravity = Gravity.CENTER
-        }, lp(18))
+        val seta = tx("⌄", 20f, MUTED, true).apply { gravity = Gravity.CENTER; includeFontPadding = false }
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(14), dp(12), dp(14))
+            addView(badge(icon, accent, 40), LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(12) })
+            val col = LinearLayout(this@RotasActivity).apply { orientation = LinearLayout.VERTICAL }
+            col.addView(tx(head, 15.5f, TXT, true))
+            col.addView(tx(resumo, 12f, MUTED).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }, lp(2))
+            addView(col, LinearLayout.LayoutParams(0, WRAP, 1f))
+            addView(seta, LinearLayout.LayoutParams(dp(28), dp(28)))
+        }
+        val conteudo = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), 0, dp(16), dp(16))
+        }
+        var montado = false
+        fun aplicar(aberta: Boolean, animar: Boolean) {
+            if (aberta && !montado) {
+                conteudo.addView(divider(), LinearLayout.LayoutParams(MATCH, 1).apply { bottomMargin = dp(14) })
+                build(conteudo); montado = true
+            }
+            conteudo.visibility = if (aberta) View.VISIBLE else View.GONE
+            c.background = rounded(CARD, 18, if (aberta) (accent and 0x00FFFFFF) or 0x66000000 else LINE)
+            val rot = if (aberta) 0f else -90f
+            if (animar) seta.animate().rotation(rot).setDuration(180).start() else seta.rotation = rot
+            if (animar && aberta) { conteudo.alpha = 0f; conteudo.animate().alpha(1f).setDuration(220).start() }
+        }
+        header.setOnClickListener {
+            val abrir = !secAbertas.contains(key)
+            if (abrir) secAbertas.add(key) else secAbertas.remove(key)
+            aplicar(abrir, true)
+        }
+        c.addView(header)
+        c.addView(conteudo)
+        aplicar(secAbertas.contains(key), false)
+        return c
     }
+
+    private fun grupo(t: String) = tx(t.uppercase(), 11f, 0xFF7EE2A0.toInt(), true).apply {
+        letterSpacing = 0.14f
+        setPadding(dp(4), 0, 0, 0)
+    }
+
+    private fun conteudoGasolina(c: LinearLayout, withMinRpk: Boolean) {
+        c.addView(tx("Gasto = km ÷ consumo × preço do litro · vale para os dois apps", 12f, MUTED))
+        c.addView(pair(
+            field("Gasolina (R$/litro)", prefs.fuelPrice) { prefs.fuelPrice = it },
+            field("Consumo (km/litro)", prefs.kmPerLiter) { prefs.kmPerLiter = it }
+        ), lp(12))
+        if (withMinRpk) c.addView(field("R$/km mínimo (abaixo disso sugere valor)", prefs.minRpk) { prefs.minRpk = it }, lp(12))
+    }
+
+    private fun buildConfig() {
+        body.addView(pageHeader("⚙️", "Configurações", "Ajustes do Assistente de rotas para cada app"), lp(4))
+        body.addView(abasApp(), lp(14))
+
+        if (cfgApp == 0) {
+            // ───────── iFood
+            val ifRecs = MonthRef.monthRecs(this, route = true)
+            body.addView(grupo("iFood"), lp(18))
+            val est = IfoodSaldo.estado(this)
+            body.addView(secao("if_rec", "💰", GREEN, "Recebimento automático",
+                if (prefs.ifoodSaldoAuto) "Ligado" + (if (est.has("ts")) " · último ${money(est.optDouble("valor", 0.0) + est.optDouble("bonus", 0.0))}" else "") else "Desligado"
+            ) { c ->
+                c.addView(switchRow("Lançar rotas concluídas", "\"Você ganhou R$ …\" vira \"Recebimento iFood\" no faturamento e na carteira", prefs.ifoodSaldoAuto) {
+                    prefs.ifoodSaldoAuto = it
+                })
+                val txtEst = if (est.has("ts")) {
+                    val quando = java.text.SimpleDateFormat("dd/MM 'às' HH:mm", java.util.Locale("pt", "BR")).format(java.util.Date(est.optLong("ts")))
+                    val bn = est.optDouble("bonus", 0.0)
+                    "Último lançado: ${money(est.optDouble("valor", 0.0))}" + (if (bn > 0) " + ${money(bn)} de bônus" else "") + " · $quando"
+                } else "Ainda nenhuma rota concluída lançada."
+                c.addView(tx(txtEst, 12f, MUTED), lp(12))
+                c.addView(button("💰 Testar comemoração", false) {
+                    if (!RotasStatus.ligado(this)) {
+                        Toast.makeText(this, "Ligue o assistente para ver o botão flutuante", Toast.LENGTH_SHORT).show()
+                    } else {
+                        sendBroadcast(Intent(this, PowerReceiver::class.java).setAction(Notif.ACTION_TESTE_MOEDA))
+                        Toast.makeText(this, "Olhe o botão flutuante 👀", Toast.LENGTH_SHORT).show()
+                    }
+                }, lp(12))
+                c.addView(tx("O tempo da rota conta de \"EM DESLOCAMENTO\" até \"Oba, mais uma rota concluída!\". O bônus verde (+ R$) entra junto. Cada tela é lançada uma vez só.", 11.5f, MUTED), lp(10))
+            }, lp(8))
+            val nv = KmGps.nivel(this)
+            body.addView(secao("if_km", "📍", BLUE, "Km da rota (GPS)",
+                when (nv) { 2 -> "GPS ativo · mede os km de cada rota"; 1 -> "GPS só com a tela ligada · toque para ajustar"; else -> "Sem localização · usando km estimado da oferta" }
+            ) { c ->
+                c.addView(tx("Em \"EM DESLOCAMENTO\" o GPS começa a medir e em \"Oba, mais uma rota concluída!\" ele para. Os km vão para a Linha do tempo com o selo GPS e entram no consumo de combustível. O GPS fica desligado fora das rotas.", 12f, MUTED))
+                val (cor, txt) = when (nv) {
+                    2 -> Pair(GREEN, "✅ Localização permitida o tempo todo")
+                    1 -> Pair(AMBER, "⚠️ Permitida só enquanto o app está em uso: com a tela apagada o GPS pode parar. Escolha \"Permitir o tempo todo\".")
+                    else -> Pair(AMBER, "⚠️ Sem permissão: os km vêm da oferta do iFood (selo ESTIMADO), sem contar desvios.")
+                }
+                c.addView(tx(txt, 12.5f, cor, true), lp(12))
+                if (nv < 2) c.addView(button(if (nv == 0) "📍 Permitir localização" else "📍 Permitir o tempo todo", true) { pedirLocalizacao() }, lp(12))
+                if (est.optDouble("km", 0.0) > 0) {
+                    val f = if (est.optString("kmFonte") == "gps") "GPS" else "estimado"
+                    c.addView(tx("Última rota: ${KmGps.fmtKm(est.optDouble("km", 0.0))} ($f)", 12f, MUTED), lp(10))
+                }
+                c.addView(tx("Sem permissão de localização o app usa o km que o iFood mostra na oferta (só como último caso).", 11.5f, MUTED), lp(10))
+            }, lp(10))
+            body.addView(secao("if_cls", "🎯", GOLD, "Classificação",
+                "RUIM abaixo de ${br(prefs.ifoodMedio)} · ÓTIMO a partir de ${br(prefs.ifoodOtimo)}"
+            ) { c ->
+                c.addView(tx("R$ por km da rota inteira (coleta + entregas)", 12f, MUTED))
+                c.addView(pair(
+                    field("RUIM abaixo de", prefs.ifoodMedio) { prefs.ifoodMedio = it },
+                    field("ÓTIMO a partir de", prefs.ifoodOtimo) { prefs.ifoodOtimo = it }
+                ), lp(12))
+                c.addView(classRef(MonthRef.of(ifRecs.mapNotNull { it.rpk }), "rotas", { prefs.ifoodMedio = it }, { prefs.ifoodOtimo = it }), lp(14))
+            }, lp(10))
+            body.addView(secao("if_ped", "📦", BLUE, "Valor por pedido",
+                if (prefs.ifoodMinPerOrder > 0) "Mínimo ${br(prefs.ifoodMinPerOrder)} por pedido" else "Sem mínimo"
+            ) { c ->
+                c.addView(tx("Valor bruto ÷ nº de entregas. Abaixo do mínimo = RUIM.", 12f, MUTED))
+                c.addView(field("Valor mínimo por pedido (R$, 0 = sem mínimo)", prefs.ifoodMinPerOrder) { prefs.ifoodMinPerOrder = it }, lp(12))
+                c.addView(orderRef(MonthRef.of(ifRecs.mapNotNull { it.per })), lp(14))
+            }, lp(10))
+            body.addView(secao("if_gas", "⛽", GREEN, "Gasolina e lucro",
+                "${br(prefs.fuelPrice)}/L · ${num1(prefs.kmPerLiter)} km/L"
+            ) { c -> conteudoGasolina(c, false) }, lp(10))
+        } else {
+            // ───────── InDrive
+            body.addView(grupo("InDrive"), lp(18))
+            body.addView(secao("in_cls", "🎯", GOLD, "Classificação",
+                "RUIM abaixo de ${br(prefs.medio)} · ÓTIMO a partir de ${br(prefs.otimo)}"
+            ) { c ->
+                c.addView(tx("R$ por km rodado (busca + corrida)", 12f, MUTED))
+                c.addView(pair(
+                    field("RUIM abaixo de", prefs.medio) { prefs.medio = it },
+                    field("ÓTIMO a partir de", prefs.otimo) { prefs.otimo = it }
+                ), lp(12))
+                c.addView(classRef(MonthRef.of(MonthRef.monthRecs(this, route = false).mapNotNull { it.rpk }), "corridas",
+                    { prefs.medio = it }, { prefs.otimo = it }), lp(14))
+                c.addView(divider(), LinearLayout.LayoutParams(MATCH, 1).apply { topMargin = dp(14) })
+                c.addView(switchRow("Somar a busca", "Conta a distância até o passageiro na nota", prefs.includePickup) {
+                    prefs.includePickup = it
+                }, lp(12))
+            }, lp(8))
+            body.addView(secao("in_auto", "⚡", AMBER, "Aceite automático",
+                if (prefs.autoAccept) "Ligado · mín. ${br(prefs.autoMinPrice)} · ${br(prefs.autoMinRpk)}/km" else "Desligado"
+            ) { c ->
+                c.addView(switchRow("Aceitar corridas automaticamente", "Só aceita quando bate os 3 mínimos · também liga pelo botão flutuante", prefs.autoAccept) {
+                    prefs.autoAccept = it
+                })
+                c.addView(field("Valor mínimo bruto (R$, 0 = sem mínimo)", prefs.autoMinPrice) { prefs.autoMinPrice = it }, lp(14))
+                c.addView(pair(
+                    field("R$/km mínimo", prefs.autoMinRpk) { prefs.autoMinRpk = it },
+                    field("Nota mínima", prefs.minRating) { prefs.minRating = it }
+                ), lp(12))
+                c.addView(tx("⚠️ Aceitar sozinho pode ir contra as regras do app de corridas. Use com cuidado.", 11.5f, AMBER), lp(12))
+            }, lp(10))
+            body.addView(secao("in_busca", "📍", BLUE, "Cores da busca",
+                "Verde até ${num1(prefs.pickupGood)} km · vermelho a partir de ${num1(prefs.pickupBad)} km"
+            ) { c ->
+                c.addView(tx("Distância até o passageiro", 12f, MUTED))
+                c.addView(pair(
+                    field("Verde até (km)", prefs.pickupGood) { prefs.pickupGood = it },
+                    field("Vermelho a partir de (km)", prefs.pickupBad) { prefs.pickupBad = it }
+                ), lp(12))
+            }, lp(10))
+            body.addView(secao("in_gas", "⛽", GREEN, "Gasolina e lucro",
+                "${br(prefs.fuelPrice)}/L · ${num1(prefs.kmPerLiter)} km/L · mín. ${br(prefs.minRpk)}/km"
+            ) { c -> conteudoGasolina(c, true) }, lp(10))
+        }
+
+        // ───────── geral (vale para os dois)
+        body.addView(grupo("Geral"), lp(22))
+        body.addView(secao("g_alerta", "🔔", GOLD, "Alerta de rota",
+            if (prefs.alertOn) "Ligado · som ${RouteAlert.SOUNDS.getOrNull(prefs.alertSound) ?: ""}" else "Desligado"
+        ) { c ->
+            c.addView(switchRow("Avisar a cada rota nova", "Toca mesmo no Não perturbe e no silencioso", prefs.alertOn) {
+                prefs.alertOn = it
+            })
+            c.addView(caps("Som"), lp(16))
+            c.addView(optionGrid(RouteAlert.SOUNDS, prefs.alertSound) { i ->
+                prefs.alertSound = i
+                RouteAlert.play(this, i, 0)
+            }, lp(10))
+            c.addView(caps("Vibração"), lp(18))
+            c.addView(optionGrid(RouteAlert.VIBES, prefs.alertVibe) { i ->
+                prefs.alertVibe = i
+                RouteAlert.play(this, 0, i)
+            }, lp(10))
+            c.addView(button("▶  Testar alerta", false) { RouteAlert.play(this, prefs.alertSound, prefs.alertVibe) }, lp(16))
+            c.addView(tx("O som usa o volume de ALARME do celular.", 11.5f, MUTED), lp(10))
+        }, lp(8))
+        body.addView(secao("g_calc", "🧮", BLUE, "Cálculo",
+            "Velocidade média ${num1(prefs.avgSpeed)} km/h"
+        ) { c ->
+            c.addView(tx("Usado quando o app de corridas não mostra o tempo", 12f, MUTED))
+            c.addView(field("Velocidade média (km/h)", prefs.avgSpeed) { prefs.avgSpeed = it.coerceIn(5f, 120f) }, lp(12))
+        }, lp(10))
+        body.addView(secao("g_sobre", "ℹ️", 0xFF7EE2A0.toInt(), "Sobre",
+            "Prismo Drive ${BuildConfig.VERSION_NAME} · " + (if (RotasStatus.ligado(this)) "ligado" else "desligado")
+        ) { c ->
+            fun infoRow(k: String, v: String) = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(tx(k, 13.5f, MUTED), LinearLayout.LayoutParams(0, WRAP, 1f))
+                addView(tx(v, 13.5f, TXT, true))
+            }
+            c.addView(infoRow("Versão", "Prismo Drive " + BuildConfig.VERSION_NAME))
+            c.addView(infoRow("Serviço", if (RotasStatus.ligado(this)) "Ligado" else "Desligado"), lp(8))
+            c.addView(infoRow("Rotas no relatório", ReportStore.load(this).size.toString()), lp(8))
+        }, lp(10))
+        body.addView(tx("Toque numa opção para abrir. Os valores são salvos na hora.", 11.5f, MUTED).apply { gravity = Gravity.CENTER }, lp(18))
+    }
+
 
     /** Linha com marcador redondo no degradê da marca. */
     private fun bullet(t: String) = LinearLayout(this).apply {
@@ -969,16 +956,51 @@ class RotasActivity : Activity() {
     // ------------------------------------------------------------------ status
     override fun onResume() {
         super.onResume()
+        // voltou dos Ajustes com a localização alterada: atualiza a tela de Configurações
+        val nl = KmGps.nivel(this)
+        if (nivelLocVisto >= 0 && nl != nivelLocVisto && page == Page.CONFIG) showPage()
+        nivelLocVisto = nl
         if (RotasStatus.ligado(this)) Notif.show(this)   // garante o aviso fixo na barra
         if (homeShown) updateStatus()
         if (page == Page.REPORT) report.refresh()
         if (drawerOpen) buildDrawer()                // ícone liga/desliga sempre com o estado real
-        if (page == Page.IFOOD || page == Page.INDRIVE) showPage()   // referência do mês sempre atualizada
         refreshSample()
     }
 
+    /** Localização para o km da rota: primeiro "durante o uso", depois "o tempo todo" (Android 10+). */
+    private fun pedirLocalizacao() {
+        val fine = android.Manifest.permission.ACCESS_FINE_LOCATION
+        when (KmGps.nivel(this)) {
+            0 -> {
+                if (pedidoLocNegado && !shouldShowRequestPermissionRationale(fine)) abrirAjustesApp()
+                else requestPermissions(arrayOf(fine, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQ_LOC)
+            }
+            1 -> {
+                if (Build.VERSION.SDK_INT >= 30) Toast.makeText(this, "Em Localização, escolha \"Permitir o tempo todo\"", Toast.LENGTH_LONG).show()
+                if (Build.VERSION.SDK_INT >= 29) requestPermissions(arrayOf(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION), REQ_LOC_SEMPRE)
+            }
+        }
+    }
+
+    private fun abrirAjustesApp() {
+        runCatching {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", packageName, null)))
+            Toast.makeText(this, "Toque em Permissões → Localização", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private var pedidoLocNegado = false
+    private var nivelLocVisto = -1
+
     override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, res: IntArray) {
         super.onRequestPermissionsResult(code, perms, res)
+        if (code == REQ_LOC || code == REQ_LOC_SEMPRE) {
+            if (code == REQ_LOC && res.none { it == PackageManager.PERMISSION_GRANTED }) pedidoLocNegado = true
+            // concedeu "durante o uso": já emenda o pedido de "o tempo todo"
+            if (code == REQ_LOC && KmGps.nivel(this) == 1 && Build.VERSION.SDK_INT == 29) pedirLocalizacao()
+            nivelLocVisto = KmGps.nivel(this)
+            if (page == Page.CONFIG) showPage()
+        }
         if (RotasStatus.ligado(this)) Notif.show(this)
         if (homeShown) updateStatus()
     }

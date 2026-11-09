@@ -33,6 +33,7 @@ class ReportScreen(private val act: Activity) {
     private enum class Per { DAY, WEEK, MONTH }
 
     private var per = Per.DAY
+    private var historicoRecs: List<Rec> = emptyList()   // usado pelo ícone 📅 do cartão de ganhos
     private var app = 0                      // 0 = todos, 1 = iFood, 2 = InDrive
     private lateinit var box: LinearLayout
     private val BR = Locale("pt", "BR")
@@ -239,7 +240,7 @@ class ReportScreen(private val act: Activity) {
             ), lp(12)
         )
 
-        box.addView(history(baseRecs), lp(14))
+        historicoRecs = baseRecs
     }
 
     // ------------------------------------------------------------------ faixas automáticas
@@ -605,7 +606,17 @@ class ReportScreen(private val act: Activity) {
             }
         }
         val rot = when (per) { Per.DAY -> "GANHOS DE HOJE"; Per.WEEK -> "GANHOS DA SEMANA"; Per.MONTH -> "GANHOS DO MÊS" }
-        c.addView(tx(rot, 10.5f, 0xFF7EE2A0.toInt(), true).apply { letterSpacing = 0.12f })
+        val topo = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        topo.addView(tx(rot, 10.5f, 0xFF7EE2A0.toInt(), true).apply { letterSpacing = 0.12f }, LinearLayout.LayoutParams(0, WRAP, 1f))
+        // 📅 abre o Histórico mensal (cada mês abre o calendário de rendimento)
+        topo.addView(tx("📅", 18f, TXT).apply {
+            gravity = Gravity.CENTER
+            includeFontPadding = false
+            background = rounded(0x263FB950, 12, 0x663FB950)
+            contentDescription = "Histórico mensal"
+            setOnClickListener { abrirHistorico() }
+        }, LinearLayout.LayoutParams(dp(40), dp(40)))
+        c.addView(topo)
         val linha = LinearLayout(act).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         linha.addView(tx(m2(cur), 30f, TXT, true).apply { maxLines = 1 }, LinearLayout.LayoutParams(0, WRAP, 1f))
         linha.addView(tx(ptxt, 14f, pcol, true).apply {
@@ -742,6 +753,28 @@ class ReportScreen(private val act: Activity) {
             corpo.addView(tx("Ainda sem ganhos registrados neste mês. Eles entram aqui pelas rotas concluídas do iFood e pelos lançamentos do Prismo Drive.", 12.5f, MUTED), lp(14))
         }
 
+        root.addView(android.widget.ScrollView(act).apply { addView(corpo) }, LinearLayout.LayoutParams(MATCH, 0, 1f))
+        dlg.setContentView(root)
+        dlg.window?.let { w -> w.statusBarColor = BG; w.navigationBarColor = BG }
+        dlg.show()
+    }
+
+    /** Tela cheia com o Histórico mensal (aberta pelo 📅 do cartão de ganhos). */
+    private fun abrirHistorico() {
+        val dlg = android.app.Dialog(act, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val root = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(BG) }
+        val barra = LinearLayout(act).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(28), dp(16), dp(8))
+        }
+        barra.addView(tx("←", 22f, TXT, true).apply { setPadding(dp(12), dp(4), dp(12), dp(4)); setOnClickListener { dlg.dismiss() } })
+        val tc = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL }
+        tc.addView(tx("Histórico mensal", 19f, TXT, true))
+        tc.addView(tx(when (app) { 1 -> "iFood"; 2 -> "InDrive e outros"; else -> "Todos os apps" }, 12f, MUTED))
+        barra.addView(tc, LinearLayout.LayoutParams(0, WRAP, 1f))
+        root.addView(barra)
+        val corpo = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(4), dp(14), dp(28)) }
+        corpo.addView(history(historicoRecs))
         root.addView(android.widget.ScrollView(act).apply { addView(corpo) }, LinearLayout.LayoutParams(MATCH, 0, 1f))
         dlg.setContentView(root)
         dlg.window?.let { w -> w.statusBarColor = BG; w.navigationBarColor = BG }

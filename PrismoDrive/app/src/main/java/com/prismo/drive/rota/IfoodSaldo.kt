@@ -44,6 +44,9 @@ object IfoodSaldo {
     private var rotaId = ""                // liga valor + bônus que chegam separados à mesma rota
 
     private const val ARQ_INICIO = "ifood_rota_inicio"
+    private const val ARQ_OFERTA = "ifood_oferta.json"          // última oferta de rota vista
+    private const val ARQ_ROTA_OFERTA = "ifood_rota_oferta"     // km da oferta da rota em andamento
+    @Volatile private var ultDeslocVisto = 0L
     private const val MAX_ROTA_MS = 5 * 3600_000L   // rota "esquecida" há mais de 5 h não conta tempo
 
     private fun dir(ctx: Context) = (ctx.applicationContext ?: ctx).filesDir
@@ -83,12 +86,72 @@ object IfoodSaldo {
         return false
     }
 
-    /** Marca o início da rota na 1ª vez que aparece "EM DESLOCAMENTO" (as próximas paradas não reiniciam). */
+    /**
+     * Marca o início da rota na 1ª vez que aparece "EM DESLOCAMENTO" (as próximas paradas não reiniciam)
+     * e liga o GPS para medir os km. Guarda também o km da última oferta vista (reserva sem GPS).
+     */
     fun marcarInicio(ctx: Context) {
         val agora = System.currentTimeMillis()
+        ultDeslocVisto = agora
         val ini = inicio(ctx)
-        if (ini > 0 && agora - ini < MAX_ROTA_MS) return
+        if (ini > 0 && agora - ini < MAX_ROTA_MS) {
+            if (!KmGps.ativo) KmGps.iniciar(ctx, zerar = false)     // serviço reiniciado no meio da rota
+            return
+        }
         runCatching { File(dir(ctx), ARQ_INICIO).writeText(agora.toString()) }
+        val of = ultimaOferta(ctx, 30 * 60_000L)
+        runCatching { File(dir(ctx), ARQ_ROTA_OFERTA).writeText(of.toString()) }
+        KmGps.iniciar(ctx, zerar = true)
+    }
+
+    /** Batimento do serviço: retoma o GPS de uma rota em andamento ou desliga o de uma rota abandonada. */
+    fun manterGps(ctx: Context) {
+        val agora = System.currentTimeMillis()
+        val ini = inicio(ctx)
+        val emRota = ini > 0 && agora - ini < MAX_ROTA_MS
+        if (KmGps.ativo) {
+            // sem "EM DESLOCAMENTO" há mais de 2 h (rota cancelada): desliga o GPS, o km medido fica guardado
+            if (!emRota || (ultDeslocVisto > 0 && agora - ultDeslocVisto > 2 * 3600_000L)) KmGps.parar(ctx)
+        } else if (emRota && ultDeslocVisto == 0L) {
+            ultDeslocVisto = agora
+            KmGps.iniciar(ctx, zerar = false)
+        }
+    }
+
+    // ───────────────────────── km da oferta (reserva) ─────────────────────────
+
+    /** Oferta de rota do iFood aberta na tela (detalhe/popup com 1 rota): guarda o km total dela. */
+    fun lembrarOferta(ctx: Context, km: Double) {
+        if (km <= 0 || km > 300) return
+        runCatching {
+            File(dir(ctx), ARQ_OFERTA).writeText(JSONObject().put("km", km).put("ts", System.currentTimeMillis()).toString())
+        }
+    }
+
+    private fun ultimaOferta(ctx: Context, validade: Long): Double = runCatching {
+        val o = JSONObject(File(dir(ctx), ARQ_OFERTA).readText())
+        if (System.currentTimeMillis() - o.optLong("ts") <= validade) o.optDouble("km", 0.0) else 0.0
+    }.getOrDefault(0.0)
+
+    /**
+     * Fecha o km da rota. GPS primeiro; o km da oferta só entra quando não há permissão de localização
+     * (ou o GPS não conseguiu medir nada). Devolve (km, "gps" | "estimado" | "").
+     */
+    private fun fecharKm(ctx: Context): Pair<Double, String> {
+        val (gpsKm, pontos) = KmGps.parar(ctx)
+        KmGps.limpar(ctx)
+        val fOf = File(dir(ctx), ARQ_ROTA_OFERTA)
+        var oferta = runCatching { fOf.readText().trim().toDouble() }.getOrDefault(0.0)
+        runCatching { fOf.delete() }
+        if (oferta <= 0) oferta = ultimaOferta(ctx, 3 * 3600_000L)
+        ultDeslocVisto = 0L
+        val r = when {
+            KmGps.temPermissao(ctx) && gpsKm >= 0.2 && pontos >= 3 -> Pair(gpsKm, "gps")
+            oferta > 0 -> Pair(oferta, "estimado")
+            gpsKm >= 0.05 -> Pair(gpsKm, "gps")
+            else -> Pair(0.0, "")
+        }
+        return Pair(Math.round(r.first * 100) / 100.0, r.second)
     }
 
     fun inicio(ctx: Context): Long =
@@ -174,7 +237,8 @@ object IfoodSaldo {
         ultPrincipal = principal
         ultBonus = bonus
         rotaId = System.currentTimeMillis().toString(36)
-        enfileirar(ctx, principal, bonus, fecharDuracao(ctx))
+        val (km, fonte) = runCatching { fecharKm(ctx) }.getOrDefault(Pair(0.0, ""))
+        enfileirar(ctx, principal, bonus, fecharDuracao(ctx), km, fonte)
         return principal + bonus
     }
 
@@ -190,7 +254,7 @@ object IfoodSaldo {
         if (agora - sumiuDesde >= 1200) { sessaoAtiva = false; sumiuDesde = 0L }
     }
 
-    private fun enfileirar(ctx: Context, valor: Double, bonus: Double, dur: Long = 0L) {
+    private fun enfileirar(ctx: Context, valor: Double, bonus: Double, dur: Long = 0L, km: Double = 0.0, kmFonte: String = "") {
         if (valor <= 0 && bonus <= 0) return
         runCatching {
             comTrava(ctx) {
@@ -204,11 +268,14 @@ object IfoodSaldo {
                     .put("ts", agora)
                     .put("rota", rotaId.ifEmpty { agora.toString(36) })
                     .put("app", "ifood")
-                    .put("dur", dur))
+                    .put("dur", dur)
+                    .put("km", km)
+                    .put("kmFonte", kmFonte))
                 gravar(fFila, fila.toString())
                 Ganhos.registrarIfood(ctx, agora, valor + bonus)   // rendimento do dia / calendário
                 gravar(File(dir(ctx), ARQ_ESTADO), JSONObject()
-                    .put("valor", valor).put("bonus", bonus).put("ts", agora).toString())
+                    .put("valor", valor).put("bonus", bonus).put("ts", agora)
+                    .put("km", km).put("kmFonte", kmFonte).toString())
             }
         }
         avisarApp(ctx)

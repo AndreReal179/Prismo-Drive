@@ -124,7 +124,7 @@ class Fab(private val svc: AccessibilityService) {
         val c = circle ?: return
         val t = valueText ?: return
         val ic = icon ?: return
-        comemorandoAte = SystemClock.uptimeMillis() + 2600
+        comemorandoAte = SystemClock.uptimeMillis() + 3700   // moeda visível por ~3 s depois do giro
         stopPulse()
         c.animate().cancel()
         // moeda
@@ -155,7 +155,7 @@ class Fab(private val svc: AccessibilityService) {
             valueText?.textSize = 14f
             shownKey = "~"          // força redesenhar o estado atual
             applyBest()
-        }, 2700)
+        }, 3800)
     }
 
     /** Balão "+R$ 68,00 · na carteira" que sobe ao lado do botão e desaparece. */
@@ -197,7 +197,7 @@ class Fab(private val svc: AccessibilityService) {
             txt.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f).setDuration(380)
                 .setInterpolator(android.view.animation.OvershootInterpolator(1.6f))
                 .withEndAction {
-                    txt.animate().alpha(0f).translationY(-dpf(36f)).setStartDelay(1500).setDuration(600)
+                    txt.animate().alpha(0f).translationY(-dpf(36f)).setStartDelay(3000).setDuration(600)
                         .withEndAction { runCatching { wm.removeView(w) } }.start()
                 }.start()
         }
@@ -692,7 +692,8 @@ class Fab(private val svc: AccessibilityService) {
         }
         var shownT = -1L
         fun paintBest() {
-            val b = runCatching { DayBest.get(svc) }.getOrNull()
+            val ifood = modoIfood()
+            val b = runCatching { DayBest.get(svc, ifood) }.getOrNull()   // só do app aberto
             val key = b?.let { it.t xor java.lang.Double.doubleToLongBits(it.price) } ?: 0L
             if (key == shownT) return
             val first = shownT == -1L
@@ -700,7 +701,7 @@ class Fab(private val svc: AccessibilityService) {
             if (b == null) {
                 bestValue.text = "—"
                 bestValue.setTextColor(MUTED)
-                bestInfo.text = "Nenhuma oferta analisada hoje ainda"
+                bestInfo.text = if (modoIfood()) "Nenhuma rota do iFood analisada hoje" else "Nenhuma corrida do InDrive analisada hoje"
                 return
             }
             bestValue.setTextColor(GOLD)
@@ -760,7 +761,7 @@ class Fab(private val svc: AccessibilityService) {
                 addView(limits, LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
             }
-            addView(section("Maior valor de hoje"))
+            addView(section(if (ifood) "Maior valor de hoje · iFood" else "Maior valor de hoje · InDrive"))
             addView(bestCard)
             addView(actions, LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(16) })

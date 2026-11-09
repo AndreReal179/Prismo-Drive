@@ -57,6 +57,8 @@ class RouteService : AccessibilityService() {
             }
             // relatório: grava as ofertas que já saíram da tela
             try { store.flush() } catch (_: Throwable) {}
+            // km da rota: retoma o GPS de uma rota em andamento / desliga o de uma rota abandonada
+            runCatching { IfoodSaldo.manterGps(this@RouteService) }
             // batimento: avisa o processo principal que o serviço está vivo
             RotasStatus.batida(this@RouteService)
             handler.postDelayed(this, 900)
@@ -89,6 +91,7 @@ class RouteService : AccessibilityService() {
      */
     fun shutdown() {
         if (::store.isInitialized) runCatching { store.flush(true) }   // salva o relatório antes de desligar
+        runCatching { KmGps.parar(this) }
         handler.removeCallbacks(tick)
         ticking = false
         if (::overlay.isInitialized) runCatching { overlay.remove() }
@@ -209,6 +212,8 @@ class RouteService : AccessibilityService() {
             // aprende qual app é qual: rotas com coletas/entregas = iFood; corridas = InDrive
             if (offers.any { it.route }) prefs.ifoodPkg = p else prefs.indrivePkg = p
         }
+        // km da oferta aberta (detalhe/popup com 1 rota): reserva para quando não houver GPS
+        offers.singleOrNull()?.takeIf { it.route }?.tripKm?.let { km -> runCatching { IfoodSaldo.lembrarOferta(this, km) } }
         offers.forEach { runCatching { keepStops(it) } }
         val results = offers.map { Evaluator.evaluate(it, prefs) }
         runCatching { store.observe(results) }   // relatório
@@ -306,6 +311,7 @@ class RouteService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        runCatching { KmGps.parar(this) }
         if (::store.isInitialized) runCatching { store.flush(true) }
         handler.removeCallbacks(tick)
         ticking = false

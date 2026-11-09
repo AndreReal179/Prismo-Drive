@@ -183,8 +183,9 @@ class ReportStore(private val ctx: Context) {
 object DayBest {
     class Best(val t: Long, val route: Boolean, val price: Double, val km: Double?, val rpk: Double?, val orders: Int)
 
-    private const val SP = "rotaguru_best"
-    @Volatile private var cache: Best? = null
+    /** Maior valor de hoje separado por app: route = true (iFood) / false (InDrive). */
+    private const val SP = "rotaguru_best2"
+    private val cache = HashMap<Boolean, Best?>()
     @Volatile private var cacheDay = -1
 
     private fun dayOf(t: Long): Int {
@@ -193,42 +194,53 @@ object DayBest {
     }
 
     private fun sp(ctx: Context) = ctx.applicationContext.getSharedPreferences(SP, Context.MODE_PRIVATE)
+    private fun k(route: Boolean, campo: String) = (if (route) "r_" else "d_") + campo
 
-    /** O maior valor de hoje (null = nada analisado hoje ainda). */
-    fun get(ctx: Context): Best? {
-        val today = dayOf(System.currentTimeMillis())
-        if (cacheDay == today) return cache
-        synchronized(this) {
-            if (cacheDay == today) return cache
-            val s = sp(ctx)
-            var b: Best? = null
-            if (s.getInt("day", -1) == today) {
-                b = Best(
-                    s.getLong("t", 0), s.getBoolean("r", false), s.getFloat("p", 0f).toDouble(),
-                    s.getFloat("k", -1f).takeIf { it >= 0 }?.toDouble(),
-                    s.getFloat("e", -1f).takeIf { it >= 0 }?.toDouble(),
-                    s.getInt("o", 0)
+    private fun carregarDia(ctx: Context, today: Int) {
+        if (cacheDay == today) return
+        cache.clear()
+        val s = sp(ctx)
+        if (s.getInt("day", -1) == today) {
+            for (route in listOf(true, false)) {
+                if (!s.contains(k(route, "p"))) { cache[route] = null; continue }
+                cache[route] = Best(
+                    s.getLong(k(route, "t"), 0), route, s.getFloat(k(route, "p"), 0f).toDouble(),
+                    s.getFloat(k(route, "k"), -1f).takeIf { it >= 0 }?.toDouble(),
+                    s.getFloat(k(route, "e"), -1f).takeIf { it >= 0 }?.toDouble(),
+                    s.getInt(k(route, "o"), 0)
                 )
-            } else {
-                // 1ª vez no dia (ou logo após atualizar o app): procura no relatório o que já foi visto hoje
-                runCatching {
-                    ReportStore.load(ctx).filter { dayOf(it.t) == today }.maxByOrNull { it.price }?.let {
-                        b = Best(it.t, it.route, it.price, it.km, it.rpk, it.orders)
-                    }
-                }
-                b?.let { save(ctx, today, it) } ?: s.edit().clear().putInt("day", today).apply()
             }
-            cache = b
-            cacheDay = today
-            return b
+        } else {
+            // 1ª vez no dia: procura no relatório o que já foi visto hoje, por app
+            s.edit().clear().putInt("day", today).apply()
+            runCatching {
+                val hoje = ReportStore.load(ctx).filter { dayOf(it.t) == today }
+                for (route in listOf(true, false)) {
+                    val m = hoje.filter { it.route == route }.maxByOrNull { it.price }
+                    val b = m?.let { Best(it.t, it.route, it.price, it.km, it.rpk, it.orders) }
+                    cache[route] = b
+                    if (b != null) save(ctx, today, b)
+                }
+            }
         }
+        cacheDay = today
     }
 
-    /** Oferta analisada: se for maior que o recorde de hoje, vira o novo recorde. */
+    /**
+     * O maior valor de hoje. route = true → só iFood; false → só InDrive; null → o maior dos dois.
+     * (null = nada analisado hoje ainda)
+     */
+    fun get(ctx: Context, route: Boolean? = null): Best? = synchronized(this) {
+        carregarDia(ctx, dayOf(System.currentTimeMillis()))
+        if (route != null) cache[route]
+        else listOfNotNull(cache[true], cache[false]).maxByOrNull { it.price }
+    }
+
+    /** Oferta analisada: se for maior que o recorde de hoje DAQUELE app, vira o novo recorde. */
     fun offer(ctx: Context, r: Result) {
         val o = r.offer
         if (o.price <= 0 || !o.price.isFinite()) return
-        val cur = get(ctx)
+        val cur = get(ctx, o.route)
         if (cur != null && o.price <= cur.price + 0.001) return
         val now = System.currentTimeMillis()
         val b = Best(
@@ -239,21 +251,20 @@ object DayBest {
         )
         synchronized(this) {
             val today = dayOf(now)
+            carregarDia(ctx, today)
             save(ctx, today, b)
-            cache = b
-            cacheDay = today
+            cache[o.route] = b
         }
     }
 
     private fun save(ctx: Context, day: Int, b: Best) {
         sp(ctx).edit()
             .putInt("day", day)
-            .putLong("t", b.t)
-            .putBoolean("r", b.route)
-            .putFloat("p", b.price.toFloat())
-            .putFloat("k", (b.km ?: -1.0).toFloat())
-            .putFloat("e", (b.rpk ?: -1.0).toFloat())
-            .putInt("o", b.orders)
+            .putLong(k(b.route, "t"), b.t)
+            .putFloat(k(b.route, "p"), b.price.toFloat())
+            .putFloat(k(b.route, "k"), (b.km ?: -1.0).toFloat())
+            .putFloat(k(b.route, "e"), (b.rpk ?: -1.0).toFloat())
+            .putInt(k(b.route, "o"), b.orders)
             .apply()
     }
 }
