@@ -6,7 +6,9 @@ Ordem: versão sendo gerada agora (NOVIDADES.md)  →  versões já publicadas n
 →  histórico fixo (novidades/historico.json, até a 1.7.11).
 
 Uso: python3 novidades/gerar.py <versao> [releases.json]
-  releases.json = saída de `gh api repos/<repo>/releases` (opcional; sem ele usa só o histórico).
+  releases.json = saída de `gh api repos/<repo>/releases`. Sem ele, o script busca sozinho os Releases
+  do repositório (GITHUB_REPOSITORY / REPO_ATUALIZACAO, token GH_TOKEN/GITHUB_TOKEN se houver).
+  Roda automaticamente antes de cada build (app/build.gradle.kts → tarefa gerarNovidades).
 """
 import json, os, re, sys, datetime
 
@@ -27,6 +29,23 @@ def itens_de_texto(txt):
 def chave(v):
     return [int(x) if x.isdigit() else 0 for x in re.split(r"[.\-]", v)]
 
+def buscar_releases():
+    import urllib.request
+    repo = os.environ.get("REPO_ATUALIZACAO") or os.environ.get("GITHUB_REPOSITORY") or ""
+    if not repo:
+        return []
+    req = urllib.request.Request(f"https://api.github.com/repos/{repo}/releases?per_page=100",
+                                 headers={"Accept": "application/vnd.github+json", "User-Agent": "PrismoDrive-build"})
+    tok = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if tok:
+        req.add_header("Authorization", "Bearer " + tok)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception as e:
+        print("aviso: não consegui ler os Releases (" + str(e) + ") — uso só o histórico")
+        return []
+
 def main():
     versao = sys.argv[1] if len(sys.argv) > 1 else "dev"
     hoje = datetime.date.today().isoformat()
@@ -42,11 +61,15 @@ def main():
         lista.append({"versao": versao, "data": hoje, "itens": atuais, "atual": True})
 
     # notas das versões já publicadas depois do histórico (1.8, 1.8.1, …)
+    rels = None
     if len(sys.argv) > 2 and os.path.exists(sys.argv[2]):
         try:
             rels = json.load(open(sys.argv[2], encoding="utf-8"))
         except Exception:
-            rels = []
+            rels = None
+    if rels is None and versao != "dev":
+        rels = buscar_releases()
+    if rels:
         vistos = {versao}
         pub = []
         for r in rels if isinstance(rels, list) else []:

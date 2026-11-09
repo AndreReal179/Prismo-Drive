@@ -780,7 +780,16 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 #drawer-menu .drawer-content > div:nth-child(2){padding:18px 22px 18px !important;}
 #drawer-avatar{width:74px !important;height:74px !important;border:0 !important;font-size:28px !important;
   box-shadow:0 0 0 3px #06100a,0 0 0 5.5px rgba(74,222,128,.65),0 14px 30px -6px rgba(63,185,80,.65) !important;}
-#drawer-avatar + div{width:15px !important;height:15px !important;right:3px !important;bottom:3px !important;background:#4ade80 !important;border:3px solid #06100a !important;box-shadow:0 0 10px #4ade80;}
+#drawer-avatar + div{width:15px !important;height:15px !important;right:3px !important;bottom:3px !important;background:#4ade80 !important;border:3px solid #06100a !important;box-shadow:0 0 10px #4ade80;transition:background .3s,box-shadow .3s;}
+/* Assistente de rotas desligado: arco e bolinha vermelhos ("offline"); tocar na foto liga */
+#drawer-av-wrap{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#drawer-av-wrap:active #drawer-avatar{transform:scale(.95);}
+#drawer-avatar{transition:box-shadow .3s,transform .15s;}
+#drawer-av-wrap.rt-off #drawer-avatar{box-shadow:0 0 0 3px #06100a,0 0 0 5.5px rgba(248,81,73,.75),0 14px 30px -6px rgba(248,81,73,.45) !important;}
+#drawer-av-wrap.rt-off #drawer-avatar + div{background:#f85149 !important;box-shadow:0 0 10px #f85149;animation:avOff 1.6s ease-in-out infinite;}
+#drawer-av-wrap.rt-warn #drawer-avatar{box-shadow:0 0 0 3px #06100a,0 0 0 5.5px rgba(240,136,62,.75),0 14px 30px -6px rgba(240,136,62,.45) !important;}
+#drawer-av-wrap.rt-warn #drawer-avatar + div{background:#f0883e !important;box-shadow:0 0 10px #f0883e;}
+@keyframes avOff{0%,100%{box-shadow:0 0 4px #f85149;}50%{box-shadow:0 0 14px #f85149;}}
 #drawer-nome-exibicao{font-size:23px !important;letter-spacing:-.035em !important;color:#f2fbf5 !important;margin-bottom:8px !important;}
 #resumo-mes-ganho{font-size:21px !important;letter-spacing:-.04em !important;color:#4ade80 !important;text-shadow:0 0 22px rgba(74,222,128,.45);}
 .pd-stat{border-radius:20px !important;padding:13px 8px !important;background:rgba(255,255,255,.035) !important;border:1px solid rgba(160,255,200,.1) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
@@ -1047,7 +1056,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
         <button onclick="fecharDrawer()" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);"><span class="material-icons" style="font-size:15px;">close</span></button>
       </div>
       <div style="display:flex;align-items:center;gap:16px;position:relative;">
-        <div style="position:relative;flex-shrink:0;">
+        <div id="drawer-av-wrap" onclick="toqueFotoDrawer()" style="position:relative;flex-shrink:0;">
           <div id="drawer-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:2px solid rgba(46,164,79,0.45);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;overflow:hidden;">A</div>
           <div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#3fb950;border:2px solid #080c10;"></div>
         </div>
@@ -1145,11 +1154,6 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
                 <p id="rt-st-t" style="font-size:14px;font-weight:900;color:#e6edf3;">Verificando…</p>
                 <p id="rt-st-s" style="font-size:0.66rem;color:var(--muted);margin-top:2px;line-height:1.35;"></p>
               </div>
-            </div>
-            <div id="rt-hoje" class="rt-grid" style="display:none;">
-              <div class="rt-k"><p>Hoje</p><p id="rt-n">0</p></div>
-              <div class="rt-k"><p>R$/km médio</p><p id="rt-rpk">—</p></div>
-              <div class="rt-k"><p>Melhor</p><p id="rt-best">—</p></div>
             </div>
             <button type="button" id="rt-abrir" onclick="PrismoRotas.abrir()" class="rt-btn pri"><span class="material-icons" style="font-size:18px;">open_in_new</span>Abrir assistente</button>
             <button type="button" id="rt-power" onclick="PrismoRotas.power()" class="rt-btn"><span class="material-icons" id="rt-power-i" style="font-size:18px;">power_settings_new</span><span id="rt-power-t">Ligar</span></button>
@@ -3800,6 +3804,11 @@ window.getPerfilAtivo=function(){try{return perfilAtivo;}catch(e){return '';}};
 .nv-tag.c{background:#d29922;color:#0d1117;}
 .nv-sec .nv-data{margin-left:auto;font-size:.56rem;letter-spacing:.06em;color:#6e7681;font-weight:800;}
 .nv-sec.nv-sec-atual{color:#3fb950;}
+.nv-ant-btn{width:100%;margin:18px 0 6px;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:16px;background:#161b22;border:1px solid rgba(255,255,255,.08);color:#c9d1d9;font-size:13px;font-weight:800;cursor:pointer;}
+.nv-ant-btn .material-icons{font-size:19px;color:#8b949e;}
+.nv-ant-btn #nv-ant-txt{flex:1;text-align:left;}
+.nv-ant-btn .nv-ant-seta{transition:transform .2s;}
+.nv-ant-btn.on .nv-ant-seta{transform:rotate(180deg);}
 .nv-sec.nv-sec-atual::before{content:'';width:8px;height:8px;border-radius:50%;background:#3fb950;box-shadow:0 0 10px rgba(63,185,80,.8);}
 .nv-foot{margin-top:18px;text-align:center;font-size:.62rem;color:#6e7681;font-weight:600;letter-spacing:.04em;}
 .upd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;}
@@ -3949,6 +3958,9 @@ window.getPerfilAtivo=function(){try{return perfilAtivo;}catch(e){return '';}};
     </div>
     <div id="nv-scroll">
       <div id="nv-auto"></div>
+      <button type="button" id="nv-ant-btn" class="nv-ant-btn" onclick="nvAntigas()"><span class="material-icons">history</span><span id="nv-ant-txt">Versões anteriores</span><span class="material-icons nv-ant-seta">expand_more</span></button>
+      <div id="nv-antigas" style="display:none">
+      <div id="nv-auto-antigas"></div>
 
             <div class="nv-sec" style="color:#8b949e">Versão 1.6</div>
       <div class="nv-card"><div class="nv-ico">📖</div><div class="nv-txt"><div class="nv-ct">Guia do App <span class="nv-tag n">Novo</span></div><div class="nv-cd">Nova aba no menu lateral que ensina a usar cada tela do aplicativo, com prints reais, para que serve, passo a passo e dicas.</div></div></div>
@@ -4098,6 +4110,7 @@ window.getPerfilAtivo=function(){try{return perfilAtivo;}catch(e){return '';}};
       <div class="nv-card"><div class="nv-ico">👤</div><div class="nv-txt"><div class="nv-ct">Perfil e configurações</div><div class="nv-cd">Nome, foto, dia de recebimento e meta diária bruta.</div></div></div>
       <div class="nv-card"><div class="nv-ico">📴</div><div class="nv-txt"><div class="nv-ct">100% offline</div><div class="nv-cd">Seus dados ficam no aparelho — sem login e sem depender de internet.</div></div></div>
 
+      </div><!-- /nv-antigas -->
       <div class="nv-foot">Prismo Drive · versão <span id="nv-versao2">1.6</span></div>
     </div>
   </div>
@@ -4336,10 +4349,11 @@ function renderNovidadesAuto(){
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   var fmtData=function(d){var p=String(d||'').split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'';};
   var emojiRe=/^((?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u2190-\u21FF\u2300-\u23FF\u2600-\u27BF])[\uFE0F\u200D\p{Extended_Pictographic}]*)\s*/u;
-  var html='';
+  var html='',htmlAnt='';
   lista.forEach(function(v,iv){
+    var h='';
     var atual=iv===0;
-    html+='<div class="nv-sec'+(atual?' nv-sec-atual':'')+'">'+(atual?'🚀 Lançado na versão ':'Versão ')+esc(v.versao)+'<span class="nv-data">'+esc(fmtData(v.data))+'</span></div>';
+    h+='<div class="nv-sec'+(atual?' nv-sec-atual':'')+'">'+(atual?'🚀 Lançado na versão ':'Versão ')+esc(v.versao)+'<span class="nv-data">'+esc(fmtData(v.data))+'</span></div>';
     (v.itens||[]).forEach(function(txt){
       var t=String(txt||'').trim(),ico='✨',m=t.match(emojiRe);
       if(m){ico=m[1];t=t.slice(m[0].length);}
@@ -4350,14 +4364,24 @@ function renderNovidadesAuto(){
       var tit=t,desc='',i=t.search(/:\s|\s[—–]\s/);
       if(i>3&&i<70){tit=t.slice(0,i);desc=t.slice(i).replace(/^(:\s*|\s[—–]\s*)/,'');}
       desc=desc?desc.charAt(0).toUpperCase()+desc.slice(1):'';
-      html+='<div class="nv-card'+(atual?' nv-new':'')+'"><div class="nv-ico">'+esc(ico)+'</div><div class="nv-txt"><div class="nv-ct">'+esc(tit)+' <span class="nv-tag '+cls+'">'+tag+'</span></div>'+(desc?'<div class="nv-cd">'+esc(desc)+'</div>':'')+'</div></div>';
+      h+='<div class="nv-card'+(atual?' nv-new':'')+'"><div class="nv-ico">'+esc(ico)+'</div><div class="nv-txt"><div class="nv-ct">'+esc(tit)+' <span class="nv-tag '+cls+'">'+tag+'</span></div>'+(desc?'<div class="nv-cd">'+esc(desc)+'</div>':'')+'</div></div>';
     });
+    if(iv===0)html+=h;else htmlAnt+=h;
   });
   box.innerHTML=html;box.setAttribute('data-ok','1');
+  var ant=document.getElementById('nv-auto-antigas');if(ant)ant.innerHTML=htmlAnt;
+  var qt=lista.length-1+document.querySelectorAll('#nv-antigas > .nv-sec').length;
+  var tx=document.getElementById('nv-ant-txt');if(tx)tx.textContent='Versões anteriores ('+qt+')';
+}
+function nvAntigas(abrir){
+  var w=document.getElementById('nv-antigas'),b=document.getElementById('nv-ant-btn');if(!w||!b)return;
+  var on=typeof abrir==='boolean'?abrir:w.style.display==='none';
+  w.style.display=on?'block':'none';b.classList.toggle('on',on);
 }
 function abrirNovidades(){
   var m=document.getElementById('modal-novidades');if(!m)return;
   try{renderNovidadesAuto();}catch(e){console.warn('novidades',e);}
+  try{nvAntigas(false);}catch(e){}
   var v=document.getElementById('nv-versao');if(v)v.textContent='Versão '+APP_VERSAO;
   m.style.display='flex';
   requestAnimationFrame(function(){m.classList.add('nv-open');});
@@ -4460,14 +4484,11 @@ window.PrismoRotas=(function(){
     if(e.ligado){cls='on';t='Ligado · lendo as corridas';s='O selo aparece em cada oferta do iFood e do InDrive.';cor='#3fb950';}
     else if(e.travado){cls='warn';t='Serviço parado';s='Toque em Ligar para reiniciar o assistente.';cor='#f0883e';}
     if(ic)ic.className='rt-ic '+cls;if(dot){dot.style.background=cor;dot.style.boxShadow='0 0 8px '+cor;}
+    var av=$r('drawer-av-wrap');if(av){av.classList.toggle('rt-off',cls==='off');av.classList.toggle('rt-warn',cls==='warn');}
     txt('rt-st-t',t);txt('rt-st-s',s);
     txt('acc-rotas-sub',e.ligado?('Ligado · '+(e.hoje||0)+' analisada'+((e.hoje||0)===1?'':'s')+' hoje'):'iFood e InDrive · avalia cada corrida');
     if(pw){pw.className='rt-btn'+(e.ligado?' desl':'');}
     txt('rt-power-t',e.ligado?'Desligar':'Ligar');
-    var h=$r('rt-hoje');if(h)h.style.display=(e.hoje>0)?'':'none';
-    txt('rt-n',String(e.hoje||0));
-    txt('rt-rpk',e.rpkMedio!=null?brl(e.rpkMedio):'—');
-    txt('rt-best',e.melhor!=null?brl(e.melhor):'—');
   }
   function atualizar(){render(estado());}
   function abrir(){var n=nat();if(!n||typeof n.abrirAssistenteRotas!=='function'){try{showToast('Disponível no app instalado',true);}catch(e){}return;}
@@ -4481,6 +4502,15 @@ window.PrismoRotas=(function(){
   document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(atualizar,300);});
   window.addEventListener('focus',function(){setTimeout(atualizar,300);});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(atualizar,1600);});else setTimeout(atualizar,1600);
+  /* atalho: toque na foto do menu com o assistente desligado = ligar (abre a Acessibilidade se o Android pedir) */
+  window.toqueFotoDrawer=function(){
+    var e=estado();ult=e||ult;
+    if(!e||e.suportado===false){try{showToast('Assistente de rotas disponível no app instalado (Android 8+)',true);}catch(x){}return;}
+    if(e.ligado){try{showToast('✅ Assistente de rotas ligado');}catch(x){}return;}
+    power();
+  };
+  var _ad=window.abrirDrawer;
+  if(typeof _ad==='function'){window.abrirDrawer=function(){var r=_ad.apply(this,arguments);setTimeout(atualizar,50);return r;};}
   return {abrir:abrir,power:power,atualizar:atualizar};
 })();
 

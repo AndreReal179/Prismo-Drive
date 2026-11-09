@@ -90,3 +90,15 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
 }
+
+// Novidades do app: antes de cada build monta assets/novidades.js com a versão atual (NOVIDADES.md),
+// as notas de todas as versões já publicadas (Releases do GitHub) e o histórico (novidades/historico.json).
+// Assim nenhuma versão antiga some da aba Novidades, mesmo que o workflow não tenha o passo próprio.
+val gerarNovidades by tasks.registering(Exec::class) {
+    val versao = System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "dev"
+    workingDir = rootProject.projectDir
+    commandLine("sh", "-c", "python3 novidades/gerar.py \"$versao\" || echo 'novidades: python3 indisponível, mantendo o arquivo atual'")
+    isIgnoreExitValue = true
+    onlyIf { System.getenv("VERSION_NAME")?.isNotBlank() == true }   // só no GitHub (build com versão)
+}
+tasks.matching { it.name == "preBuild" }.configureEach { dependsOn(gerarNovidades) }
