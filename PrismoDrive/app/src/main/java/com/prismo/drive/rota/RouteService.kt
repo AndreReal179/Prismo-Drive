@@ -127,12 +127,18 @@ class RouteService : AccessibilityService() {
      */
     private fun candidateRoots(): List<AccessibilityNodeInfo> {
         val out = ArrayList<AccessibilityNodeInfo>()
-        rootInActiveWindow?.let { if (it.packageName != packageName) out.add(it) }
+        val rides = prefs.ridePkgs
+        // privacidade: só as telas do iFood e do InDrive são analisadas; as de outros apps são ignoradas
+        fun aceita(r: AccessibilityNodeInfo): Boolean {
+            val p = r.packageName?.toString().orEmpty()
+            return p.isNotEmpty() && p != packageName && appDeCorrida(p, rides)
+        }
+        rootInActiveWindow?.let { if (aceita(it)) out.add(it) }
         runCatching {
             for (w in windows) {
                 if (w.type != AccessibilityWindowInfo.TYPE_APPLICATION) continue
                 val rr = w.root ?: continue
-                if (rr.packageName == packageName) continue
+                if (!aceita(rr)) continue
                 if (out.any { it.windowId == rr.windowId }) continue
                 out.add(rr)
             }
