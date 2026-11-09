@@ -42,7 +42,7 @@ class RouteService : AccessibilityService() {
             if (!running) return
             try {
                 val now = SystemClock.uptimeMillis()
-                if (now - lastEvent < 60_000 || overlay.isShowing) scan()
+                if (now - lastEvent < 60_000 || overlay.isShowing || lastPkg.contains("ifood", true)) scan()
             } catch (_: Throwable) {
             }
             // botão flutuante: aparece no app de corridas (ou em qualquer app até descobrirmos qual é)
@@ -218,6 +218,14 @@ class RouteService : AccessibilityService() {
         runCatching { maybeAutoAccept(results) }
     }
 
+    /** Botão "Testar" da tela do assistente: mostra a comemoração sem lançar nada. */
+    fun testarComemoracao() {
+        handler.post {
+            runCatching { fab.setVisible(true); fab.celebrar(68.0) }
+            runCatching { RouteAlert.moedas(this) }
+        }
+    }
+
     /** Tela "Oba, mais uma rota concluída!" do iFood: lança o valor ganho (+ bônus) no Prismo Drive. */
     private fun lerSaldoIfood(roots: List<AccessibilityNodeInfo>) {
         if (!prefs.ifoodSaldoAuto) return
@@ -225,8 +233,13 @@ class RouteService : AccessibilityService() {
             val p = r.packageName?.toString().orEmpty()
             val ehIfood = p.contains("ifood", true) || (p.isNotEmpty() && p == prefs.ifoodPkg)
             if (!ehIfood) continue
-            val (valor, bonus) = IfoodSaldo.lerConclusao(r) ?: continue
-            IfoodSaldo.observarConclusao(this, valor, bonus)
+            val lido = IfoodSaldo.lerConclusao(r)
+            if (lido == null) { IfoodSaldo.telaSumiu(); continue }
+            val lancado = IfoodSaldo.observarConclusao(this, lido.first, lido.second)
+            if (lancado != null && lancado > 0) {
+                runCatching { fab.celebrar(lancado) }
+                runCatching { RouteAlert.moedas(this) }
+            }
             return
         }
     }

@@ -627,7 +627,15 @@ class RotasActivity : Activity() {
             "Último lançado: ${money(est.optDouble("valor", 0.0))}" + (if (b > 0) " + ${money(b)} de bônus" else "") + " · $quando"
         } else "Ainda nenhuma rota concluída lançada."
         rec.addView(tx(txtEst, 12f, MUTED), lp(10))
-        rec.addView(tx("Quando aparece \"Oba, mais uma rota concluída!\", o valor ganho entra no Faturamento do dia e no Saldo em conta. O bônus verde (+ R$) entra junto, como \"Bônus iFood\" no extrato. Cada tela é lançada uma vez só.", 11.5f, MUTED), lp(6))
+        rec.addView(button("💰 Testar comemoração", false) {
+            if (!RotasStatus.ligado(this)) {
+                Toast.makeText(this, "Ligue o assistente para ver o botão flutuante", Toast.LENGTH_SHORT).show()
+            } else {
+                sendBroadcast(Intent(this, PowerReceiver::class.java).setAction(Notif.ACTION_TESTE_MOEDA))
+                Toast.makeText(this, "Olhe o botão flutuante 👀", Toast.LENGTH_SHORT).show()
+            }
+        }, lp(12))
+        rec.addView(tx("Quando aparece \"Oba, mais uma rota concluída!\", o valor ganho entra na hora no Faturamento do dia e no Saldo em conta — e o botão flutuante vira uma moeda com som de moedas para confirmar. O bônus verde (+ R$) entra junto, como \"Bônus iFood\" no extrato. Cada tela é lançada uma vez só.", 11.5f, MUTED), lp(6))
         body.addView(rec, lp(12))
 
         val ifRecs = MonthRef.monthRecs(this, route = true)

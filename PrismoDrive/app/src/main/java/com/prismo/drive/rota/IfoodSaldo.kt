@@ -16,9 +16,9 @@ import java.io.RandomAccessFile
  * lançamento no Prismo Drive: entra no Faturamento do dia e no Saldo em conta da Carteira, com
  * "Recebimento iFood" (e "Bônus iFood" separado) no extrato.
  *
- * - Cada tela de rota concluída é lançada UMA vez (a mesma tela relida várias vezes não repete).
- * - Os valores precisam ficar iguais por ~1,5 s antes de lançar (o bônus às vezes aparece depois).
+ * - Lança na hora em que a tela aparece, UMA vez por tela (relida várias vezes não repete).
  * - Se o bônus aparecer depois do valor já lançado, só o bônus é lançado.
+ * - A cada lançamento o botão flutuante comemora (moeda girando, "+R$" subindo e som de moedas).
  *
  * O serviço (processo ":rotas") grava os recebimentos numa fila em arquivo; a tela do Prismo Drive
  * (processo principal) busca a fila, lança e confirma.
@@ -36,12 +36,11 @@ object IfoodSaldo {
 
     private class Lido(val valor: Double, val mais: Boolean, val top: Int, val left: Int, val altura: Int)
 
-    // estabilidade e anti-repetição (só no processo do serviço)
-    private var candKey = ""
-    private var candDesde = 0L
-    private var ultPrincipal = -1.0
+    // sessão da tela "rota concluída" (só no processo do serviço)
+    private var sessaoAtiva = false        // a tela está (ou estava há pouco) aberta
+    private var ultPrincipal = 0.0
     private var ultBonus = 0.0
-    private var ultVisto = 0L
+    private var sumiuDesde = 0L            // 1ª leitura do iFood SEM a tela de conclusão
 
     private fun dir(ctx: Context) = (ctx.applicationContext ?: ctx).filesDir
 
@@ -113,26 +112,40 @@ object IfoodSaldo {
         return Pair(principal.valor, bonus?.valor ?: 0.0)
     }
 
-    /** Chamado a cada leitura da tela de rota concluída. */
-    fun observarConclusao(ctx: Context, principal: Double, bonus: Double) {
-        val agora = SystemClock.uptimeMillis()
-        val key = String.format(java.util.Locale.US, "%.2f|%.2f", principal, bonus)
-        if (key != candKey) { candKey = key; candDesde = agora; return }
-        if (agora - candDesde < 1500) return
-
-        val mesmaTela = Math.abs(principal - ultPrincipal) < 0.005 && agora - ultVisto < 120_000
-        if (mesmaTela) {
-            ultVisto = agora
-            if (bonus > ultBonus + 0.005) {          // bônus apareceu depois: lança só ele
-                enfileirar(ctx, 0.0, Math.round((bonus - ultBonus) * 100) / 100.0)
-                ultBonus = bonus
-            }
-            return
+    /**
+     * Chamado a cada leitura da tela de rota concluída. Lança NA HORA (sem esperar), uma vez por tela.
+     * Se depois disso o valor ou o bônus aumentarem na mesma tela (animação, bônus que aparece
+     * depois), lança só a diferença. Retorna o total lançado agora (null = nada novo).
+     */
+    fun observarConclusao(ctx: Context, principal: Double, bonus: Double): Double? {
+        sumiuDesde = 0L
+        if (sessaoAtiva) {
+            val dv = Math.round((principal - ultPrincipal) * 100) / 100.0
+            val db = Math.round((bonus - ultBonus) * 100) / 100.0
+            if (dv <= 0.0 && db <= 0.0) return null
+            ultPrincipal = maxOf(ultPrincipal, principal)
+            ultBonus = maxOf(ultBonus, bonus)
+            val v = maxOf(dv, 0.0); val b = maxOf(db, 0.0)
+            enfileirar(ctx, v, b)
+            return v + b
         }
+        sessaoAtiva = true
         ultPrincipal = principal
         ultBonus = bonus
-        ultVisto = agora
         enfileirar(ctx, principal, bonus)
+        return principal + bonus
+    }
+
+    /**
+     * Leitura do iFood em que a tela de conclusão NÃO está. Depois de ~1,2 s sem ela, a sessão
+     * termina: a próxima "rota concluída" conta como nova. (Um tropeço de leitura com a tela ainda
+     * aberta não encerra a sessão, então a mesma rota nunca é lançada duas vezes.)
+     */
+    fun telaSumiu() {
+        if (!sessaoAtiva) return
+        val agora = SystemClock.uptimeMillis()
+        if (sumiuDesde == 0L) { sumiuDesde = agora; return }
+        if (agora - sumiuDesde >= 1200) { sessaoAtiva = false; sumiuDesde = 0L }
     }
 
     private fun enfileirar(ctx: Context, valor: Double, bonus: Double) {

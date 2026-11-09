@@ -113,6 +113,95 @@ class Fab(private val svc: AccessibilityService) {
 
     private var shownKey = ""
     private var blink: ValueAnimator? = null
+    private var comemorandoAte = 0L
+
+    /**
+     * Comemoração quando uma rota concluída do iFood entra na carteira: o botão vira uma moeda
+     * dourada que gira com "+R$", dá um pulo e solta um balão "+R$ 68,00 · na carteira" que sobe e some.
+     */
+    fun celebrar(valor: Double) {
+        if (button == null) showButton()
+        val c = circle ?: return
+        val t = valueText ?: return
+        val ic = icon ?: return
+        comemorandoAte = SystemClock.uptimeMillis() + 2600
+        stopPulse()
+        c.animate().cancel()
+        // moeda
+        c.background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFFFFE08A.toInt(), 0xFFF5B301.toInt(), 0xFFB97800.toInt())).apply {
+            shape = GradientDrawable.OVAL
+            setStroke(dp(2), 0xFFFFF4C2.toInt())
+        }
+        ic.visibility = View.GONE
+        t.visibility = View.VISIBLE
+        t.setTextColor(0xFF3A2500.toInt())
+        t.setShadowLayer(0f, 0f, 0f, 0)
+        t.textSize = if (valor >= 100) 11f else 13f
+        t.text = "+" + String.format(BR, "%.0f", valor)
+        c.scaleX = 0.6f; c.scaleY = 0.6f; c.rotationY = 0f
+        c.animate().scaleX(1.25f).scaleY(1.25f).rotationY(720f)
+            .setDuration(650).setInterpolator(android.view.animation.OvershootInterpolator(2.2f))
+            .withEndAction {
+                c.animate().scaleX(1f).scaleY(1f).setDuration(260).start()
+            }.start()
+        balaoValor(valor)
+        // volta ao normal depois da comemoração
+        handler.postDelayed({
+            if (SystemClock.uptimeMillis() < comemorandoAte) return@postDelayed
+            val cc = circle ?: return@postDelayed
+            cc.rotationY = 0f
+            valueText?.setTextColor(TXT)
+            valueText?.setShadowLayer(dpf(2f), 0f, dpf(1f), 0x66000000)
+            valueText?.textSize = 14f
+            shownKey = "~"          // força redesenhar o estado atual
+            applyBest()
+        }, 2700)
+    }
+
+    /** Balão "+R$ 68,00 · na carteira" que sobe ao lado do botão e desaparece. */
+    private fun balaoValor(valor: Double) {
+        val blp = buttonLp ?: return
+        val txt = TextView(svc).apply {
+            text = "💰 +" + String.format(BR, "R$ %.2f", valor) + "  ·  na carteira"
+            setTextColor(0xFFFFFFFF.toInt())
+            textSize = 13f
+            setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD))
+            setPadding(dp(14), dp(9), dp(14), dp(9))
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0xFF1A7A3A.toInt(), 0xFF2EA44F.toInt())).apply {
+                cornerRadius = dpf(20f)
+                setStroke(dp(1), 0x66FFFFFF)
+            }
+            elevation = dpf(8f)
+            alpha = 0f
+        }
+        val w = FrameLayout(svc).apply {
+            clipChildren = false
+            addView(txt, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        }
+        val largura = dp(250)
+        val noLadoDireito = blp.x > screenW() / 2
+        val lp = WindowManager.LayoutParams(
+            largura, dp(110),
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = if (noLadoDireito) (blp.x + dp(BTN) - largura).coerceAtLeast(0) else blp.x.coerceAtMost(screenW() - largura)
+            y = (blp.y - dp(100)).coerceAtLeast(0)
+        }
+        runCatching { wm.addView(w, lp) }.onSuccess {
+            txt.translationY = dpf(40f)
+            txt.scaleX = 0.8f; txt.scaleY = 0.8f
+            txt.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f).setDuration(380)
+                .setInterpolator(android.view.animation.OvershootInterpolator(1.6f))
+                .withEndAction {
+                    txt.animate().alpha(0f).translationY(-dpf(36f)).setStartDelay(1500).setDuration(600)
+                        .withEndAction { runCatching { wm.removeView(w) } }.start()
+                }.start()
+        }
+    }
 
     private fun idleBackground() = GradientDrawable(
         GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF1C2B22.toInt(), 0xFF0B0F14.toInt())
@@ -129,6 +218,7 @@ class Fab(private val svc: AccessibilityService) {
         val eff = r?.effRpk
         val key = if (r == null || eff == null) "idle" else
             String.format(BR, "%.2f", eff) + "|" + Evaluator.labelOf(r) + "|" + r.level
+        if (SystemClock.uptimeMillis() < comemorandoAte) return   // deixa a comemoração terminar
         if (key == shownKey) return          // nada mudou: não reinicia a animação
         shownKey = key
         stopPulse()

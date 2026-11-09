@@ -79,6 +79,18 @@ object RouteAlert {
         play(ctx, prefs.alertSound, prefs.alertVibe)
     }
 
+    /** Som de moedas + vibração curta: valor da rota concluída lançado no Prismo Drive. */
+    fun moedas(ctx: Context) {
+        val app = ctx.applicationContext
+        runCatching { playSound(app, 2) }          // alerta_moeda
+        runCatching {
+            val v = vibrator(app) ?: return@runCatching
+            if (Build.VERSION.SDK_INT >= 26) {
+                v.vibrate(android.os.VibrationEffect.createWaveform(longArrayOf(0, 40, 60, 40, 60, 90), -1))
+            }
+        }
+    }
+
     /** Toca o som [sound] e a vibração [vibe] (também usado no botão "Testar"). */
     fun play(ctx: Context, sound: Int, vibe: Int) {
         val app = ctx.applicationContext

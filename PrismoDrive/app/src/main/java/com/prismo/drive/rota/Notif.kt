@@ -26,6 +26,7 @@ object Notif {
     const val ACTION_OFF = "com.prismo.drive.rota.action.DESLIGAR"
     const val ACTION_DISMISSED = "com.prismo.drive.rota.action.NOTIF_REMOVIDA"
     const val ACTION_SHUTDOWN = "com.prismo.drive.rota.action.ENCERRAR"
+    const val ACTION_TESTE_MOEDA = "com.prismo.drive.rota.action.TESTE_MOEDA"
 
     fun canPost(ctx: Context) =
         Build.VERSION.SDK_INT < 33 ||
@@ -103,6 +104,7 @@ class PowerReceiver : BroadcastReceiver() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+            Notif.ACTION_TESTE_MOEDA -> RouteService.instance?.testarComemoracao()
             Notif.ACTION_SHUTDOWN -> {
                 // pedido vindo da tela (outro processo): desliga sem repetir o aviso
                 RouteService.instance?.shutdown()
