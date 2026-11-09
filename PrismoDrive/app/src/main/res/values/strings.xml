@@ -6,5 +6,5 @@
     <string name="canal_nome">Avisos do Prismo Drive</string>
     <string name="canal_desc">Vencimentos, manutenção, metas e lembretes</string>
     <string name="rotas_servico">Assistente de Rotas (Prismo Drive)</string>
-    <string name="rotas_servico_desc">Lê a tela de pedidos de corrida do iFood e do InDrive para calcular o valor por km e mostrar se a rota vale a pena. Nada sai do seu celular.</string>
+    <string name="rotas_servico_desc">Lê só as telas do iFood e do InDrive: as ofertas (valor, km e tempo) para mostrar se a rota vale a pena, e a tela \"rota concluída\" do iFood para lançar o ganho. Telas de outros apps são ignoradas. Nada é enviado para a internet: tudo fica no seu celular. Desligue antes de abrir o app do banco.</string>
 </resources>
