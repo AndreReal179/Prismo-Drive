@@ -56,13 +56,13 @@ jobs:
           if [ -z "$ARQ" ]; then echo "::error::settings.gradle.kts não encontrado. Envie a pasta do projeto para o repositório."; exit 1; fi
           PROJ=$(dirname "$ARQ")
           BASE=$(grep -m1 -E '^\s*versionName\s*=' "$PROJ/app/build.gradle.kts" | sed -E 's/.*"(.*)".*/\1/')
-          # Número da atualização dentro da versão base: 1.7 → 1.7.1, 1.7.2, 1.7.3…
-          # (conta quantos Releases v1.7.N já existem; build que falha não publica, então não pula número)
+          # Número da atualização dentro da versão base: 1.8 → 1.8, 1.8.1, 1.8.2…
+          # (pega o maior v1.8.N já publicado e soma 1; build que falha não publica, então não pula número)
           REPO_REL="${REPO_ATUALIZACAO:-${{ github.repository }}}"
-          N=$(gh release list --repo "$REPO_REL" --limit 1000 --json tagName \
-                --jq "[.[] | select(.tagName | test(\"^v${BASE//./\\\\.}\\\\.[0-9]+$\"))] | length" 2>/dev/null || echo 0)
-          [ -z "$N" ] && N=0
-          VERSAO="$BASE.$((N + 1))"
+          M=$(gh release list --repo "$REPO_REL" --limit 1000 --json tagName \
+                --jq "[.[] | .tagName | select(test(\"^v${BASE//./\\\\.}(\\\\.[0-9]+)?$\")) | ((capture(\"^v${BASE//./\\\\.}\\\\.(?<p>[0-9]+)$\").p) // \"0\" | tonumber)] | if length==0 then -1 else max end" 2>/dev/null || echo -1)
+          [ -z "$M" ] && M=-1
+          if [ "$M" -lt 0 ]; then VERSAO="$BASE"; else VERSAO="$BASE.$((M + 1))"; fi
           # versionCode automático: minutos desde 01/11/2026 (sempre maior que o anterior)
           CODIGO=$(( 100 + $(date +%s) / 60 - 29891520 ))
           echo "PROJ=$PROJ" >> "$GITHUB_ENV"
@@ -89,6 +89,7 @@ jobs:
 
       - name: Compilar APK (release)
         env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}   # Novidades: lê as notas das versões publicadas
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
