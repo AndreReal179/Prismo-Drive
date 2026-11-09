@@ -1,4 +1,4 @@
-• ✨ Correção: Novidades: as versões antigas não somem mais. Cada versão fica guardada e a lista mostra a mais nova em cima
-• 📚 Versões anteriores: ficam recolhidas abaixo das novidades atuais e abrem com um toque
-• 🧭 Assistente de rotas no menu: tela mais limpa, sem os cartões Hoje, R$/km médio e Melhor
-• 🔴 Foto do menu mostra o assistente: arco e bolinha verdes com o Assistente de rotas ligado, vermelhos quando está desligado. Toque na foto para ligar (abre a Acessibilidade se o Android pedir)
+• 📖 Novo: Guia do App reescrito: 26 capítulos com prints de todas as funções, incluindo Assistente de rotas, Carteira, Manutenção e Atualizações
+• 🔒 Transparência: capítulos que explicam o que o app usa e por quê (Acessibilidade, Localização, notificações, internet) e como ligar ou desligar cada um
+• 🛡️ Privacidade: o Assistente de rotas agora analisa só as telas do iFood e do InDrive; telas de outros apps são ignoradas
+• 🔴 Foto da tela inicial: arco e bolinha verdes com o Assistente de rotas ligado e vermelhos quando está desligado, igual ao menu lateral
