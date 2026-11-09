@@ -831,6 +831,15 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .rt-como summary{font-size:12px;font-weight:800;color:#c9d1d9;cursor:pointer;}
 .rt-como p{font-size:0.68rem;color:var(--muted);line-height:1.5;margin-top:7px;}
 </style>
+
+<style>
+.tl-app .pd-meta2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.tl-dur{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.3);color:#79b8ff;font-weight:800;font-size:.72rem;}
+.tl-dur .material-icons{font-size:13px;}
+.tl-app.ifood .pd-node{background:rgba(234,29,44,.12)!important;border-color:rgba(234,29,44,.35)!important;}
+.tl-app.ifood .pd-node .material-icons{color:#ff6b74!important;}
+.tl-bonus{font-size:.68rem;color:#3fb950;font-weight:700;margin-top:2px;}
+</style>
 </head>
 <body class="px-4 pt-4 pb-28 select-none" style="min-height:100dvh;">
 <!-- ══ TELA DE CARREGAMENTO (3s ao abrir o app e ao abrir a Carteira) ══ -->
@@ -1937,11 +1946,69 @@ function atualizarComparativoCombustivel(historico,custoHoje){
   const bg=subiu?'rgba(248,81,73,0.10)':(delta<0?'rgba(63,185,80,0.10)':'rgba(139,148,158,0.10)');
   icon.style.color=cor;txt.style.color=cor;el.style.background=bg;
 }
+/* ═══ LINHA DO TEMPO — rotas dos apps (iFood / InDrive) lançadas automaticamente ═══
+   Cada rota concluída vira 1 item: "iFood · 0,0 km  + R$ 68,00 · Hoje · ⏱ 42 min".
+   O tempo vem do Assistente de rotas: de "EM DESLOCAMENTO" até "Oba, mais uma rota concluída!". */
+function _tlAppKey(){return 'prismo_tl_apps_'+(perfilAtivo||'guest');}
+function tlAppLista(){try{const a=JSON.parse(localStorage.getItem(_tlAppKey()));return Array.isArray(a)?a:[];}catch(e){return [];}}
+function tlAppSalvar(a){try{const lim=Date.now()-120*86400000;localStorage.setItem(_tlAppKey(),JSON.stringify(a.filter(x=>x&&x.ts>=lim)));}catch(e){}}
+function tlAppRegistrar(p){
+  const lista=tlAppLista(),rid=String(p.rota||p.id),v=Number(p.valor)||0,b=Number(p.bonus)||0;
+  let it=lista.find(x=>x.id===rid);
+  if(!it){it={id:rid,app:p.app||'ifood',valor:0,bonus:0,km:0,dur:0,ts:Number(p.ts)||Date.now(),partes:[]};lista.push(it);}
+  it.valor=Math.round((it.valor+v)*100)/100;it.bonus=Math.round((it.bonus+b)*100)/100;
+  if(Number(p.dur)>0)it.dur=Number(p.dur);
+  if(v>0)it.partes.push({id:'if_'+p.id,valor:v});
+  if(b>0)it.partes.push({id:'ifb_'+p.id,valor:b});
+  tlAppSalvar(lista);
+}
+function fmtDuracaoRota(ms){
+  const m=Math.round((Number(ms)||0)/60000);if(m<=0)return '';
+  if(m<60)return m+' min';
+  return Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')+'min';
+}
+function _inicioSemanaTs(){const d=new Date();d.setHours(0,0,0,0);const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow);return d.getTime();}
+function tlAppSemana(){const ini=_inicioSemanaTs();return tlAppLista().filter(x=>x.ts>=ini);}
+function tlAppHtml(it){
+  const nomeApp=it.app==='indrive'?'InDrive':'iFood';
+  const d=new Date(it.ts),hoje=new Date(),ontem=new Date(Date.now()-86400000);
+  const mesmo=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  const p2=n=>String(n).padStart(2,'0');
+  const dia=mesmo(d,hoje)?'Hoje':(mesmo(d,ontem)?'Ontem':`${p2(d.getDate())}/${p2(d.getMonth()+1)}`);
+  const hora=`${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  const dur=fmtDuracaoRota(it.dur);
+  const total=(Number(it.valor)||0)+(Number(it.bonus)||0);
+  const km=(Number(it.km)||0).toFixed(1).replace('.',',');
+  return `<div class="hist-item pd-item tl-app ${it.app==='indrive'?'indrive':'ifood'}"><div class="pd-row in"><div class="pd-node"><span class="material-icons">${it.app==='indrive'?'local_taxi':'delivery_dining'}</span></div><div class="pd-txt"><p class="pd-title">${nomeApp} · ${km} km</p><p class="pd-meta2">${dia} · ${hora}${dur?` <span class="tl-dur"><span class="material-icons">timer</span>${dur}</span>`:''}</p>${it.bonus>0?`<p class="tl-bonus">inclui bônus de ${moeda(it.bonus)}</p>`:''}</div><p class="pd-amt">+ ${moeda(total)}</p></div><div class="pd-acts"><button onclick="excluirRotaApp('${escaparHtml(it.id)}')" class="pd-act del"><span class="material-icons">delete</span>EXCLUIR</button></div></div>`;
+}
+function excluirRotaApp(id){
+  abrirConfirmacao('Excluir esta rota? O valor sai do faturamento e da carteira.',()=>{
+    const lista=tlAppLista(),it=lista.find(x=>x.id===id);if(!it)return;
+    (it.partes||[]).forEach(pt=>{
+      try{
+        if(getDiariaEntries().some(e=>e.id===pt.id))removerDiariaEntry(pt.id);
+        else{carteiraDiaria({id:pt.id,valor:pt.valor,criadoEm:it.ts},-1);setDiariaHist(getDiariaHist().filter(x=>x.id!==pt.id));}
+      }catch(e){}
+    });
+    tlAppSalvar(lista.filter(x=>x.id!==id));
+    try{renderizarHistorico(ultimoHistoricoCache||[]);}catch(e){}
+    try{atualizarFaturamentoDia();}catch(e){}
+    showToast('Rota excluída');
+  });
+}
 function renderizarHistorico(historico){
   const cont=$('lista-historico');if(!cont)return;
-  if(!historico.length){cont.innerHTML='<div class="pd-empty"><span class="material-icons">route</span><p>Nenhum registro esta semana</p><small>Toque no botão verde para lançar sua primeira rota</small></div>';return;}
+  historico=historico||[];
+  let apps=[];try{apps=tlAppSemana();}catch(e){}
+  if(!historico.length&&!apps.length){cont.innerHTML='<div class="pd-empty"><span class="material-icons">route</span><p>Nenhum registro esta semana</p><small>Toque no botão verde para lançar sua primeira rota</small></div>';return;}
   const rotuloData=d=>{try{if(d===dataBROffset(0))return 'Hoje';if(d===dataBROffset(1))return 'Ontem';}catch(e){}return d;};
-  cont.innerHTML=historico.map(item=>{
+  const tsData=d=>{const p=String(d||'').split('/');const x=new Date(+p[2],(+p[1]||1)-1,+p[0]||1,23,59,0);return isNaN(x.getTime())?0:x.getTime();};
+  const blocos=historico.map((item,i)=>({k:tsData(item.data)-i*1000,item}));
+  apps.forEach(it=>blocos.push({k:it.ts,app:it}));
+  blocos.sort((a,b)=>b.k-a.k);
+  cont.innerHTML=blocos.map(bl=>{
+    if(bl.app)return tlAppHtml(bl.app);
+    const item=bl.item;
     const tipo=String(item.tipo||'').toUpperCase();
     if(tipo==='ODO_DIA')return `<div class="hist-item pd-item"><div class="pd-row odo"><div class="pd-node"><span class="material-icons">speed</span></div><div class="pd-txt"><p class="pd-title">Odômetro do dia</p><p class="pd-meta2">${escaparHtml(rotuloData(item.data))}</p></div><p class="pd-amt">${item.km?Number(item.km).toLocaleString('pt-BR')+' km':'—'}</p></div></div>`;
     const saida=['ABASTECIMENTO','GASTO','SUBTRAIR','GASTO_CARTEIRA'].includes(tipo);
@@ -4285,12 +4352,15 @@ window.PrismoIfood=(function(){
           addDiariaEntry({id:id,valor:v,km:0,consumo:cons,preco:pre,criadoEm:ts,diaISO:iso,origem:origem});
           total+=v;
         }
+        var antes=total;
         lanca('if_'+p.id,p.valor,'ifood');          /* "Você ganhou: R$ 60,00" */
         lanca('ifb_'+p.id,p.bonus,'ifood_bonus');   /* "+ R$ 8,00" em verde (promoção) */
+        if(total>antes){try{tlAppRegistrar(p);}catch(e){}}
         feitos.push(p.id);
       });
       if(feitos.length)n.ifoodConfirmar(JSON.stringify(feitos));
       if(total>0){
+        try{renderizarHistorico(ultimoHistoricoCache||[]);}catch(e){}
         try{renderDiariaLista();}catch(e){}
         try{atualizarFaturamentoDia();}catch(e){}
         try{showToast('💰 Recebimento iFood: +'+moeda(total)+' no faturamento e na carteira');}catch(e){}

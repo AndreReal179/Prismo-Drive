@@ -41,6 +41,10 @@ object IfoodSaldo {
     private var ultPrincipal = 0.0
     private var ultBonus = 0.0
     private var sumiuDesde = 0L            // 1ª leitura do iFood SEM a tela de conclusão
+    private var rotaId = ""                // liga valor + bônus que chegam separados à mesma rota
+
+    private const val ARQ_INICIO = "ifood_rota_inicio"
+    private const val MAX_ROTA_MS = 5 * 3600_000L   // rota "esquecida" há mais de 5 h não conta tempo
 
     private fun dir(ctx: Context) = (ctx.applicationContext ?: ctx).filesDir
 
@@ -60,6 +64,43 @@ object IfoodSaldo {
 
     private fun num(m: MatchResult): Double? =
         (m.groupValues[2].replace(".", "") + "." + m.groupValues[3]).toDoubleOrNull()
+
+
+    // ───────────────────────── duração da rota ─────────────────────────
+
+    /** A tela "EM DESLOCAMENTO" do iFood está aberta? (rota iniciada) */
+    fun emDeslocamento(root: AccessibilityNodeInfo): Boolean {
+        val fila = ArrayDeque<AccessibilityNodeInfo>()
+        fila.add(root)
+        var vistos = 0
+        while (fila.isNotEmpty() && vistos < 400) {
+            val n = fila.removeFirst()
+            vistos++
+            val t = (n.text?.toString() ?: n.contentDescription?.toString() ?: "")
+            if (t.contains("em deslocamento", true)) return true
+            for (i in 0 until n.childCount) n.getChild(i)?.let { fila.add(it) }
+        }
+        return false
+    }
+
+    /** Marca o início da rota na 1ª vez que aparece "EM DESLOCAMENTO" (as próximas paradas não reiniciam). */
+    fun marcarInicio(ctx: Context) {
+        val agora = System.currentTimeMillis()
+        val ini = inicio(ctx)
+        if (ini > 0 && agora - ini < MAX_ROTA_MS) return
+        runCatching { File(dir(ctx), ARQ_INICIO).writeText(agora.toString()) }
+    }
+
+    fun inicio(ctx: Context): Long =
+        runCatching { File(dir(ctx), ARQ_INICIO).readText().trim().toLong() }.getOrDefault(0L)
+
+    /** Fecha a contagem: devolve a duração (ms) e zera o início. */
+    private fun fecharDuracao(ctx: Context): Long {
+        val ini = inicio(ctx)
+        runCatching { File(dir(ctx), ARQ_INICIO).delete() }
+        val d = System.currentTimeMillis() - ini
+        return if (ini > 0 && d in 1..MAX_ROTA_MS) d else 0L
+    }
 
     // ───────────────────────── leitura da tela (serviço) ─────────────────────────
 
@@ -132,7 +173,8 @@ object IfoodSaldo {
         sessaoAtiva = true
         ultPrincipal = principal
         ultBonus = bonus
-        enfileirar(ctx, principal, bonus)
+        rotaId = System.currentTimeMillis().toString(36)
+        enfileirar(ctx, principal, bonus, fecharDuracao(ctx))
         return principal + bonus
     }
 
@@ -148,7 +190,7 @@ object IfoodSaldo {
         if (agora - sumiuDesde >= 1200) { sessaoAtiva = false; sumiuDesde = 0L }
     }
 
-    private fun enfileirar(ctx: Context, valor: Double, bonus: Double) {
+    private fun enfileirar(ctx: Context, valor: Double, bonus: Double, dur: Long = 0L) {
         if (valor <= 0 && bonus <= 0) return
         runCatching {
             comTrava(ctx) {
@@ -159,7 +201,10 @@ object IfoodSaldo {
                     .put("id", agora.toString(36) + (Math.random() * 1e6).toLong().toString(36))
                     .put("valor", valor)
                     .put("bonus", bonus)
-                    .put("ts", agora))
+                    .put("ts", agora)
+                    .put("rota", rotaId.ifEmpty { agora.toString(36) })
+                    .put("app", "ifood")
+                    .put("dur", dur))
                 gravar(fFila, fila.toString())
                 Ganhos.registrarIfood(ctx, agora, valor + bonus)   // rendimento do dia / calendário
                 gravar(File(dir(ctx), ARQ_ESTADO), JSONObject()

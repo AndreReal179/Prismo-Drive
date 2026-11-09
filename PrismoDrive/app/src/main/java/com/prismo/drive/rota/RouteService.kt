@@ -234,7 +234,12 @@ class RouteService : AccessibilityService() {
             val ehIfood = p.contains("ifood", true) || (p.isNotEmpty() && p == prefs.ifoodPkg)
             if (!ehIfood) continue
             val lido = IfoodSaldo.lerConclusao(r)
-            if (lido == null) { IfoodSaldo.telaSumiu(); continue }
+            if (lido == null) {
+                IfoodSaldo.telaSumiu()
+                // "EM DESLOCAMENTO" = rota iniciada: começa a contar o tempo da rota
+                if (IfoodSaldo.emDeslocamento(r)) IfoodSaldo.marcarInicio(this)
+                continue
+            }
             val lancado = IfoodSaldo.observarConclusao(this, lido.first, lido.second)
             if (lancado != null && lancado > 0) {
                 runCatching { fab.celebrar(lancado) }
