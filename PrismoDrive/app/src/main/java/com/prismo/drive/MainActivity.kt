@@ -227,7 +227,7 @@ class MainActivity : Activity() {
                 if (pct >= 0) barraProgresso?.progress = pct
                 val mb = ev.optLong("baixado") / 1048576.0
                 val totalMb = ev.optLong("total") / 1048576.0
-                textoProgresso?.text = if (totalMb > 0)
+                textoProgresso?.text = if (ev.has("msg")) ev.optString("msg") else if (totalMb > 0)
                     String.format("Baixando… %.1f de %.1f MB", mb, totalMb)
                 else String.format("Baixando… %.1f MB", mb)
             }

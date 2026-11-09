@@ -191,37 +191,34 @@ object Atualizador {
                 val destino = File(pasta, "PrismoDrive.apk")
                 val tmp = File(pasta, "PrismoDrive.apk.part")
 
-                val con = (URL(url).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 15000
-                    readTimeout = 30000
-                    instanceFollowRedirects = true
-                    setRequestProperty("User-Agent", "PrismoDrive-Android")
-                }
-                try {
-                    if (con.responseCode !in 200..299) throw IllegalStateException("Download respondeu ${con.responseCode}")
-                    val total = con.contentLengthLong.takeIf { it > 0 } ?: info.optLong("tamanho", 0)
-                    var lido = 0L
-                    var ultimoPct = -1
-                    con.inputStream.use { ins ->
-                        tmp.outputStream().use { out ->
-                            val buf = ByteArray(64 * 1024)
-                            while (true) {
-                                val n = ins.read(buf)
-                                if (n < 0) break
-                                out.write(buf, 0, n)
-                                lido += n
-                                val pct = if (total > 0) ((lido * 100) / total).toInt() else -1
-                                if (pct != ultimoPct && (pct < 0 || pct - ultimoPct >= 2 || pct == 100)) {
-                                    ultimoPct = pct
-                                    cb(JSONObject().put("tipo", "progresso").put("pct", pct)
-                                        .put("baixado", lido).put("total", total))
-                                }
-                            }
+                // Tenta o link principal e, se o GitHub falhar (504, 502, queda de rede), tenta de novo
+                // e depois os links alternativos do mesmo Release.
+                val versao = info.optString("versao", "")
+                val alternativas = linkedSetOf(url)
+                if (versao.isNotEmpty() && url.endsWith("/PrismoDrive.apk"))
+                    alternativas.add(url.removeSuffix("PrismoDrive.apk") + "PrismoDrive_v$versao.apk")
+                if (repo.isNotEmpty()) alternativas.add("https://github.com/$repo/releases/latest/download/PrismoDrive.apk")
+                var ultimoErro: Throwable? = null
+                var ok = false
+                loop@ for (link in alternativas) {
+                    for (tentativa in 1..3) {
+                        try {
+                            baixarArquivo(link, tmp, info.optLong("tamanho", 0), cb)
+                            ok = true
+                            break@loop
+                        } catch (e: HttpErro) {
+                            ultimoErro = e
+                            if (e.codigo == 404) continue@loop          // link não existe: vai para o próximo
+                            if (e.codigo !in 500..599 && e.codigo != 429) throw e
+                        } catch (e: java.io.IOException) {
+                            ultimoErro = e                                // queda de rede / tempo esgotado
                         }
+                        cb(JSONObject().put("tipo", "progresso").put("pct", -1).put("baixado", 0L).put("total", 0L)
+                            .put("msg", "O servidor demorou, tentando de novo…"))
+                        Thread.sleep(2000L * tentativa)
                     }
-                } finally {
-                    con.disconnect()
                 }
+                if (!ok) throw ultimoErro ?: IllegalStateException("Falha no download")
                 if (!tmp.renameTo(destino)) throw IllegalStateException("Não foi possível salvar o arquivo")
 
                 // Confere se é mesmo o Prismo Drive e se é mais novo
@@ -237,6 +234,44 @@ object Atualizador {
                 baixando = false
                 cb(erro(mensagemErro(e)))
             }
+        }
+    }
+
+    private class HttpErro(val codigo: Int) : Exception("Download respondeu $codigo")
+
+    private fun baixarArquivo(link: String, tmp: File, tamanhoInfo: Long, cb: (JSONObject) -> Unit) {
+        val con = (URL(link).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 20000
+            readTimeout = 40000
+            instanceFollowRedirects = true
+            setRequestProperty("User-Agent", "PrismoDrive-Android")
+        }
+        try {
+            val code = con.responseCode
+            if (code !in 200..299) throw HttpErro(code)
+            val total = con.contentLengthLong.takeIf { it > 0 } ?: tamanhoInfo
+            var lido = 0L
+            var ultimoPct = -1
+            con.inputStream.use { ins ->
+                tmp.outputStream().use { out ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = ins.read(buf)
+                        if (n < 0) break
+                        out.write(buf, 0, n)
+                        lido += n
+                        val pct = if (total > 0) ((lido * 100) / total).toInt() else -1
+                        if (pct != ultimoPct && (pct < 0 || pct - ultimoPct >= 2 || pct == 100)) {
+                            ultimoPct = pct
+                            cb(JSONObject().put("tipo", "progresso").put("pct", pct)
+                                .put("baixado", lido).put("total", total))
+                        }
+                    }
+                }
+            }
+            if (total > 0 && lido < total) throw java.io.IOException("Download incompleto")
+        } finally {
+            con.disconnect()
         }
     }
 
@@ -284,6 +319,9 @@ object Atualizador {
     private fun erro(msg: String) = JSONObject().put("tipo", "erro").put("msg", msg)
 
     private fun mensagemErro(e: Throwable): String = when (e) {
+        is HttpErro -> if (e.codigo in 500..599 || e.codigo == 429)
+            "O GitHub não respondeu agora (erro ${e.codigo}). Tente de novo em alguns minutos."
+        else "O download falhou (erro ${e.codigo})."
         is java.net.UnknownHostException -> "Sem internet. Conecte-se e tente de novo."
         is java.net.SocketTimeoutException -> "A conexão demorou demais. Tente de novo."
         is javax.net.ssl.SSLException -> "Falha de conexão segura. Tente de novo."
