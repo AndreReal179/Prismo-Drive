@@ -1,5 +1,12 @@
 [
  {
+  "versao": "1.8.8",
+  "data": "2026-11-10",
+  "itens": [
+   "🍔 iFood: o assistente lê o novo layout da rota oferecida (Valor da rota, Distância, Tempo e as paradas numeradas), com selo, R$/km, gasolina e número de coletas e entregas"
+  ]
+ },
+ {
   "versao": "1.8.7",
   "data": "2026-11-09",
   "itens": [
