@@ -181,6 +181,46 @@ class PrismoBridge(private val activity: Activity) {
 
     // ── Recebimentos do iFood lidos pelo assistente (fila entre processos) ──
 
+    // ───────────── Turno (km e tempo pelo GPS) ─────────────
+
+    @JavascriptInterface
+    fun turnoEstado(): String = try {
+        com.prismo.drive.rota.Turno.json(activity)
+    } catch (_: Throwable) {
+        "{}"
+    }
+
+    /** "ok" = começou · "permissao" = pediu a localização (a página recebe o evento prismo-turno) · "erro" */
+    @JavascriptInterface
+    fun turnoIniciar(): String = try {
+        if (com.prismo.drive.rota.KmGps.temPermissao(activity)) {
+            if (com.prismo.drive.rota.Turno.iniciar(activity)) "ok" else "erro"
+        } else {
+            main.post {
+                runCatching {
+                    activity.requestPermissions(
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                        REQ_LOC_TURNO
+                    )
+                }
+            }
+            "permissao"
+        }
+    } catch (_: Throwable) {
+        "erro"
+    }
+
+    @JavascriptInterface
+    fun turnoFinalizar(): String = try {
+        com.prismo.drive.rota.Turno.finalizar(activity)
+    } catch (_: Throwable) {
+        "{}"
+    }
+
+    /** Ação pendente vinda da notificação ou do botão flutuante (ex.: "turno_finalizar"); lê uma vez. */
+    @JavascriptInterface
+    fun turnoAcao(): String = (activity as? MainActivity)?.consumirAcao() ?: ""
+
     @JavascriptInterface
     fun ifoodPendentes(): String = com.prismo.drive.rota.IfoodSaldo.pendentes(activity)
 
@@ -239,6 +279,7 @@ class PrismoBridge(private val activity: Activity) {
 
     companion object {
         const val REQ_NOTIF = 7
+        const val REQ_LOC_TURNO = 4202
 
         fun pedirPermissaoNotificacao(activity: Activity) {
             try {

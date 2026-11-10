@@ -52,9 +52,30 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Ação pedida pela notificação/botão flutuante (ex.: finalizar o turno), entregue à página uma vez. */
+    @Volatile private var acaoPendente: String? = null
+
+    fun consumirAcao(): String { val a = acaoPendente ?: ""; acaoPendente = null; return a }
+
+    private fun lerAcao(i: Intent?) {
+        val a = i?.getStringExtra(com.prismo.drive.rota.Turno.EXTRA_ACAO) ?: return
+        i.removeExtra(com.prismo.drive.rota.Turno.EXTRA_ACAO)
+        acaoPendente = a
+        if (::web.isInitialized) handler.postDelayed({
+            runCatching { web.evaluateJavascript("try{window.PrismoTurno&&PrismoTurno.verAcao();}catch(e){}", null) }
+        }, 600)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        lerAcao(intent)
+    }
+
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lerAcao(intent)
 
         web = WebView(this).apply {
             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.bg_dark))
@@ -171,6 +192,14 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PrismoBridge.REQ_LOC_TURNO) {
+            val ok = grantResults.isNotEmpty() && grantResults.any { it == android.content.pm.PackageManager.PERMISSION_GRANTED } &&
+                com.prismo.drive.rota.KmGps.temPermissao(this)
+            val r = if (ok && com.prismo.drive.rota.Turno.iniciar(this)) "ok" else "negada"
+            web.evaluateJavascript(
+                "try{window.dispatchEvent(new CustomEvent('prismo-turno',{detail:'$r'}));}catch(e){}", null
+            )
+        }
         if (requestCode == PrismoBridge.REQ_NOTIF) {
             // Avisa a página para atualizar o status das notificações, se ela tiver o gancho.
             web.evaluateJavascript(
@@ -435,6 +464,8 @@ class MainActivity : Activity() {
  function vis(e){if(!e)return false;if(e.classList&&e.classList.contains('hidden'))return false;return getComputedStyle(e).display!=='none';}
  var c=el('carteira-app');
  if(c&&c.style.display==='block'&&typeof fecharCarteira==='function'){fecharCarteira();return '1';}
+ if(vis(el('modal-turno-fim'))&&typeof PrismoTurno!=='undefined'){PrismoTurno.fecharFim();return '1';}
+ if(vis(el('modal-contas-semana'))&&typeof fecharContasSemana==='function'){fecharContasSemana();return '1';}
  if(vis(el('guia-app'))&&typeof fecharGuia==='function'){fecharGuia();return '1';}
  if(vis(el('manut-wizard'))&&typeof mwVoltar==='function'){mwVoltar();return '1';}
  if(vis(el('modal-peca-form'))&&typeof fecharModalPecaForm==='function'){fecharModalPecaForm();return '1';}
