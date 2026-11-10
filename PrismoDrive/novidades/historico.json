@@ -1,5 +1,12 @@
 [
  {
+  "versao": "1.8.6",
+  "data": "2026-11-09",
+  "itens": [
+   "🔄 Correção: Atualização mais resistente: se o GitHub falhar no download (erro 504, 502 ou queda de rede), o app tenta de novo sozinho e usa um link alternativo"
+  ]
+ },
+ {
   "versao": "1.8.5",
   "data": "2026-11-09",
   "itens": [
