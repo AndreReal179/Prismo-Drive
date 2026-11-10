@@ -44,6 +44,11 @@
             android:name=".AlarmReceiver"
             android:exported="false" />
 
+        <!-- zera os widgets na virada do dia -->
+        <receiver
+            android:name=".WidgetMeiaNoite"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

@@ -20,6 +20,7 @@ import kotlin.math.roundToLong
 class PrismoWidget4x2 : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { WidgetUtil.atualizar(context, manager, it, grande = true) }
+        WidgetUtil.agendarMeiaNoite(context)
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle?) {
@@ -31,6 +32,7 @@ class PrismoWidget4x2 : AppWidgetProvider() {
 class PrismoWidget2x2 : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { WidgetUtil.atualizar(context, manager, it, grande = false) }
+        WidgetUtil.agendarMeiaNoite(context)
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle?) {
@@ -56,6 +58,7 @@ object WidgetUtil {
             o.put("ts", System.currentTimeMillis())
             prefs(ctx).edit().putString(KEY, o.toString()).apply()
             atualizarTodos(ctx)
+            agendarMeiaNoite(ctx)
         } catch (_: Throwable) {
         }
     }
@@ -77,6 +80,29 @@ object WidgetUtil {
     fun atualizar(ctx: Context, mgr: AppWidgetManager, id: Int, grande: Boolean) {
         try {
             mgr.updateAppWidget(id, montar(ctx, grande))
+        } catch (_: Throwable) {
+        }
+    }
+
+    /**
+     * Virada do dia: redesenha os widgets logo depois da meia-noite, mesmo com o app fechado.
+     * Os dados guardados são de "ontem", então ganho, rotas, km, combustível e lucro aparecem zerados.
+     */
+    fun agendarMeiaNoite(context: Context) {
+        try {
+            val ctx = context.applicationContext ?: context
+            val am = ctx.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            val c = java.util.Calendar.getInstance().apply {
+                add(java.util.Calendar.DAY_OF_YEAR, 1)
+                set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 30); set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val pi = PendingIntent.getBroadcast(
+                ctx, 7701, Intent(ctx, WidgetMeiaNoite::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            if (android.os.Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(android.app.AlarmManager.RTC, c.timeInMillis, pi)
+            else am.set(android.app.AlarmManager.RTC, c.timeInMillis, pi)
         } catch (_: Throwable) {
         }
     }
@@ -170,4 +196,13 @@ object WidgetUtil {
     private fun inteiro(x: Double) = String.format(BR, "%,d", x.toLong())
     private fun kmTxt(x: Double) = String.format(BR, "%,.1f", x)
     private fun metaTxt(x: Double) = if (x != floor(x)) num(x) else inteiro(x)
+}
+
+
+/** Alarme da meia-noite: zera os widgets e já agenda a próxima virada. */
+class WidgetMeiaNoite : android.content.BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        WidgetUtil.atualizarTodos(context)
+        WidgetUtil.agendarMeiaNoite(context)
+    }
 }

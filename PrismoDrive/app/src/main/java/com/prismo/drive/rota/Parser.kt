@@ -23,6 +23,8 @@ object Parser {
     private val BUBBLE = Regex("""(\d+)\s*min\D{0,6}([\d.,]+)\s*km""", RegexOption.DOT_MATCHES_ALL)
     private val ONLY_KM = Regex("""^\s*([\d.,]+)\s*km\s*$""")
     private val RATING = Regex("""^\s*(\d[.,]\d{1,2})\s*(\(\d+\))?\s*$""")
+    // layout novo do InDrive: "★ 4.34 (259)" na mesma linha do nome, ou "4.34" sozinho
+    private val RATING_STAR = Regex("""(?:★|☆|⭐)\s*(\d[.,]\d{1,2})|(?:^|\s)(\d[.,]\d{1,2})\s*\(\d+\)""")
 
     fun num(s: String): Double? {
         var t = s.trim().trimEnd('.', ',')
@@ -180,21 +182,33 @@ object Parser {
         val heads = items.filter { RPK.containsMatchIn(it.text) }.sortedBy { it.rect.top }
         val offers = mutableListOf<Offer>()
         heads.forEachIndexed { i, h ->
-            val top = h.rect.top - 2
-            val bottom = heads.getOrNull(i + 1)?.rect?.top ?: Int.MAX_VALUE
-            val region = items.filter { it.rect.top in top until bottom }
+            // o preço grande ("R$20") fica na mesma linha do "R$ 1,1/km", mas começa um pouco mais acima
+            val folga = maxOf(40, h.rect.height())
+            val prevBottom = heads.getOrNull(i - 1)?.rect?.bottom ?: Int.MIN_VALUE
+            val top = maxOf(h.rect.top - folga, prevBottom + 1)
+            val bottom = heads.getOrNull(i + 1)?.let { it.rect.top - maxOf(40, it.rect.height()) } ?: Int.MAX_VALUE
+            val region = items.filter { it.rect.top in top until bottom || (it.rect.top < top && it.rect.bottom > h.rect.top) }
+                .sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
             val joined = region.joinToString("\n") { it.text }
 
             val price = firstPrice(joined) ?: return@forEachIndexed
             val rpk = RPK.find(joined)?.let { num(it.groupValues[1]) }
-            val pickup = PICK.find(joined)?.let { num(it.groupValues[1]) }
+            // layout antigo: "~2,7 km" até o passageiro · layout novo: "2,7 km" (embarque) e "15,9 km" (destino)
+            var pickup = PICK.find(joined)?.let { num(it.groupValues[1]) }
+            var trip: Double? = null
+            val kms = region.filter { it.rect.top > h.rect.top - 2 }
+                .mapNotNull { t -> ONLY_KM.find(t.text)?.let { m -> num(m.groupValues[1]) } }
+            if (pickup == null && kms.size >= 2) { pickup = kms[0]; trip = kms[1] }
+            else if (pickup != null && kms.isNotEmpty()) trip = kms.filter { Math.abs(it - pickup!!) > 0.05 }.maxOrNull()
+            else if (pickup == null && kms.size == 1) pickup = kms[0]
             val rating = region.firstNotNullOfOrNull { RATING.find(it.text)?.let { m -> num(m.groupValues[1]) } }
+                ?: region.firstNotNullOfOrNull { t -> RATING_STAR.find(t.text)?.let { m -> num(m.groupValues[1].ifEmpty { m.groupValues[2] }) } }
 
             // ponto de toque de reserva: meio do card, a partir da coluna do texto
             val cardBottom = region.maxOfOrNull { it.rect.bottom } ?: (h.rect.bottom + 200)
             offers.add(
                 Offer(
-                    price, rpk, pickup, null, null, null, rating,
+                    price, rpk, pickup, trip, null, null, rating,
                     cardNode = clickableAncestor(h.node),
                     tapX = h.rect.left + 200,
                     tapY = (h.rect.top + cardBottom) / 2,
