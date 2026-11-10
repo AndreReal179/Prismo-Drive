@@ -29,9 +29,9 @@ android {
         applicationId = "com.prismo.drive"
         minSdk = 24
         targetSdk = 34
-        // versionName = "1.8" é a versão BASE. O GitHub completa sozinho: 1.8, 1.8.1, 1.8.2…
+        // versionName = "1.9" é a versão BASE. O GitHub completa sozinho: 1.9, 1.9.1, 1.9.2…
         // Para começar uma versão nova (1.8.1, 1.8.2…), troque só o número aqui.
-        versionName = "1.8"
+        versionName = "1.9"
         // versionCode é automático (sempre maior que o da v1.6 = 29)
         versionCode = codigoVersao
         System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { versionName = it }
