@@ -44,6 +44,11 @@ object Parser {
     private val POP_TIME = Regex("""Tempo\s+aproximado(?:\s+de\s+rota)?\s+(?:(\d+)\s*h)?\s*(?:(\d+)\s*min)?""", RegexOption.IGNORE_CASE)
     private val POP_PRICE = Regex("""^\s*R\$\s*([\d.,]+)\s*$""")
     private val POP_STOPS = Regex("""(\d+)\s*Paradas?""", RegexOption.IGNORE_CASE)
+    // layout de rota oferecida 2026-11: rótulos "Distância" / "Tempo" com o valor na linha de baixo
+    private val TIME_ONLY = Regex("""^\s*(?:(\d+)\s*h)?\s*(?:(\d+)\s*min\.?)?\s*$""", RegexOption.IGNORE_CASE)
+    private val DIGIT_ONLY = Regex("""^\s*(\d{1,2})\s*$""")
+    // endereço completo da loja (coleta): "…,Águas Claras,Brasilia,DF,BR"
+    private val STORE_ADDR = Regex(""",\s*[A-Z]{2}\s*,\s*BR\s*$""")
     private val ONLY_MIN = Regex("""^\s*(\d+)\s*min\.?\s*$""", RegexOption.IGNORE_CASE)
 
     /** hidden = true: inclui também nós "não visíveis" e lê text + contentDescription (balões do mapa). */
@@ -346,6 +351,18 @@ object Parser {
         )
     }
 
+    /** Valor logo abaixo de um rótulo ("Distância" → "14,3 km"), na mesma coluna. */
+    private fun <R> valorAbaixo(items: List<T>, rotulo: T, ler: (String) -> R?): R? {
+        val r = rotulo.rect
+        val alt = maxOf(r.height(), 20)
+        return items.asSequence()
+            .filter { it !== rotulo && it.rect.top >= r.top + alt / 2 && it.rect.top <= r.bottom + alt * 3 }
+            .filter { it.rect.centerX() in (r.left - r.width()) .. (r.right + r.width()) }
+            .sortedBy { it.rect.top }
+            .mapNotNull { ler(it.text.replace('\u00A0', ' ')) }
+            .firstOrNull()
+    }
+
     /**
      * Popup de rota oferecida: preço grande, "Distância total x km", "Tempo aproximado de rota 1h 59 min"
      * e botões Rejeitar / Aceitar. O painel fica no lugar da linha do preço (não cobre os botões).
@@ -354,11 +371,22 @@ object Parser {
         if (items.none { it.text.startsWith("Aceitar", true) || it.text.startsWith("Rejeitar", true) }) return emptyList()
         val all = items.sortedWith(compareBy({ it.rect.top }, { it.rect.left }))
             .joinToString("\n") { it.text.replace('\u00A0', ' ') }
-        val km = POP_DIST.find(all)?.let { num(it.groupValues[1]) } ?: return emptyList()
-        val tm = POP_TIME.find(all)
-        val minutes = tm?.let { (it.groupValues[1].toDoubleOrNull() ?: 0.0) * 60 + (it.groupValues[2].toDoubleOrNull() ?: 0.0) } ?: 0.0
         val distNode = items.firstOrNull {
             it.text.contains("Dist", true) && it.text.contains("total", true)
+        } ?: items.firstOrNull { val t = it.text.trim(); t.equals("Distância", true) || t.equals("Distancia", true) }
+        // layout antigo: "Distância total 14,3 km" · layout novo: "Distância" com "14,3 km" logo abaixo
+        val km = POP_DIST.find(all)?.let { num(it.groupValues[1]) }
+            ?: distNode?.let { d -> valorAbaixo(items, d) { t -> ONLY_KM.find(t)?.let { m -> num(m.groupValues[1]) } } }
+            ?: return emptyList()
+        val tm = POP_TIME.find(all)
+        var minutes = tm?.let { (it.groupValues[1].toDoubleOrNull() ?: 0.0) * 60 + (it.groupValues[2].toDoubleOrNull() ?: 0.0) } ?: 0.0
+        if (minutes <= 0) {
+            val tempoNode = items.firstOrNull { it.text.trim().equals("Tempo", true) }
+            if (tempoNode != null) minutes = valorAbaixo(items, tempoNode) { t ->
+                TIME_ONLY.find(t)?.takeIf { it.groupValues[1].isNotEmpty() || it.groupValues[2].isNotEmpty() }?.let { m ->
+                    (m.groupValues[1].toDoubleOrNull() ?: 0.0) * 60 + (m.groupValues[2].toDoubleOrNull() ?: 0.0)
+                }
+            } ?: 0.0
         }
         val prices = items.filter { POP_PRICE.containsMatchIn(it.text) }
         val node = (if (distNode != null) prices.filter { it.rect.top < distNode.rect.top } else prices)
@@ -372,8 +400,16 @@ object Parser {
         // Procura também fora da tela (cards do carrossel que ainda não apareceram, balões do mapa).
         val (vc, ve) = numbered(items)
         val (wc, we) = numbered(wide())
-        val coletas = maxOf(vc, wc)
-        val entregas = maxOf(ve, we)
+        // layout novo: lista de paradas com a loja (endereço completo) e as entregas numeradas 1, 2, 3… em círculos
+        val fonte = (items + wide()).filter { !it.rect.isEmpty }
+        val largura = fonte.maxOfOrNull { it.rect.right }?.coerceAtLeast(1) ?: 1
+        val abaixo = distNode?.rect?.bottom ?: 0
+        val circulos = fonte.filter { it.rect.top > abaixo && it.rect.centerX() < largura * 0.22 }
+            .mapNotNull { DIGIT_ONLY.find(it.text)?.groupValues?.get(1)?.toIntOrNull() }
+            .filter { it in 1..30 }
+        val lojas = fonte.map { it.text.trim() }.filter { STORE_ADDR.containsMatchIn(it) }.distinct().size
+        val entregas = maxOf(ve, we, circulos.maxOrNull() ?: 0)
+        val coletas = maxOf(vc, wc, lojas).let { if (it == 0 && entregas > 0) 1 else it }
         val stops = if (coletas > 0 || entregas > 0) stopsText(coletas, entregas)
         else POP_STOPS.find(all)?.let {
             val n = it.groupValues[1].toIntOrNull() ?: 0
