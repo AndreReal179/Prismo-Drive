@@ -52,7 +52,13 @@ class RouteService : AccessibilityService() {
                 if (ap.isNotEmpty() && ap != packageName && !ignoredPkg(ap)) lastPkg = ap
                 val rides = prefs.ridePkgs
                 fab.pkgAtual = lastPkg
-                fab.setVisible(rides.isEmpty() || appDeCorrida(lastPkg, rides))
+                // turno em andamento: fora do iFood/InDrive o botão vira contador de km do turno
+                val turno = runCatching { Turno.estadoRapido(this@RouteService) }.getOrNull()?.takeIf { it.ativo }
+                val noApp = appDeCorrida(lastPkg, rides)
+                fab.turno = turno
+                fab.foraDoApp = !noApp
+                fab.setVisible(rides.isEmpty() || noApp || turno != null)
+                if (turno != null) fab.tickTurno()
             } catch (_: Throwable) {
             }
             // relatório: grava as ofertas que já saíram da tela

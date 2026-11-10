@@ -79,6 +79,43 @@ class Fab(private val svc: AccessibilityService) {
     /** App em primeiro plano agora (o serviço atualiza a cada batida). */
     @Volatile var pkgAtual: String = ""
 
+    /** Turno em andamento (null = sem turno) e se o app aberto NÃO é o iFood/InDrive (o serviço atualiza). */
+    @Volatile var turno: Turno.Estado? = null
+    @Volatile var foraDoApp: Boolean = false
+
+    /** Fora do iFood/InDrive com turno ativo: o botão vira um contador de km do turno. */
+    private fun modoTurno() = turno != null && foraDoApp
+
+    /** Batida do serviço: redesenha o contador do turno (km muda). */
+    fun tickTurno() { applyBest() }
+
+    private fun turnoTexto(): CharSequence {
+        val km = turno?.km ?: 0.0
+        val sb = SpannableStringBuilder(String.format(BR, if (km < 100) "%.1f" else "%.0f", km))
+        val st = sb.length
+        sb.append("\nkm")
+        sb.setSpan(RelativeSizeSpan(0.6f), st, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return sb
+    }
+
+    private fun turnoDuracao(): String {
+        val ini = turno?.ini ?: return ""
+        val m = ((System.currentTimeMillis() - ini) / 60000L).coerceAtLeast(0)
+        return if (m < 60) "${m} min" else "${m / 60}h" + String.format(BR, "%02d", m % 60)
+    }
+
+    /** Abre o Prismo Drive direto na tela de finalizar o turno (pergunta o valor recebido). */
+    private fun abrirFinalizarTurno() {
+        closeMenu(animate = false)
+        runCatching {
+            svc.startActivity(
+                Intent(svc, com.prismo.drive.MainActivity::class.java)
+                    .putExtra(Turno.EXTRA_ACAO, Turno.ACAO_FINALIZAR)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
+        }
+    }
+
     /** O app aberto é o iFood? (pelo nome do pacote, pelo que já foi aprendido ou pela última oferta) */
     private fun modoIfood(): Boolean {
         val p = pkgAtual
@@ -217,6 +254,20 @@ class Fab(private val svc: AccessibilityService) {
         val c = circle ?: return
         val t = valueText ?: return
         val ic = icon ?: return
+        if (modoTurno()) {
+            if (SystemClock.uptimeMillis() < comemorandoAte) return
+            val tk = "turno|" + String.format(BR, "%.1f", turno?.km ?: 0.0)
+            if (tk == shownKey) return
+            shownKey = tk
+            stopPulse()
+            t.text = turnoTexto()
+            t.visibility = View.VISIBLE
+            ic.visibility = View.GONE
+            c.background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(0xFF2F81F7.toInt(), 0xFF1554B8.toInt())
+            ).apply { shape = GradientDrawable.OVAL; setStroke(dp(2), 0xAAFFFFFF.toInt()) }
+            return
+        }
         val r = lastBest
         val eff = r?.effRpk
         val key = if (r == null || eff == null) "idle" else
@@ -423,6 +474,7 @@ class Fab(private val svc: AccessibilityService) {
             menu != null -> closeMenu()
             // o toque fora do painel (no próprio botão) acabou de fechar: não reabre
             SystemClock.uptimeMillis() - menuClosedAt < 350 -> Unit
+            modoTurno() -> openMenuTurno()
             else -> openMenu()
         }
     }
@@ -755,6 +807,10 @@ class Fab(private val svc: AccessibilityService) {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(14))
             addView(header)
+            if (turno != null) {
+                addView(section("Turno em andamento"))
+                addView(turnoLinha())
+            }
             if (ifood) {
                 addView(section("Configurações rápidas · iFood"))
                 addView(ifoodGroup)
@@ -821,6 +877,138 @@ class Fab(private val svc: AccessibilityService) {
         runCatching { wm.addView(root, lp) }.onSuccess {
             menu = root
             handler.postDelayed(bestTick, 1000)
+            positionMenu()
+            panel.alpha = 0f
+            panel.scaleX = 0.92f
+            panel.scaleY = 0.92f
+            panel.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(170)
+                .setInterpolator(DecelerateInterpolator()).start()
+        }
+    }
+
+    // ------------------------------------------------------------------ turno
+
+    /** Linha compacta "12,4 km · 1h05  [Finalizar]" (painel do iFood/InDrive durante o turno). */
+    private fun turnoLinha(): View {
+        val info = label(Turno.fmtKm(turno?.km ?: 0.0) + " · " + turnoDuracao(), 14f, TXT, true)
+        val fim = label("Finalizar", 12.5f, 0xFFFFFFFF.toInt(), true).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            background = rounded(0xFF2EA44F.toInt(), 10f)
+            setOnClickListener { abrirFinalizarTurno() }
+        }
+        return LinearLayout(svc).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(10), dp(10), dp(10))
+            background = rounded(0x1A2F81F7, 14f, 0x552F81F7)
+            addView(info, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            addView(fim)
+        }
+    }
+
+    /** Painel do contador do turno (fora do iFood/InDrive): km, tempo e "Finalizar turno". */
+    private fun openMenuTurno() {
+        if (menu != null) return
+        val logo = FrameLayout(svc).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF1554B8.toInt(), 0xFF2F81F7.toInt())
+            ).apply { cornerRadius = dpf(12f) }
+            addView(ImageView(svc).apply {
+                setImageResource(R.drawable.ic_stat_rota)
+                imageTintList = ColorStateList.valueOf(0xFFFFFFFF.toInt())
+            }, FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER))
+        }
+        val desde = turno?.ini?.let { java.text.SimpleDateFormat("HH:mm", BR).format(java.util.Date(it)) } ?: "--:--"
+        val titleCol = LinearLayout(svc).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(label("Turno em andamento", 16f, TXT, true))
+            addView(label("GPS medindo · desde $desde", 11.5f, MUTED))
+        }
+        val close = label("✕", 13f, MUTED, true).apply {
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(SURFACE_HI) }
+            setOnClickListener { closeMenu() }
+        }
+        val header = LinearLayout(svc).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(logo, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(12) })
+            addView(titleCol, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            addView(close, LinearLayout.LayoutParams(dp(30), dp(30)))
+        }
+        val kmVal = label(Turno.fmtKm(turno?.km ?: 0.0), 30f, 0xFF79B8FF.toInt(), true)
+        val durVal = label(turnoDuracao(), 30f, TXT, true)
+        fun bloco(v: TextView, t: String) = LinearLayout(svc).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = rounded(SURFACE, 14f, STROKE)
+            addView(label(t.uppercase(BR), 10.5f, MUTED, true))
+            addView(v)
+        }
+        val numeros = LinearLayout(svc).apply {
+            orientation = LinearLayout.HORIZONTAL
+            addView(bloco(kmVal, "Rodados"), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { rightMargin = dp(5) })
+            addView(bloco(durVal, "Tempo"), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = dp(5) })
+        }
+        val tick = object : Runnable {
+            override fun run() {
+                if (menu == null) return
+                kmVal.text = Turno.fmtKm(turno?.km ?: 0.0)
+                durVal.text = turnoDuracao()
+                handler.postDelayed(this, 1000)
+            }
+        }
+        val finalizar = actionBtn("Finalizar turno", null, 0xFFFFFFFF.toInt(),
+            GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0xFF1A7A3A.toInt(), 0xFF2EA44F.toInt()))
+                .apply { cornerRadius = dpf(12f) }) { abrirFinalizarTurno() }
+        val content = LinearLayout(svc).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(14))
+            addView(header)
+            addView(numeros, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
+            addView(finalizar, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
+            addView(label("No iFood e no InDrive o assistente funciona normal; fora deles, conta os km do turno.", 10.5f, MUTED).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(10), 0, 0)
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        }
+        val panel = FrameLayout(svc).apply {
+            background = rounded(PANEL, 22f, 0x552F81F7)
+            clipToOutline = true
+            outlineProvider = ViewOutlineProvider.BACKGROUND
+            elevation = dpf(12f)
+            addView(content)
+        }
+        val pad = dp(10)
+        val root = FrameLayout(svc).apply {
+            setPadding(pad, pad, pad, pad)
+            clipToPadding = false
+            addView(panel, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT))
+            setOnTouchListener { _, ev ->
+                if (ev.action == MotionEvent.ACTION_OUTSIDE) { closeMenu(); true } else false
+            }
+        }
+        val w = menuWidth()
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(w - 2 * pad, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val h = (content.measuredHeight + 2 * pad).coerceAtMost(screenH() - dp(48))
+        val lp = WindowManager.LayoutParams(
+            w, h,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply { gravity = Gravity.TOP or Gravity.START }
+        root.layoutParams = lp
+        runCatching { wm.addView(root, lp) }.onSuccess {
+            menu = root
+            handler.postDelayed(tick, 1000)
             positionMenu()
             panel.alpha = 0f
             panel.scaleX = 0.92f
