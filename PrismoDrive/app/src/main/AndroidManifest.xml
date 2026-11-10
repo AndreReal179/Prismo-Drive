@@ -112,6 +112,13 @@
                 android:resource="@xml/rotas_accessibility" />
         </service>
 
+        <!-- Turno: mede km e tempo pelo GPS entre "Iniciar turno" e "Finalizar turno" -->
+        <service
+            android:name=".rota.TurnoService"
+            android:exported="false"
+            android:process=":rotas"
+            android:foregroundServiceType="location" />
+
         <!-- Mede os km pelo GPS enquanto a rota está em andamento -->
         <service
             android:name=".rota.LocalizacaoService"
