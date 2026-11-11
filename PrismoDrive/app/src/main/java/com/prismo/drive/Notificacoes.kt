@@ -62,7 +62,7 @@ object Notificacoes {
         nm.createNotificationChannel(canal)
     }
 
-    fun mostrar(ctx: Context, id: Int, titulo: String, texto: String) {
+    fun mostrar(ctx: Context, id: Int, titulo: String, texto: String, abrirIntent: Intent? = null, acao: String? = null) {
         criarCanal(ctx)
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -76,12 +76,13 @@ object Notificacoes {
             }
         }
 
-        val abrir = Intent(ctx, MainActivity::class.java).apply {
+        val abrir = abrirIntent ?: Intent(ctx, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }
         val pi = PendingIntent.getActivity(
-            ctx, 0, abrir, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            ctx, if (abrirIntent != null) id else 0, abrir, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        if (acao != null) runCatching { b.addAction(Notification.Action.Builder(null, acao, pi).build()) }
 
         b.setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)

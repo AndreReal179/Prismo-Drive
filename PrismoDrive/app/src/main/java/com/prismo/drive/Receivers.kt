@@ -33,6 +33,10 @@ class BootReceiver : BroadcastReceiver() {
         } catch (_: Throwable) {
         }
         try {
+            Lembretes.reagendar(context)
+        } catch (_: Throwable) {
+        }
+        try {
             WidgetUtil.atualizarTodos(context)
             WidgetUtil.agendarMeiaNoite(context)
         } catch (_: Throwable) {

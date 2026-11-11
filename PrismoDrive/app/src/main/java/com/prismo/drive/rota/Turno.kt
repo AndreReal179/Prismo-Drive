@@ -167,6 +167,39 @@ class TurnoService : Service() {
     private var ultNotif = -1.0
     private val handler = Handler(Looper.getMainLooper())
 
+    // ── turno esquecido aberto ──
+    private val TURNO_LONGO = 10 * 3600_000L        // aberto há mais de 10 h
+    private val PARADO = 2 * 3600_000L              // sem sair do lugar há 2 h
+    private var avisouLongo = false
+    private var avisouParado = false
+    private val verificar = object : Runnable {
+        override fun run() {
+            runCatching { checarEsquecido() }
+            handler.postDelayed(this, 10 * 60_000L)
+        }
+    }
+
+    private fun hm(ms: Long): String { val m = (ms / 60000).coerceAtLeast(0); return "${m / 60}h" + String.format(Locale.US, "%02d", m % 60) }
+
+    private fun checarEsquecido() {
+        if (Turno.encerrado(this) || ini <= 0) return
+        val agora = System.currentTimeMillis()
+        val dur = agora - ini
+        val ultMov = ult?.time?.takeIf { it > 0 } ?: ini
+        val finalizar = Intent(this, com.prismo.drive.MainActivity::class.java)
+            .putExtra(Turno.EXTRA_ACAO, Turno.ACAO_FINALIZAR)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        if (!avisouLongo && dur >= TURNO_LONGO) {
+            avisouLongo = true
+            com.prismo.drive.Notificacoes.mostrar(this, 9200, "Seu turno ainda está aberto (" + hm(dur) + ")",
+                "Já terminou? Finalize para salvar o km e o valor certos. " + Turno.fmtKm(km) + " até agora.", finalizar, "Finalizar turno")
+        } else if (!avisouParado && dur >= PARADO && agora - ultMov >= PARADO) {
+            avisouParado = true
+            com.prismo.drive.Notificacoes.mostrar(this, 9201, "Turno parado há " + hm(agora - ultMov),
+                "Você não se moveu nas últimas horas. Esqueceu o turno aberto? " + Turno.fmtKm(km) + " até agora.", finalizar, "Finalizar turno")
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -185,6 +218,8 @@ class TurnoService : Service() {
         }.isSuccess
         if (!ok) { stopSelf(); return START_NOT_STICKY }
         ligarGps()
+        handler.removeCallbacks(verificar)
+        handler.postDelayed(verificar, 60_000L)
         return START_STICKY       // se o Android derrubar, volta e continua o turno
     }
 
@@ -215,6 +250,7 @@ class TurnoService : Service() {
         rejeitados = 0
         km += d / 1000.0
         ult = loc
+        avisouParado = false     // voltou a andar: pode avisar de novo se parar outra vez
         pontos++
         Turno.gravar(this, ini, km, pontos, ult)
         if (km - ultNotif >= 0.1) {

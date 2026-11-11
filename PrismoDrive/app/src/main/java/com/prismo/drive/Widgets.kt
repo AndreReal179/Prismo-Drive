@@ -51,11 +51,41 @@ object WidgetUtil {
     private const val CHIP_RUIM = 0xFFFF7B72.toInt()
     private val BR = Locale("pt", "BR")
 
+    private const val ARQ = "widget_dados.json"
+
+    /** Guardado em arquivo: o assistente (outro processo) também lê e atualiza o widget com o app fechado. */
+    private fun arq(ctx: Context) = java.io.File((ctx.applicationContext ?: ctx).filesDir, ARQ)
+
+    private fun ler(ctx: Context): JSONObject? =
+        runCatching { arq(ctx).takeIf { it.exists() }?.readText()?.let { JSONObject(it) } }.getOrNull()
+            ?: runCatching { prefs(ctx).getString(KEY, null)?.let { JSONObject(it) } }.getOrNull()
+
+    /** Ganho de hoje como o widget mostra: o resumo que a página mandou + rotas do iFood ainda na fila. */
+    fun ganhoHoje(ctx: Context): Double = runCatching {
+        val d = ler(ctx)
+        val hojeStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        var g = if (d != null && d.optString("dia") == hojeStr) d.optDouble("ganho", 0.0) else 0.0
+        val ja = HashSet<String>()
+        d?.optJSONArray("fila")?.let { a -> for (i in 0 until a.length()) ja.add(a.optString(i)) }
+        val fila = org.json.JSONArray(com.prismo.drive.rota.IfoodSaldo.pendentes(ctx))
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        for (i in 0 until fila.length()) {
+            val o = fila.optJSONObject(i) ?: continue
+            if (fmt.format(Date(o.optLong("ts"))) != hojeStr || ja.contains(o.optString("id"))) continue
+            g += o.optDouble("valor", 0.0) + o.optDouble("bonus", 0.0)
+        }
+        g
+    }.getOrDefault(0.0)
+
     /** Chamado pela página (PrismoNative.widget) com o resumo do dia em JSON. */
     fun salvar(ctx: Context, json: String) {
         try {
             val o = JSONObject(json)
             o.put("ts", System.currentTimeMillis())
+            runCatching {
+                val f = arq(ctx); val tmp = java.io.File(f.parentFile, f.name + ".tmp")
+                tmp.writeText(o.toString()); if (!tmp.renameTo(f)) f.writeText(o.toString())
+            }
             prefs(ctx).edit().putString(KEY, o.toString()).apply()
             atualizarTodos(ctx)
             agendarMeiaNoite(ctx)
@@ -112,22 +142,51 @@ object WidgetUtil {
     private fun montar(ctx: Context, grande: Boolean): RemoteViews {
         val v = RemoteViews(ctx.packageName, if (grande) R.layout.widget_4x2 else R.layout.widget_2x2)
 
-        val d: JSONObject? = try {
-            prefs(ctx).getString(KEY, null)?.let { JSONObject(it) }
-        } catch (_: Throwable) {
-            null
-        }
+        val d: JSONObject? = ler(ctx)
         val tem = d != null
         val hojeStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val hoje = d != null && hojeStr == d.optString("dia", "")
 
-        val ganho = if (hoje) d!!.optDouble("ganho", 0.0) else 0.0
-        val comb = if (hoje) d!!.optDouble("comb", 0.0) else 0.0
-        val lucro = if (hoje) d!!.optDouble("lucro", ganho - comb) else 0.0
-        val km = if (hoje) d!!.optDouble("km", 0.0) else 0.0
-        val rotas = if (hoje) d!!.optInt("rotas", 0) else 0
-        val pct = (if (hoje) d!!.optInt("pct", 0) else 0).coerceIn(0, 100)
+        var ganho = if (hoje) d!!.optDouble("ganho", 0.0) else 0.0
+        var comb = if (hoje) d!!.optDouble("comb", 0.0) else 0.0
+        var lucro = if (hoje) d!!.optDouble("lucro", ganho - comb) else 0.0
+        var km = if (hoje) d!!.optDouble("km", 0.0) else 0.0
+        var rotas = if (hoje) d!!.optInt("rotas", 0) else 0
+        var pct = (if (hoje) d!!.optInt("pct", 0) else 0).coerceIn(0, 100)
         val meta = if (tem) d!!.optDouble("meta", 250.0) else 0.0
+        var ultimaRota = 0L
+
+        // Rotas do iFood concluídas com o app fechado (ainda na fila do assistente): soma aqui mesmo,
+        // sem esperar abrir o app. As que o app já lançou vêm em "fila" e não contam de novo.
+        runCatching {
+            val ja = HashSet<String>()
+            d?.optJSONArray("fila")?.let { a -> for (i in 0 until a.length()) ja.add(a.optString(i)) }
+            val rotasJa = HashSet<String>()
+            d?.optJSONArray("rotasIds")?.let { a -> for (i in 0 until a.length()) rotasJa.add(a.optString(i)) }
+            val cons = d?.optDouble("cons", 0.0) ?: 0.0
+            val preco = d?.optDouble("preco", 0.0) ?: 0.0
+            val fila = org.json.JSONArray(com.prismo.drive.rota.IfoodSaldo.pendentes(ctx))
+            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val vistas = HashSet<String>()
+            var extraGanho = 0.0; var extraKm = 0.0; var extraRotas = 0
+            for (i in 0 until fila.length()) {
+                val o = fila.optJSONObject(i) ?: continue
+                val ts = o.optLong("ts")
+                if (fmt.format(Date(ts)) != hojeStr || ja.contains(o.optString("id"))) continue
+                extraGanho += o.optDouble("valor", 0.0) + o.optDouble("bonus", 0.0)
+                val rota = o.optString("rota")
+                if (!rotasJa.contains(rota) && vistas.add(rota)) { extraRotas++; extraKm += o.optDouble("km", 0.0) }
+                if (ts > ultimaRota) ultimaRota = ts
+            }
+            if (extraGanho > 0 || extraRotas > 0) {
+                if (!hoje) { ganho = 0.0; comb = 0.0; km = 0.0; rotas = 0; pct = 0; lucro = 0.0 }
+                val extraComb = if (cons > 0 && preco > 0) extraKm / cons * preco else 0.0
+                ganho += extraGanho; km += extraKm; rotas += extraRotas; comb += extraComb
+                lucro += extraGanho - extraComb
+                if (meta > 0) pct = (pct + Math.round(extraGanho / meta * 100).toInt()).coerceIn(0, 100)
+            }
+        }
+        val hojeOuFila = hoje || ultimaRota > 0
 
         v.setProgressBar(R.id.wdg_barra, 100, pct, false)
 
@@ -139,9 +198,9 @@ object WidgetUtil {
             )
             v.setTextColor(R.id.wdg_lucro, if (lucro >= 0) VERDE else VERMELHO)
         } else {
-            val atualizado = if (tem && hoje) {
+            val atualizado = if (tem && hojeOuFila) {
                 "atualizado " + SimpleDateFormat("HH:mm", Locale.US)
-                    .format(Date(d!!.optLong("ts", System.currentTimeMillis())))
+                    .format(Date(maxOf(ultimaRota, if (hoje) d!!.optLong("ts", 0L) else 0L).takeIf { it > 0 } ?: System.currentTimeMillis()))
             } else {
                 "toque para atualizar"
             }

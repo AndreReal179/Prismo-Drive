@@ -40,6 +40,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Lembrete da meta de quitação (20h, só em dia trabalhado) -->
+        <receiver
+            android:name=".LembreteReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".AlarmReceiver"
             android:exported="false" />

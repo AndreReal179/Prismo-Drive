@@ -1,11 +1,14 @@
-• ⏱️ Novo: Turno. Na tela de lançar rota, a aba Diária virou Turno: toque em Iniciar turno e o GPS mede os km e o tempo até você finalizar
-• 🏁 Finalizar turno: informe quanto recebeu e veja km, combustível, lucro e R$/km. O valor entra no Faturamento do dia e na Carteira, igual ao iFood
-• 🔵 Botão flutuante: com o Assistente de rotas ligado, fora do iFood e do InDrive ele vira um contador de km do turno. Toque para finalizar
-• 🔔 Notificação do turno com km, cronômetro e botão Finalizar turno, e um chip azul na tela inicial
-• 🛣️ Km das rotas do iFood/InDrive feitas durante o turno não são contados duas vezes
-• 📍 Odômetro do dia agora é opcional e vem desligado. Ligue em Menu › Configurações para um cálculo melhor do combustível e das peças
-• 📊 Menu: os cards de Combustível, KM, Litros e o ganho do mês agora incluem as rotas automáticas do iFood/InDrive e os turnos
-• 📖 Guia do App atualizado (Turno e odômetro opcional)
-• 💰 Meta diária mais real: com contas na semana, a porcentagem da meta conta só o lucro livre (o que sobrou depois de separar as contas). O Faturamento do dia continua mostrando tudo o que você fez
-• 🧾 Contas da semana com visual novo: cada conta com status (Paga, Em aberto ou Atrasada), o que entrou na semana, o total das contas e quanto sobrou de lucro livre
-• ✅ Contas já pagas nesta semana continuam reservadas, então o lucro livre só começa depois delas
+• 🧾 Dívidas por mês: a lista agora é "Minhas dívidas de (mês)". Parcela paga sai da lista e fica em "Ver pagas", onde dá para desfazer
+• 🔴 Mês seguinte em vermelho: pagou tudo do mês? A Carteira já mostra as contas do próximo mês, e dá para pagar adiantado
+• ⚡ Carteira mais rápida: digitar valores e rolar a lista ficou fluido, sem os cards sumindo
+• 💲 Vírgula fixa nos valores: digite só os números (1234 vira 12,34 e 123456 vira 1.234,56)
+• 🎯 Estratégia virou Plano de ataque: mostra o Foco agora (o que pagar primeiro e quanto separar por dia), separa as dívidas das contas do mês e diz quando você fica livre das dívidas usando a sua média real de ganhos
+• 📉 Bola de neve ou Menos juros: escolha o método com um toque. Dá para informar o juros ao mês de cada dívida
+• 🏦 Meta de quitação: em dívidas que vale quitar logo (empréstimo, renovação, juros alto), a Estratégia sugere quanto guardar por dia e cria a meta em Planos com barra de progresso. Ao chegar a 100%, é só quitar
+• 😴 Folga não é atraso: a meta conta só os dias trabalhados. Dia sem ganho aparece com 😴 e não quebra a sequência
+• 🔔 Lembrete das 20h da meta de quitação: só em dia trabalhado e se você ainda não guardou nada (funciona com o app fechado)
+• ⏰ Turno esquecido: se o turno ficar aberto mais de 10 horas, ou parado no mesmo lugar por 2 horas, o celular avisa com o botão Finalizar turno
+• 🚪 Sair da Carteira: o X agora pergunta se você quer mesmo sair
+• 📅 Calendário do Faturamento: cada lançamento aparece com o nome certo (iFood, InDrive, Turno ou Rota), em ordem de horário
+• 📱 Widget automático: as rotas do iFood concluídas com o app fechado já somam no widget
+• 🔢 Nova numeração: as versões vão de 1.9.1 a 1.9.9 e depois viram 2.0

@@ -279,6 +279,8 @@ object IfoodSaldo {
             }
         }
         avisarApp(ctx)
+        // widget da tela inicial: soma a rota na hora, mesmo com o app fechado
+        runCatching { com.prismo.drive.WidgetUtil.atualizarTodos(ctx) }
     }
 
     /** Acorda a tela do Prismo Drive (se estiver aberta em segundo plano) para lançar na hora. */

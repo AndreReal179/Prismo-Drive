@@ -181,6 +181,12 @@ class PrismoBridge(private val activity: Activity) {
 
     // ── Recebimentos do iFood lidos pelo assistente (fila entre processos) ──
 
+    /** Meta de quitação da Carteira (lembrete das 20h em dia trabalhado). Vazio = sem meta. */
+    @JavascriptInterface
+    fun lembreteQuitacao(json: String?) {
+        try { Lembretes.salvarQuitacao(activity, json) } catch (_: Throwable) {}
+    }
+
     // ───────────── Turno (km e tempo pelo GPS) ─────────────
 
     @JavascriptInterface
