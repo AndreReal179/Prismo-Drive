@@ -597,8 +597,8 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .pd-fill::after{content:"";position:absolute;right:-2px;top:50%;width:15px;height:15px;transform:translateY(-50%);border-radius:50%;background:#eafff1;box-shadow:0 0 0 3px rgba(74,222,128,.35),0 0 16px #4ade80;}
 .pd-fill[style*="width: 0%"]::after,.pd-fill[style*="width:0%"]::after{display:none;}
 .pd-fill.done{background:linear-gradient(90deg,#16a34a,#4ade80 60%,#bbf7d0);}
-.pd-fill.debt{background:linear-gradient(90deg,#b45309,#f0883e 60%,#ffcf8a);}
-.pd-fill.debt::after{background:#fff4e5;box-shadow:0 0 0 3px rgba(240,136,62,.35),0 0 16px #f0883e;}
+.pd-fill.debt{background:linear-gradient(90deg,#8e1519,#f85149 60%,#ff9b95);}
+.pd-fill.debt::after{background:#fff0ef;box-shadow:0 0 0 3px rgba(248,81,73,.35),0 0 16px #f85149;}
 .pd-meta.debt{cursor:pointer;}
 /* aba Turno */
 .pr-seg-b.on.tn{color:#dbeafe;background:linear-gradient(145deg,rgba(47,129,247,.3),rgba(21,84,184,.12));border-color:rgba(121,184,255,.45);box-shadow:0 8px 20px -10px rgba(47,129,247,.9),inset 0 1px 0 rgba(255,255,255,.12);}
@@ -711,9 +711,9 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .cs-b1{background:linear-gradient(135deg,#1A7A3A,#2EA44F);color:#fff;}
 .cs-b1 .material-icons{font-size:18px;}
 
-.pd-meta.debt .pd-meta-txt{color:#ffb87a;}
-.pd-meta.debt .pd-meta-txt .material-icons{color:#f0883e;opacity:1;}
-.pd-meta.debt .pd-pct{color:#f0883e;}
+.pd-meta.debt .pd-meta-txt{color:#ff9b95;}
+.pd-meta.debt .pd-meta-txt .material-icons{color:#f85149;opacity:1;}
+.pd-meta.debt .pd-pct{color:#f85149;}
 
 /* ── Cards combustível / balanço ── */
 .pd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
@@ -2569,7 +2569,7 @@ function atualizarFaturamentoDia(){
     if(barra){barra.style.width=`${dv.pct}%`;barra.classList.remove('done');barra.classList.add('debt');}
     if(pctEl)pctEl.innerText=`${dv.pct}%`;
     const atr=dv.itens.some(x=>x.atrasada);
-    if(status)status.innerText=`${atr?'⚠️ ':''}Contas da semana · faltam ${moeda(dv.falta)}`;
+    if(status)status.innerText=`${atr?'⚠️ ':''}Contas: ${moeda(Math.min(dv.ganho,dv.alvo))} de ${moeda(dv.alvo)}`;
     const ic=metaBox&&metaBox.querySelector('.pd-meta-txt .material-icons');if(ic)ic.textContent='receipt_long';
     try{atualizarMiniComparativo();}catch(e){}
     try{atualizarWidgetNativo();}catch(e){}
@@ -2577,21 +2577,22 @@ function atualizarFaturamentoDia(){
   }
   if(metaBox){metaBox.classList.remove('debt');metaBox.onclick=dv?abrirDividasSemana:null;const ic=metaBox.querySelector('.pd-meta-txt .material-icons');if(ic)ic.textContent='flag';}
   if(barra)barra.classList.remove('debt');
-  if(dv){try{const k='prismo_dividas_ok_'+_semanaISO().ini;if(!localStorage.getItem(k)){localStorage.setItem(k,'1');showToast('✅ Contas da semana garantidas! Daqui pra frente o lucro é todo seu.');}}catch(e){}}
+  if(dv){try{const k='prismo_dividas_ok_'+_semanaISO().ini;if(!localStorage.getItem(k)){localStorage.setItem(k,'1');
+    showToast('✅ Contas da semana pagas! Você juntou '+moeda(dv.alvo)+'. A barra voltou para a meta.');
+    try{const n=window.PrismoNative;if(n&&typeof n.notificar==='function')n.notificar(9500,'✅ Contas da semana pagas',(dv.itens.length===1?dv.itens[0].desc+': ':'')+'você juntou '+moeda(dv.alvo)+'. Daqui pra frente a meta conta o que sobra.');}catch(x){}
+  }}catch(e){}}
   /* com contas na semana, a meta diária conta só o lucro livre (o que sobrou depois das contas) */
   const totalMeta=dv?dv.livreHoje+saldo:total;
   const pctMeta=dv?Math.min(Math.round((totalMeta/metaDiariaAtiva)*100),100):pct;
   if(barra)barra.style.width=`${pctMeta}%`;if(pctEl)pctEl.innerText=`${pctMeta}%`;
   if(totalMeta>=metaDiariaAtiva){
-    if(status)status.innerHTML=`🎉 Meta batida! +${moeda(totalMeta-metaDiariaAtiva)}`;try{PrismoNotif.metaBatida(totalMeta,metaDiariaAtiva);}catch(e){}
+    if(status)status.innerText=`🎉 Meta: ${moeda(totalMeta)} de ${moeda(metaDiariaAtiva)}`;try{PrismoNotif.metaBatida(totalMeta,metaDiariaAtiva);}catch(e){}
     if(barra)barra.classList.add('done');
   }else if(dv){
-    if(status)status.innerText=`✅ Livre: ${moeda(dv.livreHoje)} de ${moeda(metaDiariaAtiva)}`;
+    if(status)status.innerText=`Meta: ${moeda(totalMeta)} de ${moeda(metaDiariaAtiva)}`;
     if(barra)barra.classList.remove('done');
   }else{
-    let txt=`${moeda(metaDiariaAtiva)} · carteira: ${moeda(saldoReal)}`;
-    if(ganhoDiaria>0)txt+=` · diária: ${moeda(ganhoDiaria)}`;
-    if(status)status.innerText=txt;
+    if(status)status.innerText=`Meta: ${moeda(totalMeta)} de ${moeda(metaDiariaAtiva)}`;
     if(barra)barra.classList.remove('done');
   }
   try{atualizarMiniComparativo();}catch(e){}
