@@ -73,7 +73,15 @@ class MainActivity : Activity() {
 
     private fun lerLinkConta(i: Intent?) {
         val d = i?.data ?: return
-        if (!d.scheme.equals("com.prismo.drive", true) || !d.host.equals("auth", true)) return
+        if (!d.scheme.equals("com.prismo.drive", true)) return
+        if (d.host.equals("pagamento", true)) {
+            // volta do Mercado Pago (pagina de retorno): a pagina confere a conta e mostra o Pro
+            val st = (d.getQueryParameter("s") ?: "").filter { it.isLetter() }.take(12)
+            i.data = null
+            handler.postDelayed({ rodarJs("try{window.PrismoConta&&PrismoConta.voltouPagamento('$st');}catch(e){}") }, 900)
+            return
+        }
+        if (!d.host.equals("auth", true)) return
         linkConta = d.toString()
         i.data = null
         if (::web.isInitialized) handler.postDelayed({

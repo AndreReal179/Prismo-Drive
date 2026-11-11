@@ -5744,7 +5744,31 @@ body.pc-sem-conta .pc-cad{display:inline-flex;}
 .ap-assinar:active{transform:scale(.98);}
 .ap-assinar > .material-icons{font-size:24px;}
 .ap-as-t{flex:1;min-width:0;}.ap-as-t b{display:block;font-size:15px;font-weight:900;}.ap-as-t small{display:block;font-size:.66rem;font-weight:700;opacity:.75;margin-top:1px;}
-.ap-as-v{font-size:17px;font-weight:900;white-space:nowrap;}
+.ap-assinar.carregando{opacity:.85;}
+.ap-gira{animation:apGira 1s linear infinite;}@keyframes apGira{to{transform:rotate(360deg)}}
+.ap-as-v{font-size:17px;font-weight:900;white-space:nowrap;text-align:right;}.ap-as-v small{display:block;font-size:.6rem;font-weight:800;opacity:.75;}
+.ap-pl-tit{display:flex;align-items:center;gap:6px;margin:14px 0 9px;font-size:.62rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#facc15;}
+.ap-pl-tit .material-icons{font-size:14px;}
+.ap-grade{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.ap-op{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:12px 11px 11px;border-radius:14px;border:1.5px solid rgba(255,255,255,.09);background:rgba(0,0,0,.25);color:#e6edf3;font-family:inherit;text-align:left;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,transform .12s;}
+.ap-op:active{transform:scale(.97);}
+.ap-op.destaque{padding-top:16px;}
+.ap-op.sel{border-color:#facc15;background:linear-gradient(160deg,rgba(234,179,8,.2),rgba(234,179,8,.05));box-shadow:0 0 0 3px rgba(250,204,21,.12),0 10px 22px -12px rgba(234,179,8,.7);}
+.ap-op-top{width:100%;display:flex;align-items:center;justify-content:space-between;}
+.ap-op-top b{font-size:13px;font-weight:900;}
+.ap-op-ck{font-size:18px;color:#6e7681;}.ap-op.sel .ap-op-ck{color:#facc15;}
+.ap-op-d{font-size:.6rem;font-weight:700;color:#8b949e;}
+.ap-op-v{font-size:19px;font-weight:900;letter-spacing:-.02em;margin-top:6px;color:#fff;}
+.ap-op.sel .ap-op-v{color:#fde047;}
+.ap-op-m{font-size:.62rem;font-weight:700;color:#c9d1d9;}
+.ap-op-eco{margin-top:7px;font-size:.58rem;font-weight:900;letter-spacing:.04em;color:#0d2a14;background:#3fb950;padding:2px 8px;border-radius:99px;}
+.ap-op-eco.nada{color:#8b949e;background:rgba(255,255,255,.06);}
+.ap-selo{position:absolute;top:-9px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-size:.54rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#1a1300;background:linear-gradient(135deg,#f59e0b,#facc15);padding:3px 9px;border-radius:99px;box-shadow:0 4px 12px -4px rgba(234,179,8,.8);}
+.ap-selo .material-icons{font-size:12px;}
+.ap-grade{padding-top:6px;}
+.ap-eco-lin{display:flex;align-items:center;gap:6px;margin-top:10px;padding:9px 11px;border-radius:12px;background:rgba(46,164,79,.1);border:1px solid rgba(46,164,79,.28);font-size:.7rem;font-weight:700;color:#c8f7d5;}
+.ap-eco-lin b{color:#7ee2a0;}.ap-eco-lin .material-icons{font-size:16px;color:#3fb950;}
+.ap-preco small:first-child{font-size:.52rem;text-transform:uppercase;letter-spacing:.05em;}
 .ap-rod{text-align:center;font-size:11px;color:#6e7681;}.ap-rod b{color:#c9d1d9;}
 /* tela de carregamento que sincroniza de verdade */
 #pc-sync{display:none;position:fixed;inset:0;z-index:2147483001;background:#00100a;align-items:center;justify-content:center;overflow:hidden;touch-action:none;--splash-ring-track:#144b17;--splash-ring-light:#efffe6;--splash-ring-green:#55ff20;}
@@ -6944,6 +6968,80 @@ window.PrismoConta=(function(){
 
   /* Adquirir plano: vantagens do Free e do Pro, resgatar código e assinar */
   function apToggle(b){var c=b&&b.closest('.ap-card');if(c)c.classList.toggle('aberta');}
+  /* Planos Pro (só visual por enquanto: o pagamento pelo Mercado Pago entra depois) */
+  var AP_PLANOS=[
+    {id:'mensal',nome:'Mensal',dias:30,meses:1,preco:29.90},
+    {id:'trimestral',nome:'Trimestral',dias:90,meses:3,preco:79.90},
+    {id:'semestral',nome:'Semestral',dias:180,meses:6,preco:149.90},
+    {id:'anual',nome:'Anual',dias:365,meses:12,preco:249.90,selo:'Melhor oferta'}
+  ];
+  var apSel='anual';
+  function apR(v){return 'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  function apPlano(){for(var i=0;i<AP_PLANOS.length;i++)if(AP_PLANOS[i].id===apSel)return AP_PLANOS[i];return AP_PLANOS[0];}
+  function apEco(x){var cheio=AP_PLANOS[0].preco*x.meses;return {v:cheio-x.preco,pct:Math.round((1-x.preco/cheio)*100)};}
+  function apGrade(){
+    var h='<div class="ap-pl-tit"><span class="material-icons">sell</span>Escolha seu plano</div><div class="ap-grade">';
+    AP_PLANOS.forEach(function(x){
+      var e=apEco(x),pm=x.preco/x.meses;
+      h+='<button type="button" class="ap-op'+(x.id===apSel?' sel':'')+(x.selo?' destaque':'')+'" data-p="'+x.id+'" onclick="PrismoConta.apEscolher(\''+x.id+'\')">'
+        +(x.selo?'<span class="ap-selo"><span class="material-icons">local_fire_department</span>'+x.selo+'</span>':'')
+        +'<span class="ap-op-top"><b>'+x.nome+'</b><span class="material-icons ap-op-ck">'+(x.id===apSel?'check_circle':'radio_button_unchecked')+'</span></span>'
+        +'<small class="ap-op-d">'+x.dias+' dias</small>'
+        +'<span class="ap-op-v">'+apR(x.preco)+'</span>'
+        +'<small class="ap-op-m">'+(x.meses>1?apR(pm)+'/mês':'por mês')+'</small>'
+        +(e.pct>0?'<span class="ap-op-eco">-'+e.pct+'%</span>':'<span class="ap-op-eco nada">sem desconto</span>')
+        +'</button>';
+    });
+    var x=apPlano(),e=apEco(x);
+    return h+'</div><p class="ap-eco-lin" id="ap-eco-lin">'+(e.v>0.005?'<span class="material-icons">savings</span><span>Você economiza <b>'+apR(e.v)+'</b> em relação ao mensal</span>':'<span class="material-icons">autorenew</span><span>Renove quando quiser · os dias se somam</span>')+'</p>';
+  }
+  function apBotao(){var x=apPlano();return '<span class="material-icons">workspace_premium</span><span class="ap-as-t"><b>Assinar Pro '+x.nome+'</b><small>'+x.dias+' dias de Pro · tudo liberado</small></span><span class="ap-as-v">'+apR(x.preco)+(x.meses>1?'<small>'+apR(x.preco/x.meses)+'/mês</small>':'')+'</span>';}
+  function apEscolher(id){
+    apSel=id;
+    document.querySelectorAll('.ap-op').forEach(function(b){var on=b.getAttribute('data-p')===id;b.classList.toggle('sel',on);var ck=b.querySelector('.ap-op-ck');if(ck)ck.textContent=on?'check_circle':'radio_button_unchecked';});
+    var x=apPlano(),e=apEco(x),l=$c('ap-eco-lin');
+    if(l)l.innerHTML=e.v>0.005?'<span class="material-icons">savings</span><span>Você economiza <b>'+apR(e.v)+'</b> em relação ao mensal</span>':'<span class="material-icons">autorenew</span><span>Renove quando quiser · os dias se somam</span>';
+    var bt=$c('ap-assinar');if(bt)bt.innerHTML=apBotao();
+  }
+  /* Pagamento pelo Mercado Pago: o servidor cria o link; o aviso do Mercado Pago libera o Pro na conta */
+  var K_PAG='prismo_pag_pend',verPag=false;
+  function assinar(){
+    if(!logado()){abrir('criar');return;}
+    var x=apPlano(),bt=$c('ap-assinar');
+    if(bt&&bt.disabled)return;
+    if(bt){bt.disabled=true;bt.classList.add('carregando');bt.innerHTML='<span class="material-icons ap-gira">autorenew</span><span class="ap-as-t"><b>Gerando pagamento…</b><small>Abrindo o Mercado Pago</small></span><span class="ap-as-v">'+apR(x.preco)+'</span>';}
+    token().then(function(t){if(!t)return {status:401,json:{msg:'Entre na sua conta de novo para assinar.'}};return http('POST','/functions/v1/mp-criar',{plano:x.id},t);}).then(function(r){
+      if(bt){bt.disabled=false;bt.classList.remove('carregando');bt.innerHTML=apBotao();}
+      if(r.status===200&&r.json&&r.json.url){
+        gravar(K_PAG,{pedido:r.json.pedido,plano:x.id,nome:x.nome,dias:x.dias,em:Date.now(),proAntes:conta().proAte||0});
+        var a=document.createElement('a');a.href=r.json.url;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+        toast('Conclua o pagamento no Mercado Pago. Ao voltar para o app, o Pro entra sozinho.');
+        return;
+      }
+      toast((r.json&&r.json.msg)||(r.status===0?'Sem internet. Verifique a conexão e tente de novo.':'Não foi possível abrir o pagamento agora. Tente de novo.'));
+    });
+  }
+  /* voltou do Mercado Pago (link de volta ou só voltou para o app): confere a conta algumas vezes */
+  function voltouPagamento(st){
+    var pd=ler(K_PAG);if(!pd||!logado()||verPag)return;
+    if(Date.now()-pd.em>48*3600e3){gravar(K_PAG,null);return;}
+    if(st==='falhou'){toast('O pagamento não foi concluído. Você pode tentar de novo quando quiser.');return;}
+    verPag=true;var tent=0;
+    (function ver(){
+      carregarPerfil().then(function(){
+        var c=conta();
+        if(c.proAte&&c.proAte>(pd.proAntes||0)+3600e3){
+          verPag=false;gravar(K_PAG,null);gravar(K_PLANO_ANT,plano());
+          try{desenharMenu();abrirPlanoMenu();}catch(e){}
+          confirmar('🎉 Pagamento aprovado! Pro '+pd.nome+' liberado: +'+pd.dias+' dias. Seu Pro vale até '+dataBr(new Date(c.proAte).toISOString())+'.',function(){},'Ótimo',null,null,false,true);
+          return;
+        }
+        if(++tent<7){setTimeout(ver,tent<3?4000:10000);return;}
+        verPag=false;
+        toast(st==='pendente'?'Pagamento em análise. Assim que o Mercado Pago aprovar, o Pro entra sozinho.':'Ainda não recebemos a confirmação do pagamento. Se você pagou, o Pro entra sozinho em instantes.');
+      });
+    })();
+  }
   function desenharPlano(){
     var box=$c('acc-plano');if(!box)return;
     var p=plano(),l=logado(),c=conta();
@@ -6961,16 +7059,17 @@ window.PrismoConta=(function(){
       +'<div class="ap-card pro'+(p==='pro'||p==='admin'?' atual':'')+' aberta"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">workspace_premium</span></span>'
         +'<span class="ap-t"><b>Pro'+(p==='pro'?seu:(p==='admin'?'<span class="ap-seu">liberado</span>':''))+'</b><small>'+(p==='pro'?'Vale até '+dataBr(new Date(c.proAte).toISOString())+' · '+diasPro()+' dia'+(diasPro()===1?'':'s'):'Tudo liberado · sem anúncios')+'</small></span>'
-        +'<span class="ap-preco">R$ 0,00<small>/30 dias</small></span><span class="material-icons ap-chev">expand_more</span></button>'
+        +'<span class="ap-preco"><small>a partir de</small>R$ 29,90<small>/mês</small></span><span class="material-icons ap-chev">expand_more</span></button>'
         +'<div class="ap-body"><ul>'+li2('Sem anúncios')+li2('Carteira completa e plano de quitação')+li2('Assistente de rotas em tempo real (iFood e InDrive)')+li2('Turno com GPS, Balanço semanal e Comparativo')+li2('Widgets, manutenção sem limite e calendário completo')+'</ul>'
-        +'<p class="ap-nota">30 dias, renovável. Quando vence, nada é apagado: só volta o cadeado.</p></div></div>';
+        +apGrade()
+        +'<p class="ap-nota">Os dias se somam: se ainda tem Pro e paga outro plano, os dias novos entram depois dos que você já tem. Quando vence, nada é apagado: só volta o cadeado.</p></div></div>';
     if(l){
       html+='<div class="ap-card cod"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">redeem</span></span>'
         +'<span class="ap-t"><b>Resgatar código</b><small>Recebeu um código Pro? Digite aqui</small></span><span class="material-icons ap-chev">expand_more</span></button>'
         +'<div class="ap-body"><div class="pa-lin"><input id="pl-cod" class="pa-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="PD-XXXX-XXXX" style="font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')PrismoConta.resgatarMenu()"><button id="pl-bt" class="pa-bt ouro" onclick="PrismoConta.resgatarMenu()">Resgatar</button></div><p id="pl-msg" style="display:none;font-size:.66rem;margin-top:8px;line-height:1.4"></p></div></div>'
-        +'<button type="button" class="ap-assinar" onclick="PrismoConta.assinar()"><span class="material-icons">workspace_premium</span><span class="ap-as-t"><b>Assinar plano Pro</b><small>30 dias · renovável</small></span><span class="ap-as-v">R$ 0,00</span></button>'
-        +'<p class="ap-rod">Pagamento pelo app em breve. Seu ID: <b>'+esc(c.contaId||'—')+'</b></p>';
+        +'<button type="button" class="ap-assinar" id="ap-assinar" onclick="PrismoConta.assinar()">'+apBotao()+'</button>'
+        +'<p class="ap-rod"><span class="material-icons" style="font-size:13px;vertical-align:-2px;color:#3fb950">lock</span> Pagamento seguro pelo Mercado Pago · Pix ou cartão<br>Seu ID: <b>'+esc(c.contaId||'—')+'</b></p>';
     }else{
       html+='<button class="pc-btn pc-pri" style="margin-top:2px" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>';
     }
@@ -7095,6 +7194,7 @@ window.PrismoConta=(function(){
     if(precisaBloquear()&&!bloqueado&&saiuEm&&Date.now()-saiuEm>BLOQ_MIN*60000)bloquear();
     try{desenharSeguranca();desenharMenu();}catch(e){}
     if(logado()&&saiuEm&&Date.now()-saiuEm>60000){carregarPerfil();conferirNuvem();}
+    if(ler(K_PAG))setTimeout(function(){voltouPagamento('');},1500);
   });
   /* fechou a Carteira: envia logo */
   try{var fc=window.fecharCarteira;if(typeof fc==='function'){window.fecharCarteira=function(){var r=fc.apply(this,arguments);if(logado())setTimeout(function(){if(!ler(K_PEND)&&assinatura()!==ler(K_SYNC_SIG))subir(true);},1500);return r;};}}catch(e){}
@@ -7111,7 +7211,8 @@ window.PrismoConta=(function(){
     tecla:tecla,cancelarPin:cancelarPin,criarPin:criarPin,pedirBio:pedirBio,escolherBio:escolherBio,segEscolher:segEscolher,
     esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
     desenharPlano:desenharPlano,resgatarMenu:resgatarMenu,planoMenu:abrirPlanoMenu,apToggle:apToggle,cfResumos:cfResumos,
-    assinar:function(){toast('A assinatura pelo app chega em breve. Por enquanto, peça seu código Pro à equipe Prismo.');},
+    assinar:assinar,voltouPagamento:voltouPagamento,
+    apEscolher:apEscolher,
     adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,
     _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura,_syncMostrar:syncMostrar,_syncFim:syncFim};
 })();

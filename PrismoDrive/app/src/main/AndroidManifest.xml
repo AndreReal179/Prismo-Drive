@@ -47,6 +47,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="com.prismo.drive" android:host="auth" />
+                <!-- Volta do pagamento (Mercado Pago) -->
+                <data android:scheme="com.prismo.drive" android:host="pagamento" />
             </intent-filter>
         </activity>
 
