@@ -82,6 +82,59 @@ class PrismoBridge(private val activity: Activity) {
         ""
     }
 
+    // ───────────── Conta (Supabase) ─────────────
+
+    /** HTTP para o Supabase feito pelo Android; a resposta chega em window.__prismoHttp. */
+    @JavascriptInterface
+    fun http(id: String?, metodo: String?, url: String?, cabecalhos: String?, corpo: String?) {
+        val a = activity as? MainActivity ?: return
+        if (id.isNullOrEmpty() || metodo.isNullOrEmpty() || url.isNullOrEmpty()) return
+        ContaNativa.http(a, id, metodo, url, cabecalhos, corpo)
+    }
+
+    /** Abre o "Entrar com Google" nativo; o resultado chega no evento 'prismo-google'. */
+    @JavascriptInterface
+    fun googleEntrar() {
+        val a = activity as? MainActivity ?: return
+        main.post { ContaNativa.entrarGoogle(a) }
+    }
+
+    /** A página informa se há conta conectada (o assistente e os widgets usam). */
+    @JavascriptInterface
+    fun contaEstado(json: String?) {
+        Conta.salvar(activity, json)
+    }
+
+    // ── Segurança: bloqueio do app por biometria ou PIN ──
+
+    @JavascriptInterface
+    fun segurancaEstado(): String = try { Seguranca.estado(activity) } catch (_: Throwable) { "{}" }
+
+    @JavascriptInterface
+    fun pinDefinir(pin: String?): Boolean = try { Seguranca.definirPin(activity, pin) } catch (_: Throwable) { false }
+
+    @JavascriptInterface
+    fun pinConferir(pin: String?): String = try { Seguranca.conferirPin(activity, pin) } catch (_: Throwable) { "erro:0" }
+
+    @JavascriptInterface
+    fun bioUsar(): Boolean = try { Seguranca.usarBiometria(activity) } catch (_: Throwable) { false }
+
+    /** Abre a biometria do Android; resultado no evento 'prismo-bio'. */
+    @JavascriptInterface
+    fun bioAutenticar(titulo: String?) {
+        val a = activity as? MainActivity ?: return
+        main.post { Seguranca.autenticar(a, titulo ?: "Desbloquear") }
+    }
+
+    @JavascriptInterface
+    fun segurancaLimpar() {
+        try { Seguranca.limpar(activity) } catch (_: Throwable) {}
+    }
+
+    /** Link do e-mail de confirmação / nova senha que abriu o app (lê uma vez). */
+    @JavascriptInterface
+    fun contaLink(): String = (activity as? MainActivity)?.consumirLinkConta() ?: ""
+
     /** Recebe o resumo do dia (JSON) e atualiza os widgets da tela inicial. */
     @JavascriptInterface
     fun widget(json: String?) {

@@ -142,6 +142,9 @@ object WidgetUtil {
     private fun montar(ctx: Context, grande: Boolean): RemoteViews {
         val v = RemoteViews(ctx.packageName, if (grande) R.layout.widget_4x2 else R.layout.widget_2x2)
 
+        // Sem conta: o widget fica bloqueado (toque abre o app para entrar ou criar a conta)
+        if (!Conta.logado(ctx)) return bloqueado(ctx, v, grande)
+
         val d: JSONObject? = ler(ctx)
         val tem = d != null
         val hojeStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
@@ -239,7 +242,12 @@ object WidgetUtil {
             v.setTextColor(R.id.wdg_lucro, if (lucro >= 0) VERDE else VERMELHO)
         }
 
-        // Toque no widget abre o app
+        tocarAbre(ctx, v, grande)
+        return v
+    }
+
+    /** Toque no widget abre o app. */
+    private fun tocarAbre(ctx: Context, v: RemoteViews, grande: Boolean) {
         val abrir = Intent(ctx, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }
@@ -248,6 +256,29 @@ object WidgetUtil {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         v.setOnClickPendingIntent(R.id.wdg_root, pi)
+    }
+
+    /** Widget sem conta conectada: mostra o cadeado e o convite para entrar. */
+    private fun bloqueado(ctx: Context, v: RemoteViews, grande: Boolean): RemoteViews {
+        v.setProgressBar(R.id.wdg_barra, 100, 0, false)
+        if (!grande) {
+            v.setTextViewText(R.id.wdg_ganho, "🔒")
+            v.setTextViewText(R.id.wdg_lucro, "Entre na sua conta")
+            v.setTextColor(R.id.wdg_lucro, NEUTRO)
+        } else {
+            v.setTextViewText(R.id.wdg_atualizado, "Toque para entrar")
+            v.setTextViewText(R.id.wdg_ganho, "🔒 Bloqueado")
+            v.setViewVisibility(R.id.wdg_chip, View.GONE)
+            v.setTextViewText(R.id.wdg_meta, "Crie sua conta grátis para usar o widget")
+            v.setTextViewText(R.id.wdg_pct, "")
+            v.setTextViewText(R.id.wdg_rotas, "—")
+            v.setTextViewText(R.id.wdg_km, "—")
+            v.setTextViewText(R.id.wdg_comb, "—")
+            v.setTextColor(R.id.wdg_comb, NEUTRO)
+            v.setTextViewText(R.id.wdg_lucro, "—")
+            v.setTextColor(R.id.wdg_lucro, NEUTRO)
+        }
+        tocarAbre(ctx, v, grande)
         return v
     }
 

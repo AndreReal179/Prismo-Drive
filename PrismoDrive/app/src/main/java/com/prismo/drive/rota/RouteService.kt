@@ -40,6 +40,7 @@ class RouteService : AccessibilityService() {
     private val tick = object : Runnable {
         override fun run() {
             if (!running) return
+            if (semConta()) return
             try {
                 val now = SystemClock.uptimeMillis()
                 if (now - lastEvent < 60_000 || overlay.isShowing || lastPkg.contains("ifood", true)) scan()
@@ -89,6 +90,23 @@ class RouteService : AccessibilityService() {
         }
         Notif.show(this)    // notificação fixa com o botão Desligar
         RotasStatus.batida(this)
+        semConta()
+    }
+
+    /**
+     * O assistente exige conta: sem conta conectada no app ele avisa e se desliga sozinho.
+     * Retorna true quando desligou.
+     */
+    private fun semConta(): Boolean {
+        if (com.prismo.drive.Conta.logado(this)) return false
+        runCatching {
+            com.prismo.drive.Notificacoes.mostrar(
+                this, 9300, "Assistente de rotas desligado",
+                "Entre na sua conta no Prismo Drive para usar o assistente de rotas."
+            )
+        }
+        shutdown()
+        return true
     }
 
     /**
@@ -115,7 +133,7 @@ class RouteService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(e: AccessibilityEvent?) {
-        if (e == null || e.packageName == packageName || !::overlay.isInitialized) return
+        if (e == null || !running || e.packageName == packageName || !::overlay.isInitialized) return
         val pkg = e.packageName?.toString().orEmpty()
         if (pkg.isNotEmpty() && !ignoredPkg(pkg)) lastPkg = pkg
         lastEvent = SystemClock.uptimeMillis()

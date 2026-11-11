@@ -1211,7 +1211,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
       <div class="acc-item pd-acc-perfil" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
         <button type="button" onclick="toggleAccordion('acc-perfil')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
           <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--green-lt);">person</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Nome e foto</p></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Nome, foto e conta</p></div>
           <span id="acc-perfil-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
         </button>
         <div id="acc-perfil" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
@@ -1241,7 +1241,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
               </div>
               <button type="button" onclick="copiarContaId()" style="cursor:pointer;border:1px solid rgba(88,166,255,0.35);background:rgba(88,166,255,0.10);color:#79b8ff;border-radius:10px;padding:8px 11px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;"><span class="material-icons" style="font-size:14px;">content_copy</span>Copiar</button>
             </div>
-            <p style="font-size:0.62rem;color:#6e7681;margin-top:8px;line-height:1.4;">Código único da sua conta. Em breve ele terá uma função especial no app.</p>
+            <p id="cfg-conta-id-dica" style="font-size:0.62rem;color:#6e7681;margin-top:8px;line-height:1.4;">Código fixo da sua conta: foi criado no cadastro e nunca muda.</p>
             <input type="hidden" id="cfg-perfil-foto">
           </div>
         </div>
@@ -5462,6 +5462,1010 @@ window.PrismoTurno=(function(){
   return {render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao};
 })();
 </script>
+<!-- ══ CONTA (login / cadastro por código / usuário / segurança) · v1.9.2 ══ -->
+<style>
+#conta-app{display:none;position:fixed;inset:0;z-index:100002;background:radial-gradient(120% 70% at 50% -10%,rgba(46,164,79,.22),transparent 60%),#070b0f;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#e6edf3;}
+#conta-app *,#conta-bloq *{box-sizing:border-box;}
+.pc-wrap{min-height:100%;max-width:440px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 22px 28px;display:flex;flex-direction:column;}
+.pc-topo{display:flex;align-items:center;justify-content:space-between;min-height:40px;}
+.pc-voltar{width:40px;height:40px;border-radius:13px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:#c9d1d9;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.pc-hero{text-align:center;margin:18px 0 26px;}
+.pc-logo{width:84px;height:84px;border-radius:26px;margin:0 auto 16px;background:linear-gradient(135deg,#165c2b,#2ea44f);display:flex;align-items:center;justify-content:center;box-shadow:0 18px 40px -14px rgba(46,164,79,.65),inset 0 1px 0 rgba(255,255,255,.18);}
+.pc-logo .material-icons{font-size:44px;color:#fff;}
+.pc-h1{font-size:25px;font-weight:900;letter-spacing:-.01em;line-height:1.15;}
+.pc-sub{font-size:13.5px;color:#8b949e;margin-top:8px;line-height:1.45;}
+.pc-sub b{color:#e6edf3;}
+.pc-btn{width:100%;min-height:52px;border-radius:16px;border:none;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .12s,opacity .15s;margin-top:10px;font-family:inherit;}
+.pc-btn:active{transform:scale(.98);}
+.pc-btn[disabled]{opacity:.55;pointer-events:none;}
+.pc-pri{background:linear-gradient(135deg,#1a7a3a,#2ea44f);color:#fff;box-shadow:0 12px 26px -14px rgba(46,164,79,.8);}
+.pc-google{background:#fff;color:#1f1f1f;}
+.pc-sec{background:rgba(255,255,255,.05);color:#e6edf3;border:1px solid rgba(255,255,255,.10);}
+.pc-link{background:none;border:none;color:#8b949e;font-size:13.5px;font-weight:700;padding:14px 8px;cursor:pointer;width:100%;font-family:inherit;}
+.pc-link b{color:#3fb950;}
+.pc-link[disabled]{opacity:.5;pointer-events:none;}
+.pc-ou{display:flex;align-items:center;gap:12px;color:#6e7681;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:16px 0 6px;}
+.pc-ou:before,.pc-ou:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.08);}
+.pc-campo{display:block;margin-top:12px;}
+.pc-campo > span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin:0 0 7px 2px;}
+.pc-in{position:relative;}
+.pc-in input{width:100%;height:52px;border-radius:15px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#e6edf3;font-size:16px;font-weight:600;padding:0 48px 0 16px;outline:none;font-family:inherit;}
+.pc-in input:focus{border-color:rgba(63,185,80,.6);background:rgba(46,164,79,.06);}
+.pc-in input.pc-codigo{text-align:center;font-size:28px;font-weight:900;letter-spacing:.45em;padding:0 0 0 .45em;height:64px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.pc-olho{position:absolute;right:6px;top:6px;width:40px;height:40px;border:none;background:none;color:#8b949e;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pc-erro{display:none;margin-top:12px;padding:11px 13px;border-radius:13px;background:rgba(248,81,73,.10);border:1px solid rgba(248,81,73,.30);color:#ff9b95;font-size:13px;font-weight:700;line-height:1.4;}
+.pc-ok{display:none;margin-top:12px;padding:11px 13px;border-radius:13px;background:rgba(46,164,79,.10);border:1px solid rgba(46,164,79,.30);color:#7ee2a0;font-size:13px;font-weight:700;line-height:1.4;}
+.pc-lista{margin:6px 0 4px;display:flex;flex-direction:column;gap:9px;}
+.pc-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;color:#c9d1d9;}
+.pc-item .material-icons{font-size:19px;color:#f0883e;flex-shrink:0;}
+.pc-item.ok .material-icons{color:#3fb950;}
+.pc-item small{display:block;font-size:11.5px;color:#8b949e;font-weight:600;margin-top:2px;}
+.pc-tit2{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8b949e;margin:18px 0 8px 2px;}
+.pc-carregando{display:inline-block;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:pcgira .8s linear infinite;}
+.pc-google .pc-carregando{border-color:rgba(0,0,0,.2);border-top-color:#1f1f1f;}
+@keyframes pcgira{to{transform:rotate(360deg);}}
+.pc-rodape{margin-top:auto;padding-top:22px;text-align:center;font-size:11.5px;color:#6e7681;line-height:1.5;}
+.pc-rodape a{color:#8b949e;}
+/* escolha do bloqueio */
+.pc-opc{display:flex;align-items:center;gap:13px;width:100%;padding:14px;border-radius:17px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);color:#e6edf3;cursor:pointer;margin-top:10px;text-align:left;font-family:inherit;}
+.pc-opc .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(46,164,79,.12);border:1px solid rgba(46,164,79,.3);flex-shrink:0;}
+.pc-opc .ic .material-icons{font-size:23px;color:#3fb950;}
+.pc-opc b{display:block;font-size:15px;font-weight:900;}
+.pc-opc small{display:block;font-size:12px;color:#8b949e;font-weight:600;margin-top:2px;}
+.pc-opc[disabled]{opacity:.45;pointer-events:none;}
+/* janela de recurso bloqueado */
+#conta-trava{display:none;position:fixed;inset:0;z-index:100003;background:rgba(0,0,0,.78);align-items:flex-end;justify-content:center;}
+.pt-box{width:100%;max-width:460px;border-radius:28px 28px 0 0;background:linear-gradient(180deg,#0f1a14,#0b1016 60%);border-top:1px solid rgba(63,185,80,.25);padding:22px 22px max(22px,env(safe-area-inset-bottom));text-align:center;animation:ptsobe .22s ease-out;}
+@keyframes ptsobe{from{transform:translateY(40px);opacity:.4;}to{transform:none;opacity:1;}}
+.pt-ic{width:62px;height:62px;border-radius:20px;margin:4px auto 14px;background:rgba(240,136,62,.12);border:1px solid rgba(240,136,62,.35);display:flex;align-items:center;justify-content:center;}
+.pt-ic .material-icons{font-size:30px;color:#f0883e;}
+.pt-t{font-size:19px;font-weight:900;color:#e6edf3;}
+.pt-s{font-size:13.5px;color:#8b949e;line-height:1.5;margin:8px 4px 6px;}
+/* tela de bloqueio (PIN / biometria) */
+#conta-bloq{display:none;position:fixed;inset:0;z-index:100006;background:radial-gradient(120% 60% at 50% 0%,rgba(46,164,79,.20),transparent 60%),#06090d;color:#e6edf3;font-family:inherit;overflow-y:auto;}
+.pb-wrap{min-height:100%;max-width:400px;margin:0 auto;padding:max(34px,env(safe-area-inset-top)) 26px 22px;display:flex;flex-direction:column;align-items:center;}
+.pb-av{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#1a7a3a,#2ea44f);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border:2px solid rgba(63,185,80,.5);box-shadow:0 14px 34px -14px rgba(46,164,79,.8);margin-top:14px;}
+.pb-ola{font-size:21px;font-weight:900;margin-top:14px;text-align:center;}
+.pb-msg{font-size:13.5px;color:#8b949e;margin-top:6px;text-align:center;min-height:20px;line-height:1.4;}
+.pb-msg.erro{color:#ff9b95;font-weight:700;}
+.pb-dots{display:flex;gap:14px;margin:26px 0 10px;min-height:18px;}
+.pb-dots i{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:block;transition:background .12s,border-color .12s;}
+.pb-dots i.on{background:#3fb950;border-color:#3fb950;}
+.pb-dots.treme{animation:pbtreme .35s;}
+@keyframes pbtreme{20%,60%{transform:translateX(-9px);}40%,80%{transform:translateX(9px);}}
+.pb-pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px 26px;margin-top:18px;}
+.pb-k{width:76px;height:76px;border-radius:50%;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:#e6edf3;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+.pb-k:active{background:rgba(46,164,79,.25);}
+.pb-k.vazio{background:none;border:none;pointer-events:none;}
+.pb-k.acao{background:none;border:none;font-size:15px;}
+.pb-k .material-icons{font-size:26px;}
+.pb-bio{width:104px;height:104px;border-radius:32px;margin-top:40px;background:rgba(46,164,79,.12);border:1px solid rgba(63,185,80,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.pb-bio .material-icons{font-size:56px;color:#3fb950;}
+.pb-rodape{margin-top:auto;padding-top:20px;width:100%;}
+/* cadeados pequenos nos recursos da conta */
+.pc-cad{display:none;}
+body.pc-sem-conta .pc-cad{display:inline-flex;}
+.pc-cad-mini{position:absolute;top:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:#f0883e;color:#111;align-items:center;justify-content:center;border:2px solid #0d1117;}
+.pc-cad-mini .material-icons{font-size:10px !important;color:#111 !important;}
+.pc-cad-tag{align-items:center;gap:3px;padding:2px 7px;border-radius:99px;background:rgba(240,136,62,.12);border:1px solid rgba(240,136,62,.35);color:#f0883e;font-size:.56rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle;margin-left:6px;}
+.pc-cad-tag .material-icons{font-size:10px !important;color:#f0883e !important;}
+/* blocos no menu (Perfil e Configurações) */
+.pc-conta-box{margin-top:10px;background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px;}
+.pc-box-tit{font-size:0.56rem;font-weight:700;color:var(--muted,#6e7681);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pc-conta-lin{display:flex;align-items:center;gap:10px;}
+.pc-conta-av{width:36px;height:36px;border-radius:11px;background:rgba(46,164,79,.10);border:1px solid rgba(46,164,79,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pc-conta-av .material-icons{font-size:18px;color:#3fb950;}
+.pc-mini-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.pc-mini{cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#c9d1d9;border-radius:10px;padding:10px 6px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;}
+.pc-mini .material-icons{font-size:15px;}
+.pc-mini.verde{border-color:rgba(46,164,79,.4);background:rgba(46,164,79,.12);color:#3fb950;}
+.pc-mini.verm{border-color:rgba(248,81,73,.3);background:rgba(248,81,73,.06);color:#f85149;}
+.pc-linha{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);color:#e6edf3;cursor:pointer;margin-top:8px;text-align:left;font-family:inherit;}
+.pc-linha .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.pc-linha .ic .material-icons{font-size:17px;color:#c9d1d9;}
+.pc-linha b{display:block;font-size:13px;font-weight:800;}
+.pc-linha small{display:block;font-size:.64rem;color:#8b949e;margin-top:2px;}
+.pc-linha .fim{margin-left:auto;font-size:18px;color:#6e7681;}
+.pc-linha.verm b{color:#f85149;}
+.pc-linha.verm .ic .material-icons{color:#f85149;}
+.pc-linha.sel{border-color:rgba(63,185,80,.55);background:rgba(46,164,79,.08);}
+.pc-linha.sel .ic{background:rgba(46,164,79,.14);border-color:rgba(63,185,80,.4);}
+.pc-linha.sel .ic .material-icons{color:#3fb950;}
+.pc-linha[aria-disabled="true"]{opacity:.5;}
+.pc-cal-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:12px;background:rgba(240,136,62,.08);border:1px solid rgba(240,136,62,.28);color:#f0b27a;font-size:12px;font-weight:700;align-items:center;gap:8px;cursor:pointer;}
+.pc-cal-aviso .material-icons{font-size:15px;color:#f0883e;}
+</style>
+
+<div id="conta-app" role="dialog" aria-modal="true">
+  <div class="pc-wrap" id="pc-tela"></div>
+</div>
+
+<div id="conta-bloq" role="dialog" aria-modal="true">
+  <div class="pb-wrap" id="pb-tela"></div>
+</div>
+
+<div id="conta-trava" onclick="if(event.target===this)PrismoConta.fecharTrava()">
+  <div class="pt-box">
+    <div class="pt-ic"><span class="material-icons">lock</span></div>
+    <div class="pt-t" id="pt-t">Recurso da conta</div>
+    <div class="pt-s" id="pt-s"></div>
+    <button class="pc-btn pc-pri" onclick="PrismoConta.fecharTrava();PrismoConta.abrir('criar')"><span class="material-icons">person_add</span>Criar conta grátis</button>
+    <button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir('inicio')"><span class="material-icons">login</span>Já tenho conta · Entrar</button>
+    <button class="pc-link" onclick="PrismoConta.fecharTrava()">Agora não</button>
+  </div>
+</div>
+
+<script>
+window.PrismoConta=(function(){
+  var URL_SB='https://xzdqvdrwvozoedmjwwhm.supabase.co';
+  var CHAVE='sb_publishable_OGjy3PepqOrIiVmw4s9EWA_kJGoFOFL';   /* chave pública (pode ficar no app) */
+  var REDIR='com.prismo.drive://auth';
+  var K_SESSAO='prismo_sessao',K_CONTA='prismo_conta',K_MODO='prismo_conta_modo',K_BKP='prismo_backup_em';
+  var NAO_COPIAR={prismo_sessao:1,prismo_conta:1,prismo_conta_modo:1,prismo_backup_em:1,prismo_conta_id:1};
+  var LIMITE_PECAS=3,DIAS_CAL=30,BLOQ_MIN=3;   /* bloqueia de novo depois de 3 min fora do app */
+
+  function $c(id){return document.getElementById(id);}
+  function nat(){try{return window.PrismoNative||null;}catch(e){return null;}}
+  function ler(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+  function gravar(k,v){try{if(v===null||v===undefined)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+  function toast(m,e){try{showToast(m,e);}catch(x){}}
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* ── estado ── */
+  function sessao(){return ler(K_SESSAO);}
+  function conta(){return ler(K_CONTA)||{};}
+  function modo(){try{return localStorage.getItem(K_MODO)||'';}catch(e){return '';}}
+  function logado(){var s=sessao();return !!(s&&s.refresh_token);}
+
+  /* avisa o Android (assistente de rotas e widgets) e atualiza a tela */
+  function sincronizar(){
+    var c=conta(),l=logado();
+    try{var n=nat();if(n&&typeof n.contaEstado==='function')n.contaEstado(JSON.stringify({logado:l,contaId:c.contaId||'',nome:c.nome||''}));}catch(e){}
+    try{document.body.classList.toggle('pc-sem-conta',!l);}catch(e){}
+    try{if(typeof mostrarContaId==='function')mostrarContaId();}catch(e){}
+    try{desenharMenu();}catch(e){}
+    try{desenharSeguranca();}catch(e){}
+  }
+
+  /* ── HTTP: pelo Android quando existe (sem CORS), senão fetch ── */
+  var pend={},seq=0;
+  window.__prismoHttp=function(r){var cb=pend[r.id];if(!cb)return;delete pend[r.id];var j=null;try{j=r.corpo?JSON.parse(r.corpo):null;}catch(e){j=null;}cb({status:r.status,json:j,texto:r.corpo||''});};
+  function http(metodo,caminho,corpo,token,extra){
+    var h={'apikey':CHAVE,'Content-Type':'application/json'};
+    if(token)h['Authorization']='Bearer '+token;
+    if(extra)for(var k in extra)h[k]=extra[k];
+    var url=URL_SB+caminho,txt=corpo==null?null:JSON.stringify(corpo);
+    return new Promise(function(ok){
+      var n=nat();
+      if(n&&typeof n.http==='function'){
+        var id='h'+(++seq)+'_'+Date.now();pend[id]=ok;
+        setTimeout(function(){if(pend[id]){delete pend[id];ok({status:0,json:null,texto:''});}},45000);
+        try{n.http(id,metodo,url,JSON.stringify(h),txt);}catch(e){delete pend[id];ok({status:0,json:null,texto:''});}
+        return;
+      }
+      try{
+        fetch(url,{method:metodo,headers:h,body:txt}).then(function(r){return r.text().then(function(t){var j=null;try{j=t?JSON.parse(t):null;}catch(e){}ok({status:r.status,json:j,texto:t});});}).catch(function(){ok({status:0,json:null,texto:''});});
+      }catch(e){ok({status:0,json:null,texto:''});}
+    });
+  }
+  function msgErro(r){
+    if(!r||r.status===0)return 'Sem internet. Verifique a conexão e tente de novo.';
+    var j=r.json||{},c=(j.error_code||j.code||j.error||'')+'',m=(j.msg||j.message||j.error_description||'')+'';
+    if(/invalid_credentials|Invalid login/i.test(c+m))return 'E-mail ou senha incorretos.';
+    if(/email_not_confirmed|not confirmed/i.test(c+m))return 'Falta confirmar o e-mail. Digite o código que enviamos.';
+    if(/otp_expired|token has expired|is invalid|invalid.*otp/i.test(c+m))return 'Código errado ou vencido. Confira o último e-mail ou peça um código novo.';
+    if(/user_already_exists|already registered/i.test(c+m))return 'Este e-mail já tem conta. Toque em Entrar.';
+    if(/weak_password|at least/i.test(c+m))return 'Senha fraca: use pelo menos 6 caracteres.';
+    if(/over_email_send_rate_limit|rate limit|too many|security purposes/i.test(c+m)||r.status===429)return 'Muitas tentativas agora. Espere um minuto e tente de novo.';
+    if(/email_address_invalid|invalid.*email|validate email/i.test(c+m))return 'E-mail inválido.';
+    if(/same_password|different from the old/i.test(c+m))return 'A nova senha precisa ser diferente da atual.';
+    return 'Não foi possível concluir agora. Tente de novo.'+(m?' ('+m+')':'');
+  }
+
+  /* ── sessão ── */
+  function guardarSessao(j,metodo){
+    if(!j||!j.access_token)return false;
+    var exp=j.expires_in?Date.now()+j.expires_in*1000:(j.expires_at?j.expires_at*1000:Date.now()+3600000); /* relógio do celular pode estar errado: conta a partir de agora */
+    var ant=sessao()||{};
+    gravar(K_SESSAO,{access_token:j.access_token,refresh_token:j.refresh_token,expires_at:exp,user:{id:j.user&&j.user.id,email:j.user&&j.user.email},metodo:metodo||ant.metodo||''});
+    try{localStorage.setItem(K_MODO,'conta');}catch(e){}
+    return true;
+  }
+  var renovando=null;
+  function token(){
+    var s=sessao();if(!s)return Promise.resolve(null);
+    if(s.expires_at-Date.now()>120000)return Promise.resolve(s.access_token);
+    if(renovando)return renovando;
+    renovando=http('POST','/auth/v1/token?grant_type=refresh_token',{refresh_token:s.refresh_token}).then(function(r){
+      renovando=null;
+      if(r.status===200&&r.json&&r.json.access_token){var u=s.user;guardarSessao(r.json);var n=sessao();if(n&&!n.user.id){n.user=u;gravar(K_SESSAO,n);}return r.json.access_token;}
+      if(r.status>=400&&r.status<500){encerrarLocal('Sua sessão terminou. Entre de novo na sua conta.');return null;}
+      return null; /* sem internet: segue com a conta, tenta depois */
+    });
+    return renovando;
+  }
+  function limparSeguranca(){try{var n=nat();if(n&&n.segurancaLimpar)n.segurancaLimpar();}catch(e){}}
+  function encerrarLocal(aviso){
+    var email=(conta().email)||((sessao()||{}).user||{}).email||'';
+    gravar(K_SESSAO,null);gravar(K_CONTA,null);
+    try{localStorage.removeItem(K_MODO);}catch(e){}
+    limparSeguranca();esconderBloqueio();
+    sincronizar();
+    if(aviso){dados.email=email;abrir('entrar');mostrarErro(aviso);}
+  }
+
+  /* perfil (nome + ID fixo da conta) */
+  function carregarPerfil(){
+    return token().then(function(t){
+      var s=sessao();if(!t||!s||!s.user||!s.user.id)return null;
+      return http('GET','/rest/v1/perfis?select=nome,email,conta_id&id=eq.'+encodeURIComponent(s.user.id),null,t).then(function(r){
+        var p=r.status===200&&Array.isArray(r.json)?r.json[0]:null;
+        if(p){gravar(K_CONTA,{contaId:p.conta_id||'',nome:p.nome||'',email:p.email||s.user.email||''});sincronizar();}
+        return p;
+      });
+    });
+  }
+
+  /* ── telas ── */
+  var tela='inicio',dados={};
+  function campo(id,rot,tipo,ph,extra){
+    var olho=tipo==='password'?'<button type="button" class="pc-olho" onclick="PrismoConta.olho(\''+id+'\',this)" aria-label="Mostrar senha"><span class="material-icons">visibility</span></button>':'';
+    return '<label class="pc-campo"><span>'+rot+'</span><div class="pc-in"><input id="'+id+'" type="'+tipo+'" placeholder="'+ph+'" '+(extra||'')+'>'+olho+'</div></label>';
+  }
+  function campoCodigo(enter){return '<label class="pc-campo"><span>Código do e-mail</span><div class="pc-in"><input id="pc-cod" class="pc-codigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="······" oninput="this.value=this.value.replace(/\\D/g,\'\')" '+(enter?'onkeydown="if(event.key===\'Enter\')'+enter+'"':'')+'></div></label>';}
+  var G_SVG='<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+  function topo(volta){return '<div class="pc-topo">'+(volta?'<button class="pc-voltar" onclick="PrismoConta.abrir(\''+volta+'\')" aria-label="Voltar"><span class="material-icons">'+(volta==='__fechar'?'close':'arrow_back')+'</span></button>':'<span></span>')+'<span></span></div>';}
+  function hero(ic,t,s){return '<div class="pc-hero"><div class="pc-logo"><span class="material-icons">'+ic+'</span></div><div class="pc-h1">'+t+'</div>'+(s?'<div class="pc-sub">'+s+'</div>':'')+'</div>';}
+  var RODAPE='<div class="pc-rodape">Ao continuar você aceita a <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</div>';
+  var MSGS='<div class="pc-erro" id="pc-erro"></div><div class="pc-ok" id="pc-ok"></div>';
+  function it(ic,t,s,ok){return '<div class="pc-item'+(ok?' ok':'')+'"><span class="material-icons">'+ic+'</span><div>'+t+(s?'<small>'+s+'</small>':'')+'</div></div>';}
+
+  var TELAS={
+    inicio:function(){
+      return topo(logado()?null:(modo()==='livre'?'__fechar':null))+hero('directions_car','Prismo Drive','Entre para salvar tudo na nuvem, trocar de celular sem perder nada e liberar todos os recursos.')
+        +MSGS
+        +'<button class="pc-btn pc-google" id="pc-bt-google" onclick="PrismoConta.google()">'+G_SVG+'Entrar com Google</button>'
+        +'<div class="pc-ou">ou</div>'
+        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'entrar\')"><span class="material-icons">mail</span>Entrar com e-mail</button>'
+        +'<button class="pc-btn pc-sec" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
+        +'<button class="pc-link" onclick="PrismoConta.abrir(\'semconta\')">Continuar como usuário (sem conta)</button>'
+        +RODAPE;
+    },
+    entrar:function(){
+      return topo('inicio')+hero('login','Entrar','Use o e-mail e a senha da sua conta.')
+        +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'"')
+        +campo('pc-senha','Senha','password','Sua senha','autocomplete="current-password" onkeydown="if(event.key===\'Enter\')PrismoConta.entrar()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.entrar()">Entrar</button>'
+        +'<button class="pc-link" onclick="PrismoConta.abrir(\'esqueci\')">Esqueci minha senha</button>'
+        +'<button class="pc-link" onclick="PrismoConta.abrir(\'criar\')">Ainda não tem conta? <b>Criar conta</b></button>';
+    },
+    criar:function(){
+      return topo('inicio')+hero('person_add','Criar conta','É grátis. Você recebe um código no e-mail para confirmar.')
+        +campo('pc-nome','Nome','text','Como você quer ser chamado','autocomplete="name" value="'+esc(dados.nome||'')+'"')
+        +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'"')
+        +campo('pc-senha','Senha','password','Mínimo de 6 caracteres','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.criar()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.criar()">Criar conta</button>'
+        +'<div class="pc-ou">ou</div>'
+        +'<button class="pc-btn pc-google" id="pc-bt-google" onclick="PrismoConta.google()">'+G_SVG+'Criar com Google</button>'
+        +'<button class="pc-link" onclick="PrismoConta.abrir(\'entrar\')">Já tem conta? <b>Entrar</b></button>'+RODAPE;
+    },
+    /* código de verificação do cadastro */
+    codigo:function(){
+      return topo('criar')+hero('mark_email_read','Digite o código','Enviamos um código para <b>'+esc(dados.email||'')+'</b>. Ele vale por 1 hora.')
+        +campoCodigo('PrismoConta.verificar()')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.verificar()">Confirmar</button>'
+        +'<button class="pc-link" id="pc-reenviar" onclick="PrismoConta.reenviar()">Não chegou? <b>Reenviar código</b></button>'
+        +'<div class="pc-item ok"><span class="material-icons">info</span><div>Procure também no spam ou em Promoções.<small>Remetente: Prismo Drive</small></div></div>';
+    },
+    esqueci:function(){
+      return topo('entrar')+hero('lock_reset','Esqueci minha senha','Digite o e-mail da conta. Vamos enviar um código para você criar uma senha nova.')
+        +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'" onkeydown="if(event.key===\'Enter\')PrismoConta.recuperar()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.recuperar()">Enviar código</button>';
+    },
+    /* código da recuperação + nova senha */
+    recuperar:function(){
+      return topo('esqueci')+hero('password','Nova senha','Digite o código que enviamos para <b>'+esc(dados.email||'')+'</b> e escolha a nova senha.')
+        +campoCodigo()
+        +campo('pc-senha','Nova senha','password','Mínimo de 6 caracteres','autocomplete="new-password"')
+        +campo('pc-senha2','Repita a nova senha','password','Igual à de cima','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.trocarPorCodigo()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.trocarPorCodigo()">Salvar nova senha</button>'
+        +'<button class="pc-link" id="pc-reenviar" onclick="PrismoConta.recuperar(true)">Não chegou? <b>Reenviar código</b></button>';
+    },
+    /* link antigo do e-mail (versão 1.9.1) */
+    novasenha:function(){
+      return topo(null)+hero('password','Nova senha','Crie a nova senha da sua conta.')
+        +campo('pc-senha','Nova senha','password','Mínimo de 6 caracteres','autocomplete="new-password"')
+        +campo('pc-senha2','Repita a senha','password','Igual à de cima','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.salvarSenha()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.salvarSenha()">Salvar nova senha</button>';
+    },
+    /* Perfil › Opções › Mudar senha */
+    mudarsenha:function(){
+      var temSenha=dados.temSenha!==false;
+      return topo('__fechar')+hero('key',temSenha?'Mudar senha':'Criar senha',temSenha?'Confirme a senha atual e escolha a nova.':'Você entra com o Google. Crie uma senha para também poder entrar com e-mail.')
+        +(temSenha?campo('pc-atual','Senha atual','password','Sua senha de agora','autocomplete="current-password"'):'')
+        +campo('pc-senha','Nova senha','password','Mínimo de 6 caracteres','autocomplete="new-password"')
+        +campo('pc-senha2','Repita a nova senha','password','Igual à de cima','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.mudarSenha()"')
+        +MSGS
+        +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.mudarSenha()">Salvar nova senha</button>'
+        +(temSenha?'<button class="pc-link" onclick="PrismoConta.esqueciLogado()">Esqueci a senha atual</button>':'');
+    },
+    /* depois de entrar: escolher a proteção */
+    protecao:function(){
+      var e=seg(),bio=!!e.bio;
+      return topo(null)+hero('shield','Proteja sua conta','Escolha como desbloquear o app sempre que abrir. Dá para trocar depois em Configurações › Segurança.')
+        +'<button class="pc-opc" '+(bio?'':'disabled')+' onclick="PrismoConta.escolherBio(true)"><span class="ic"><span class="material-icons">fingerprint</span></span><span><b>Biometria</b><small>'+(bio?'Digital ou rosto do celular':'Indisponível: cadastre a digital no Android')+'</small></span></button>'
+        +'<button class="pc-opc" onclick="PrismoConta.criarPin(true)"><span class="ic"><span class="material-icons">pin</span></span><span><b>PIN</b><small>Um código de 4 a 6 números que você escolhe</small></span></button>'
+        +MSGS
+        +'<button class="pc-link" onclick="PrismoConta.pularProtecao()">Agora não</button>';
+    },
+    semconta:function(){
+      return topo('inicio')+hero('person_outline','Continuar como usuário','Como usuário (sem conta) você usa o básico agora e cria a conta quando quiser. Seus lançamentos continuam no celular.')
+        +'<div class="pc-tit2">Bloqueado para usuários</div><div class="pc-lista">'
+        +it('lock','Carteira','Dívidas, contas do mês, metas e plano de quitação')
+        +it('lock','Assistente de rotas','Selo em cada corrida do iFood e InDrive e leitura automática dos ganhos')
+        +it('lock','Turno com GPS','Contador de km e tempo do turno')
+        +it('lock','Balanço semanal e Comparativo','Imagem do fechamento e comparação de dias')
+        +it('lock','Widgets na tela inicial','')
+        +it('lock','Backup na nuvem','Sem conta, se perder o celular perde os dados')
+        +it('lock','Segurança e opções da conta','Biometria, PIN, mudar senha')
+        +it('block','Manutenção: até '+LIMITE_PECAS+' itens','')
+        +it('history','Calendário: só os últimos '+DIAS_CAL+' dias','Os dias mais antigos voltam quando você entrar')
+        +'</div><div class="pc-tit2">Liberado para usuários</div><div class="pc-lista">'
+        +it('check_circle','Lançar corridas, abastecer e o resumo do dia e do mês','',true)
+        +it('check_circle','Avisos de manutenção','',true)
+        +'</div>'
+        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
+        +'<button class="pc-btn pc-sec" onclick="PrismoConta.semConta()">Continuar como usuário</button>';
+    }
+  };
+
+  function abrir(t){
+    if(t==='__fechar'){fechar();return;}
+    if(!TELAS[t])t='inicio';
+    var e=$c('pc-email'),nm=$c('pc-nome');if(e)dados.email=e.value.trim().toLowerCase();if(nm)dados.nome=nm.value.trim();
+    tela=t;
+    var box=$c('pc-tela');if(!box)return;
+    box.innerHTML=TELAS[t]();
+    var app=$c('conta-app');app.style.display='block';app.scrollTop=0;
+    try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(e){}
+    if(t==='codigo'||t==='recuperar')setTimeout(function(){var c=$c('pc-cod');if(c)c.focus();},250);
+  }
+  function fechar(){var app=$c('conta-app');if(app)app.style.display='none';}
+  function aberto(){var a=$c('conta-app');return !!(a&&a.style.display==='block');}
+  function mostrarErro(m){var e=$c('pc-erro'),o=$c('pc-ok');if(o)o.style.display='none';if(e){e.innerHTML=esc(m);e.style.display=m?'block':'none';}}
+  function mostrarOk(m){var e=$c('pc-erro'),o=$c('pc-ok');if(e)e.style.display='none';if(o){o.innerHTML=esc(m);o.style.display=m?'block':'none';}}
+  function ocupado(sim,id,txt){var b=$c(id||'pc-bt');if(!b)return;if(sim){b.dataset.html=b.innerHTML;b.disabled=true;b.innerHTML='<span class="pc-carregando"></span>'+(txt||'');}else{b.disabled=false;if(b.dataset.html)b.innerHTML=b.dataset.html;}}
+  function val(id){var e=$c(id);return e?e.value.trim():'';}
+  function emailOk(e){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);}
+  /* espera 60 s para pedir outro código */
+  var esperaAte=0;
+  function esperaReenviar(){
+    var b=$c('pc-reenviar');if(!b)return;var f=Math.ceil((esperaAte-Date.now())/1000);
+    if(f>0){b.disabled=true;b.innerHTML='Reenviar código em '+f+' s';setTimeout(esperaReenviar,1000);}
+    else{b.disabled=false;b.innerHTML='Não chegou? <b>Reenviar código</b>';}
+  }
+
+  /* ── entrar / criar / código ── */
+  function entrar(){
+    var email=val('pc-email').toLowerCase(),senha=($c('pc-senha')||{}).value||'';dados.email=email;
+    if(!emailOk(email))return mostrarErro('Digite um e-mail válido.');
+    if(!senha)return mostrarErro('Digite a senha.');
+    mostrarErro('');ocupado(true,'pc-bt','Entrando…');
+    http('POST','/auth/v1/token?grant_type=password',{email:email,password:senha}).then(function(r){
+      ocupado(false);
+      if(r.status===200&&guardarSessao(r.json,'email'))return depoisDeEntrar();
+      var m=msgErro(r);
+      if(/Falta confirmar/.test(m)){abrir('codigo');mostrarErro('Falta confirmar o e-mail. Digite o código que enviamos ou toque em Reenviar código.');return;}
+      mostrarErro(m);
+    });
+  }
+  function criar(){
+    var nome=val('pc-nome'),email=val('pc-email').toLowerCase(),senha=($c('pc-senha')||{}).value||'';dados.nome=nome;dados.email=email;
+    if(nome.length<2)return mostrarErro('Digite seu nome.');
+    if(!emailOk(email))return mostrarErro('Digite um e-mail válido.');
+    if(senha.length<6)return mostrarErro('A senha precisa ter pelo menos 6 caracteres.');
+    mostrarErro('');ocupado(true,'pc-bt','Criando conta…');
+    http('POST','/auth/v1/signup',{email:email,password:senha,data:{nome:nome}}).then(function(r){
+      ocupado(false);
+      if(r.status>=200&&r.status<300){
+        var j=r.json||{};
+        if(j.access_token&&guardarSessao(j,'email'))return depoisDeEntrar(true);         /* confirmação de e-mail desligada */
+        var u=j.user||j;
+        if(u&&Array.isArray(u.identities)&&u.identities.length===0){abrir('entrar');return mostrarErro('Este e-mail já tem conta. Entre com a senha ou use "Esqueci minha senha".');}
+        esperaAte=Date.now()+60000;abrir('codigo');esperaReenviar();return;
+      }
+      mostrarErro(msgErro(r));
+    });
+  }
+  function verificar(){
+    var cod=val('pc-cod');
+    if(!/^\d{6,8}$/.test(cod))return mostrarErro('Digite o código de 6 números do e-mail.');
+    ocupado(true,'pc-bt','Confirmando…');
+    http('POST','/auth/v1/verify',{type:'signup',email:dados.email,token:cod}).then(function(r){
+      ocupado(false);
+      if(r.status===200&&guardarSessao(r.json,'email'))return depoisDeEntrar(true);
+      mostrarErro(msgErro(r));
+    });
+  }
+  function reenviar(){
+    if(!emailOk(dados.email||''))return abrir('criar');
+    var b=$c('pc-reenviar');if(b){b.disabled=true;b.innerHTML='Enviando…';}
+    http('POST','/auth/v1/resend',{type:'signup',email:dados.email}).then(function(r){
+      if(r.status>=200&&r.status<300){mostrarOk('Pronto! Enviamos um código novo. Use só o último que chegou.');esperaAte=Date.now()+60000;}
+      else{mostrarErro(msgErro(r));esperaAte=Date.now()+5000;}
+      esperaReenviar();
+    });
+  }
+  /* esqueci a senha: manda o código (de novo=true reenvia da própria tela) */
+  function recuperar(deNovo){
+    var email=deNovo?dados.email:val('pc-email').toLowerCase();dados.email=email;
+    if(!emailOk(email||''))return mostrarErro('Digite um e-mail válido.');
+    if(deNovo){var b=$c('pc-reenviar');if(b){b.disabled=true;b.innerHTML='Enviando…';}}else ocupado(true,'pc-bt','Enviando…');
+    http('POST','/auth/v1/recover',{email:email}).then(function(r){
+      if(!deNovo)ocupado(false);
+      if(r.status>=200&&r.status<300){
+        esperaAte=Date.now()+60000;
+        if(!deNovo)abrir('recuperar');
+        mostrarOk(deNovo?'Pronto! Enviamos um código novo. Use só o último que chegou.':'Se este e-mail tiver conta, o código chega em instantes.');
+        esperaReenviar();return;
+      }
+      mostrarErro(msgErro(r));if(deNovo){esperaAte=Date.now()+5000;esperaReenviar();}
+    });
+  }
+  function senhasOk(a,b){
+    if(a.length<6){mostrarErro('A nova senha precisa ter pelo menos 6 caracteres.');return false;}
+    if(a!==b){mostrarErro('As duas senhas não são iguais.');return false;}
+    return true;
+  }
+  function trocarPorCodigo(){
+    var cod=val('pc-cod'),a=($c('pc-senha')||{}).value||'',b=($c('pc-senha2')||{}).value||'';
+    if(!/^\d{6,8}$/.test(cod))return mostrarErro('Digite o código de 6 números do e-mail.');
+    if(!senhasOk(a,b))return;
+    ocupado(true,'pc-bt','Salvando…');
+    http('POST','/auth/v1/verify',{type:'recovery',email:dados.email,token:cod}).then(function(r){
+      if(r.status!==200||!r.json||!r.json.access_token){ocupado(false);return mostrarErro(msgErro(r));}
+      var antes=((sessao()||{}).user||{}).id,mesmo=logado()&&antes&&r.json.user&&antes===r.json.user.id;
+      guardarSessao(r.json,'email');
+      http('PUT','/auth/v1/user',{password:a},r.json.access_token).then(function(x){
+        ocupado(false);
+        if(x.status===200){toast('Senha alterada!');if(mesmo)fechar();else depoisDeEntrar();}
+        else mostrarErro(msgErro(x));
+      });
+    });
+  }
+  function salvarSenha(){
+    var a=($c('pc-senha')||{}).value||'',b=($c('pc-senha2')||{}).value||'';
+    if(!senhasOk(a,b))return;
+    ocupado(true,'pc-bt','Salvando…');
+    token().then(function(t){
+      if(!t){ocupado(false);return mostrarErro('O link expirou. Use "Esqueci minha senha" para receber um código.');}
+      http('PUT','/auth/v1/user',{password:a},t).then(function(r){
+        ocupado(false);
+        if(r.status===200){toast('Senha alterada!');depoisDeEntrar();}else mostrarErro(msgErro(r));
+      });
+    });
+  }
+
+  /* ── Perfil › Opções › Mudar senha (só contas) ── */
+  function abrirMudarSenha(){
+    if(!exige('opcoes'))return;
+    try{fecharDrawer();}catch(e){}
+    dados.temSenha=true;abrir('mudarsenha');
+    token().then(function(t){
+      if(!t)return;
+      http('GET','/auth/v1/user',null,t).then(function(r){
+        if(r.status!==200||!r.json)return;
+        var pv=((r.json.app_metadata||{}).providers)||[];
+        var tem=pv.indexOf('email')>=0;
+        if(tem!==dados.temSenha&&tela==='mudarsenha'){dados.temSenha=tem;abrir('mudarsenha');}
+      });
+    });
+  }
+  function mudarSenha(){
+    var atual=($c('pc-atual')||{}).value||'',a=($c('pc-senha')||{}).value||'',b=($c('pc-senha2')||{}).value||'';
+    var temSenha=dados.temSenha!==false;
+    if(temSenha&&!atual)return mostrarErro('Digite a senha atual.');
+    if(!senhasOk(a,b))return;
+    ocupado(true,'pc-bt','Salvando…');
+    var email=conta().email||((sessao()||{}).user||{}).email||'';
+    var conferir=temSenha
+      ?http('POST','/auth/v1/token?grant_type=password',{email:email,password:atual}).then(function(r){
+          if(r.status===200&&guardarSessao(r.json))return r.json.access_token;
+          ocupado(false);mostrarErro(r.status===400?'A senha atual está errada.':msgErro(r));return null;})
+      :token();
+    conferir.then(function(t){
+      if(!t){if(!temSenha){ocupado(false);mostrarErro('Sem internet. Tente de novo.');}return;}
+      http('PUT','/auth/v1/user',{password:a},t).then(function(r){
+        ocupado(false);
+        if(r.status===200){fechar();toast(temSenha?'Senha alterada!':'Senha criada! Agora você também pode entrar com e-mail.');}
+        else mostrarErro(msgErro(r));
+      });
+    });
+  }
+  function esqueciLogado(){dados.email=conta().email||((sessao()||{}).user||{}).email||'';recuperarDireto();}
+  function recuperarDireto(){abrir('esqueci');var e=$c('pc-email');if(e)e.value=dados.email||'';}
+
+  /* ── Google ── */
+  function google(){
+    var n=nat();
+    if(!n||typeof n.googleEntrar!=='function')return mostrarErro('O login com Google funciona no app instalado no celular.');
+    mostrarErro('');ocupado(true,'pc-bt-google','Abrindo o Google…');
+    try{n.googleEntrar();}catch(e){ocupado(false,'pc-bt-google');mostrarErro('Não foi possível abrir o Google.');}
+  }
+  window.addEventListener('prismo-google',function(ev){
+    var d=ev.detail||{};
+    if(!d.ok){ocupado(false,'pc-bt-google');if(d.erro!=='cancelado')mostrarErro(d.erro==='sem_conta'?'Nenhuma conta Google neste celular. Adicione uma nas configurações do Android ou entre com e-mail.':(d.msg||'Não foi possível entrar com o Google.'));return;}
+    http('POST','/auth/v1/token?grant_type=id_token',{provider:'google',id_token:d.idToken,nonce:d.nonce}).then(function(r){
+      ocupado(false,'pc-bt-google');
+      if(r.status===200&&guardarSessao(r.json,'google')){dados.nome=d.nome||'';return depoisDeEntrar();}
+      mostrarErro(msgErro(r));
+    });
+  });
+  function semConta(){
+    try{localStorage.setItem(K_MODO,'livre');}catch(e){}
+    fechar();sincronizar();
+    toast('Você está como usuário. Crie sua conta quando quiser em Menu › Perfil.');
+  }
+
+  function depoisDeEntrar(novo){
+    sincronizar();desbloqueadoEm=Date.now();
+    mostrarOk('Conta conectada! Carregando…');
+    carregarPerfil().then(function(){
+      var c=conta();
+      return conferirBackup().then(function(){
+        toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome?(novo?'':', '+c.nome.split(' ')[0]):'')+(c.contaId?' · ID '+c.contaId:''));
+        if(nat()&&!metodoSeg()&&typeof (nat()||{}).segurancaEstado==='function')abrir('protecao');else fechar();
+      });
+    });
+  }
+
+  /* link do e-mail (1.9.1): com.prismo.drive://auth#access_token=…&type=signup|recovery */
+  function verLink(){
+    var n=nat(),l='';try{if(n&&typeof n.contaLink==='function')l=n.contaLink()||'';}catch(e){}
+    if(!l)return;
+    var frag=l.indexOf('#')>=0?l.slice(l.indexOf('#')+1):(l.indexOf('?')>=0?l.slice(l.indexOf('?')+1):'');
+    var p={};frag.split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)p[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' '));});
+    if(p.error||p.error_code){abrir(p.type==='recovery'?'esqueci':'inicio');mostrarErro(/expired/i.test(p.error_code+p.error_description)?'O link expirou ou já foi usado. Peça um código novo.':'Não foi possível abrir o link: '+(p.error_description||p.error));return;}
+    if(!p.access_token)return;
+    var s={access_token:p.access_token,refresh_token:p.refresh_token,expires_at:p.expires_at?Number(p.expires_at):0,expires_in:Number(p.expires_in)||3600,user:null};
+    http('GET','/auth/v1/user',null,p.access_token).then(function(r){
+      if(r.status!==200||!r.json){abrir('inicio');return mostrarErro(msgErro(r));}
+      s.user=r.json;guardarSessao(s,'email');
+      if(p.type==='recovery'){abrir('novasenha');return;}
+      abrir('inicio');depoisDeEntrar(p.type==='signup');
+    });
+  }
+
+  /* ── backup na nuvem ── */
+  function copiaLocal(){
+    var o={};
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||NAO_COPIAR[k])continue;o[k]=localStorage.getItem(k);}}catch(e){}
+    return o;
+  }
+  function temDadosLocais(){
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';if(/^prismo_rows/.test(k)&&(localStorage.getItem(k)||'').length>4)return true;}}catch(e){}
+    return false;
+  }
+  function versao(){try{var n=nat();if(n&&n.versao)return n.versao()||'';}catch(e){}return '';}
+  function fazerBackup(silencioso){
+    return token().then(function(t){
+      var s=sessao();if(!t||!s||!s.user||!s.user.id){if(!silencioso)toast('Entre na conta para fazer backup',true);return false;}
+      var agora=new Date().toISOString();
+      return http('POST','/rest/v1/backups?on_conflict=user_id',{user_id:s.user.id,dados:copiaLocal(),aparelho:(navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+)/)||[])[1]||'',versao:versao(),atualizado_em:agora},t,{'Prefer':'resolution=merge-duplicates,return=minimal'}).then(function(r){
+        if(r.status>=200&&r.status<300){gravar(K_BKP,Date.now());desenharMenu();if(!silencioso)toast('Backup feito! Seus dados estão na nuvem.');return true;}
+        if(!silencioso)toast(r.status===0?'Sem internet para o backup':'Não foi possível fazer o backup',true);return false;
+      });
+    });
+  }
+  function buscarBackup(soData){
+    return token().then(function(t){
+      var s=sessao();if(!t||!s||!s.user)return null;
+      return http('GET','/rest/v1/backups?select='+(soData?'atualizado_em':'atualizado_em,dados')+'&user_id=eq.'+encodeURIComponent(s.user.id),null,t).then(function(r){
+        if(r.status!==200||!Array.isArray(r.json))return {erro:true};
+        return r.json[0]||null;
+      });
+    });
+  }
+  function dataBr(iso){try{var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return '';}}
+  function aplicarBackup(b){
+    if(!b||!b.dados)return toast('Backup vazio',true);
+    var manter={};Object.keys(NAO_COPIAR).forEach(function(k){try{var v=localStorage.getItem(k);if(v!==null)manter[k]=v;}catch(e){}});
+    try{localStorage.clear();}catch(e){}
+    Object.keys(manter).forEach(function(k){try{localStorage.setItem(k,manter[k]);}catch(e){}});
+    Object.keys(b.dados).forEach(function(k){try{localStorage.setItem(k,String(b.dados[k]));}catch(e){}});
+    gravar(K_BKP,Date.now());
+    toast('Dados restaurados! Recarregando…');
+    setTimeout(function(){try{location.reload();}catch(e){}},900);
+  }
+  function restaurar(){
+    buscarBackup(false).then(function(b){
+      if(!b)return toast('Ainda não há backup nesta conta',true);
+      if(b.erro)return toast('Sem internet para buscar o backup',true);
+      confirmar('Restaurar o backup de '+dataBr(b.atualizado_em)+'? Os dados deste celular serão trocados pelos da nuvem.',function(){aplicarBackup(b);},'Restaurar');
+    });
+  }
+  /* ao entrar: celular sem dados + backup na nuvem = oferece restaurar; senão sobe os dados deste celular */
+  function conferirBackup(){
+    return buscarBackup(true).then(function(b){
+      if(b&&b.erro)return;
+      if(b&&b.atualizado_em){
+        return new Promise(function(fim){
+          var txt=temDadosLocais()
+            ?'Sua conta tem um backup de '+dataBr(b.atualizado_em)+'. Quer usar os dados da nuvem? (os deste celular serão trocados)'
+            :'Encontramos seu backup de '+dataBr(b.atualizado_em)+'. Restaurar agora?';
+          confirmar(txt,function(){buscarBackup(false).then(function(x){if(x&&!x.erro)aplicarBackup(x);fim();});},'Usar da nuvem',function(){fazerBackup(true);fim();},'Manter os deste celular');
+        });
+      }
+      return fazerBackup(true);
+    });
+  }
+  function confirmar(msg,ok,txtOk,nao,txtNao,vermelho){
+    try{
+      if(typeof abrirConfirmacao==='function'){
+        abrirConfirmacao(msg,ok,{ok:txtOk||'Confirmar',cancel:txtNao||'Cancelar',verde:!vermelho});
+        var m=$c('modal-confirmar');if(m)m.style.zIndex='100007';
+        var cc=$c('conf-cancel');if(cc&&nao){var f=cc.onclick;cc.onclick=function(){if(f)f();nao();};}
+        return;
+      }
+    }catch(e){}
+    if(window.confirm(msg))ok();else if(nao)nao();
+  }
+
+  /* ── sair / excluir ── */
+  function sair(){
+    confirmar('Sair da conta? Seus lançamentos continuam neste celular, mas os recursos da conta ficam bloqueados.',function(){
+      fazerBackup(true).then(function(){
+        var s=sessao();
+        var fim=function(){gravar(K_SESSAO,null);gravar(K_CONTA,null);gravar(K_BKP,null);try{localStorage.removeItem(K_MODO);}catch(e){}limparSeguranca();sincronizar();try{fecharDrawer();}catch(e){}abrir('inicio');};
+        if(s&&s.access_token)http('POST','/auth/v1/logout',null,s.access_token).then(fim);else fim();
+      });
+    },'Sair');
+  }
+  function excluir(){
+    if(!exige('opcoes'))return;
+    confirmar('Excluir sua conta para sempre? O ID '+(conta().contaId||'')+' e o backup na nuvem serão apagados. Os dados deste celular continuam.',function(){
+      confirmar('Tem certeza? Isso não pode ser desfeito.',function(){
+        token().then(function(t){
+          if(!t)return toast('Sem internet. Tente de novo.',true);
+          http('POST','/rest/v1/rpc/excluir_minha_conta',{},t).then(function(r){
+            if(r.status>=200&&r.status<300){gravar(K_SESSAO,null);gravar(K_CONTA,null);gravar(K_BKP,null);try{localStorage.removeItem(K_MODO);}catch(e){}limparSeguranca();sincronizar();try{fecharDrawer();}catch(e){}toast('Conta excluída.');abrir('inicio');}
+            else toast(r.status===0?'Sem internet. Tente de novo.':'Não foi possível excluir agora',true);
+          });
+        });
+      },'Excluir conta',null,null,true);
+    },'Continuar',null,null,true);
+  }
+
+  /* ══ Segurança: bloqueio por biometria ou PIN ══ */
+  function seg(){try{var n=nat();if(n&&typeof n.segurancaEstado==='function')return JSON.parse(n.segurancaEstado()||'{}')||{};}catch(e){}return {};}
+  function metodoSeg(){var e=seg();if(e.metodo==='pin'&&!e.temPin)return '';return e.metodo||'';}
+  var desbloqueadoEm=0,saiuEm=0,bloqueado=false;
+  /* pin: modo 'abrir' (desbloquear), 'novo' (criar), 'repete' (confirmar) */
+  var pin={modo:'abrir',dig:'',primeiro:'',depois:null,cancelar:null};
+
+  function avatarIni(){var c=conta();return esc(((c.nome||c.email||'P').trim().charAt(0)||'P').toUpperCase());}
+  function desenharBloq(msg,erro){
+    var box=$c('pb-tela');if(!box)return;var c=conta(),e=seg(),m=pin.modo;
+    var nome=(c.nome||'').split(' ')[0];
+    var tit=m==='abrir'?('Olá'+(nome?', '+esc(nome):'')):(m==='novo'?'Crie seu PIN':'Repita o PIN');
+    var sub=msg||(m==='abrir'?(e.metodo==='bio'?'Use a biometria para desbloquear':'Digite seu PIN'):(m==='novo'?'De 4 a 6 números':'Digite o mesmo PIN de novo'));
+    var html='<div class="pb-av">'+avatarIni()+'</div><div class="pb-ola">'+tit+'</div><div class="pb-msg'+(erro?' erro':'')+'" id="pb-msg">'+esc(sub)+'</div>';
+    if(m==='abrir'&&e.metodo==='bio'){
+      html+='<button class="pb-bio" onclick="PrismoConta.pedirBio()" aria-label="Usar biometria"><span class="material-icons">fingerprint</span></button>'
+        +'<div class="pb-rodape"><button class="pc-btn pc-pri" onclick="PrismoConta.pedirBio()"><span class="material-icons">fingerprint</span>Desbloquear</button>'
+        +'<button class="pc-link" onclick="PrismoConta.esqueciBloqueio()">Não consigo · <b>Entrar com a senha da conta</b></button></div>';
+    }else{
+      var total=m==='abrir'?(e.tamPin||4):6,dots='';
+      for(var i=0;i<total;i++)dots+='<i class="'+(i<pin.dig.length?'on':'')+'"></i>';
+      var k=function(d){return '<button class="pb-k" onclick="PrismoConta.tecla(\''+d+'\')">'+d+'</button>';};
+      var esq=m==='abrir'?'<button class="pb-k vazio"></button>':'<button class="pb-k acao" onclick="PrismoConta.cancelarPin()">Cancelar</button>';
+      var dir='<button class="pb-k acao" onclick="PrismoConta.tecla(\'<\')" aria-label="Apagar"><span class="material-icons">backspace</span></button>';
+      html+='<div class="pb-dots" id="pb-dots">'+dots+'</div><div class="pb-pad">'+k(1)+k(2)+k(3)+k(4)+k(5)+k(6)+k(7)+k(8)+k(9)+esq+k(0)+dir+'</div>';
+      html+='<div class="pb-rodape">';
+      if(m==='novo')html+='<button class="pc-btn pc-pri" id="pb-ok" '+(pin.dig.length>=4?'':'disabled')+' onclick="PrismoConta.tecla(\'ok\')">Continuar</button>';
+      if(m==='abrir')html+='<button class="pc-link" onclick="PrismoConta.esqueciBloqueio()">Esqueci o PIN · <b>Entrar com a senha da conta</b></button>';
+      html+='</div>';
+    }
+    box.innerHTML=html;
+  }
+  function mostrarBloq(){var b=$c('conta-bloq');if(b){b.style.display='block';b.scrollTop=0;}}
+  function esconderBloqueio(){var b=$c('conta-bloq');if(b)b.style.display='none';bloqueado=false;}
+  function precisaBloquear(){return logado()&&!!metodoSeg();}
+  function bloquear(){
+    if(!precisaBloquear()){bloqueado=false;return;}
+    bloqueado=true;pin={modo:'abrir',dig:'',primeiro:'',depois:null,cancelar:null};
+    desenharBloq();mostrarBloq();
+    if(metodoSeg()==='bio')setTimeout(pedirBio,450);
+  }
+  function liberar(){desbloqueadoEm=Date.now();esconderBloqueio();var d=pin.depois;pin.depois=null;if(d)d();}
+  function treme(){var d=$c('pb-dots');if(!d)return;d.classList.remove('treme');void d.offsetWidth;d.classList.add('treme');try{if(navigator.vibrate)navigator.vibrate([30,40,30]);}catch(e){}}
+  function tecla(t){
+    var e=seg(),n=nat();
+    if(t==='<'){pin.dig=pin.dig.slice(0,-1);desenharBloq();return;}
+    if(t==='ok'){
+      if(pin.modo==='novo'&&pin.dig.length>=4){pin.primeiro=pin.dig;pin.dig='';pin.modo='repete';desenharBloq();}
+      return;
+    }
+    if(pin.dig.length>=6)return;
+    pin.dig+=t;
+    if(pin.modo==='abrir'){
+      desenharBloq();
+      if(pin.dig.length>=(e.tamPin||4)){
+        var r='erro:0';try{r=n.pinConferir(pin.dig);}catch(x){}
+        if(r==='ok'){liberar();return;}
+        pin.dig='';
+        if(r==='bloqueado'){desenharBloq('Muitas tentativas erradas. Entre com a senha da conta.',true);treme();return;}
+        var rest=(r.split(':')[1]||'');
+        desenharBloq('PIN errado.'+(rest?' Restam '+rest+' tentativa'+(rest==='1'?'':'s')+'.':''),true);treme();
+      }
+      return;
+    }
+    if(pin.modo==='novo'){desenharBloq();return;}
+    if(pin.modo==='repete'){
+      desenharBloq();
+      if(pin.dig.length>=pin.primeiro.length){
+        if(pin.dig===pin.primeiro){
+          var ok=false;try{ok=n.pinDefinir(pin.dig);}catch(x){}
+          if(ok){var d=pin.depois;pin.depois=null;esconderBloqueio();desbloqueadoEm=Date.now();toast('PIN criado! O app vai pedir ao abrir.');desenharSeguranca();if(d)d();}
+          else{pin.dig='';desenharBloq('Não foi possível salvar o PIN.',true);}
+        }else{pin.modo='novo';pin.dig='';pin.primeiro='';desenharBloq('Os PINs não são iguais. Comece de novo.',true);treme();}
+      }
+    }
+  }
+  function cancelarPin(){var c=pin.cancelar;pin={modo:'abrir',dig:'',primeiro:'',depois:null,cancelar:null};esconderBloqueio();if(c)c();}
+  /* abre a tela de criar PIN; depois=função ao terminar */
+  function criarPin(daProtecao){
+    if(!exige('seguranca'))return;
+    pin={modo:'novo',dig:'',primeiro:'',depois:daProtecao?function(){fechar();}:null,cancelar:null};
+    desenharBloq();mostrarBloq();
+  }
+  function pedirBio(){var n=nat();if(!n||typeof n.bioAutenticar!=='function')return;try{n.bioAutenticar('Desbloquear o Prismo Drive');}catch(e){}}
+  var bioPendente=null;
+  window.addEventListener('prismo-bio',function(ev){
+    var d=ev.detail||{};
+    if(bioPendente){var f=bioPendente;bioPendente=null;f(d);return;}
+    if(!bloqueado)return;
+    if(d.ok){liberar();return;}
+    if(d.erro!=='cancelado')desenharBloq(d.msg||'Não reconhecido. Tente de novo.',true);
+  });
+  /* liga a biometria: confirma uma vez que funciona */
+  function escolherBio(daProtecao){
+    if(!exige('seguranca'))return;
+    var e=seg();if(!e.bio)return toast('Cadastre a digital ou o rosto nas configurações do Android',true);
+    var n=nat();
+    bioPendente=function(d){
+      if(!d.ok){if(d.erro!=='cancelado')toast(d.msg||'Biometria não confirmada',true);return;}
+      var ok=false;try{ok=n.bioUsar();}catch(x){}
+      if(ok){desbloqueadoEm=Date.now();toast('Biometria ligada! O app vai pedir ao abrir.');desenharSeguranca();if(daProtecao)fechar();}
+      else toast('Não foi possível ligar a biometria',true);
+    };
+    try{n.bioAutenticar('Confirme sua biometria');}catch(x){bioPendente=null;}
+  }
+  /* trocar / desligar exige desbloquear com o método atual */
+  function comDesbloqueio(fn){
+    var m=metodoSeg();if(!m)return fn();
+    if(m==='bio'){bioPendente=function(d){if(d.ok)fn();else if(d.erro!=='cancelado')toast(d.msg||'Biometria não confirmada',true);};pedirBio();return;}
+    pin={modo:'abrir',dig:'',primeiro:'',depois:fn,cancelar:null};bloqueado=true;
+    desenharBloq('Digite o PIN atual');mostrarBloq();
+    /* deixa cancelar */
+    var r=document.querySelector('#pb-tela .pb-rodape');if(r)r.insertAdjacentHTML('beforeend','<button class="pc-link" onclick="PrismoConta.cancelarPin()">Cancelar</button>');
+  }
+  function segEscolher(op){
+    if(!exige('seguranca'))return;
+    var atual=metodoSeg();
+    if(op===atual&&op!=='pin')return;
+    if(op==='bio')return comDesbloqueio(function(){escolherBio(false);});
+    if(op==='pin')return comDesbloqueio(function(){criarPin(false);});
+    if(op==='')return comDesbloqueio(function(){confirmar('Desligar o bloqueio? O app vai abrir sem pedir PIN ou biometria.',function(){limparSeguranca();desenharSeguranca();toast('Bloqueio desligado');},'Desligar',null,null,true);});
+  }
+  function esqueciBloqueio(){
+    confirmar('Entrar de novo com a senha da conta? O PIN/biometria será desligado e você escolhe outro depois. Seus dados continuam no celular.',function(){
+      var email=conta().email||((sessao()||{}).user||{}).email||'';
+      gravar(K_SESSAO,null);gravar(K_CONTA,null);try{localStorage.removeItem(K_MODO);}catch(e){}
+      limparSeguranca();esconderBloqueio();sincronizar();
+      dados.email=email;abrir('entrar');
+    },'Entrar com a senha');
+  }
+  function pularProtecao(){fechar();toast('Você pode ligar o bloqueio em Configurações › Segurança.');}
+
+  /* Configurações › Segurança */
+  function desenharSeguranca(){
+    var alvo=$c('acc-cfg');if(!alvo)return;
+    var box=$c('pc-seg-box');
+    if(!box){box=document.createElement('div');box.id='pc-seg-box';box.className='pc-conta-box';box.style.marginTop='12px';alvo.appendChild(box);}
+    var l=logado(),e=seg(),m=l?metodoSeg():'',temNat=!!(nat()&&typeof (nat()||{}).segurancaEstado==='function');
+    function op(id,ic,t,s,dis){return '<button type="button" class="pc-linha'+(m===id&&l?' sel':'')+'" '+(dis?'aria-disabled="true"':'')+' onclick="PrismoConta.segEscolher(\''+id+'\')"><span class="ic"><span class="material-icons">'+ic+'</span></span><span><b>'+t+'</b><small>'+s+'</small></span><span class="material-icons fim">'+(l?(m===id?'radio_button_checked':'radio_button_unchecked'):'lock')+'</span></button>';}
+    box.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">shield</span>Segurança'+(l?'':'<span class="pc-cad pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Conta</span>')+'</p>'
+      +'<p style="font-size:.66rem;color:#8b949e;line-height:1.4">Bloqueio do app: pede a biometria ou o PIN sempre que abrir o Prismo Drive.</p>'
+      +op('bio','fingerprint','Biometria',e.bio?'Digital ou rosto do celular':(temNat?'Cadastre a digital no Android para usar':'Disponível no app instalado'),l&&!e.bio)
+      +op('pin','pin','PIN',m==='pin'?'Toque para trocar o PIN ('+(e.tamPin||'')+' números)':'De 4 a 6 números que você escolhe')
+      +op('','lock_open','Desligado','O app abre direto');
+  }
+
+  /* ── recurso bloqueado ── */
+  var TRAVAS={
+    carteira:['Carteira','A Carteira (dívidas, contas do mês, metas e plano de quitação) é exclusiva de quem tem conta.'],
+    rotas:['Assistente de rotas','O assistente avalia cada corrida do iFood e do InDrive e lê seus ganhos sozinho. Crie sua conta grátis para usar.'],
+    turno:['Turno com GPS','O turno mede os km e o tempo pelo GPS. Crie sua conta grátis para usar.'],
+    relatorio:['Balanço semanal','A imagem do fechamento da semana é exclusiva de quem tem conta.'],
+    comparativo:['Comparativo','Comparar seus dias e semanas é exclusivo de quem tem conta.'],
+    pecas:['Limite da manutenção','Como usuário você monitora até '+LIMITE_PECAS+' itens. Crie sua conta grátis para monitorar quantos quiser.'],
+    calendario:['Histórico completo','Como usuário o calendário mostra só os últimos '+DIAS_CAL+' dias. Seus dados antigos estão guardados e voltam quando você entrar.'],
+    backup:['Backup na nuvem','Crie sua conta para guardar seus dados na nuvem e trocar de celular sem perder nada.'],
+    seguranca:['Segurança','Biometria e PIN protegem a sua conta. Crie sua conta grátis para usar.'],
+    opcoes:['Opções da conta','Mudar senha e excluir conta são só para quem tem conta.'],
+    conta:['Sua conta','Crie sua conta grátis para ter o seu ID fixo e liberar todos os recursos.']
+  };
+  function trava(r){
+    var t=TRAVAS[r]||TRAVAS.conta;
+    $c('pt-t').textContent=t[0];$c('pt-s').textContent=t[1];
+    var m=$c('conta-trava');m.style.display='flex';
+    try{if(navigator.vibrate)navigator.vibrate(15);}catch(e){}
+  }
+  function fecharTrava(){var m=$c('conta-trava');if(m)m.style.display='none';}
+  /* true = pode usar; false = mostrou o cadeado */
+  function exige(r){if(logado())return true;trava(r);return false;}
+
+  /* botão voltar do Android: true = tratou · 'min' = minimiza o app · false = segue o normal */
+  function voltar(){
+    var b=$c('conta-bloq');
+    if(b&&b.style.display==='block'){if(pin.modo!=='abrir'||pin.depois){cancelarPin();return true;}return 'min';}
+    var t=$c('conta-trava');if(t&&t.style.display==='flex'){fecharTrava();return true;}
+    if(!aberto())return false;
+    if(tela==='entrar'||tela==='criar'||tela==='semconta'){abrir('inicio');return true;}
+    if(tela==='codigo'){abrir('criar');return true;}
+    if(tela==='esqueci'){abrir(logado()?'mudarsenha':'entrar');return true;}
+    if(tela==='recuperar'){abrir('esqueci');return true;}
+    if(tela==='mudarsenha'||tela==='protecao'){fechar();return true;}
+    if(tela==='inicio'&&(logado()||modo()==='livre')){fechar();return true;}
+    return 'min'; /* tela inicial sem escolha: minimiza o app */
+  }
+
+  /* ── menu › Perfil: conta + Opções ── */
+  function desenharMenu(){
+    var alvo=$c('acc-perfil');if(!alvo)return;
+    var box=$c('pc-conta-box');
+    if(!box){box=document.createElement('div');box.id='pc-conta-box';box.className='pc-conta-box';alvo.appendChild(box);}
+    var opc=$c('pc-opcoes-box');
+    if(!opc){opc=document.createElement('div');opc.id='pc-opcoes-box';opc.className='pc-conta-box';alvo.appendChild(opc);}
+    var c=conta(),s=sessao(),l=logado();
+    if(!l){
+      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para ter seu ID fixo, backup na nuvem e todos os recursos.</p></div></div>'
+        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
+    }else{
+      var bk=ler(K_BKP);
+      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av"><span class="material-icons">verified_user</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.nome||'Conta conectada')+'</p><p style="font-size:.66rem;color:#8b949e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||(s&&s.user&&s.user.email)||'')+'</p></div></div>'
+        +'<p style="font-size:.62rem;color:#6e7681;margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:#3fb950">cloud_done</span> '+(bk?'Último backup: '+dataBr(new Date(bk).toISOString()):'Ainda sem backup')+'</p>'
+        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Fazer backup</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Restaurar</button></div>';
+    }
+    var fim=l?'chevron_right':'lock';
+    opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
+      +'<button type="button" class="pc-linha" onclick="PrismoConta.mudarSenhaAbrir()"><span class="ic"><span class="material-icons">key</span></span><span><b>Mudar senha</b><small>Troque a senha de entrar com e-mail</small></span><span class="material-icons fim">'+fim+'</span></button>'
+      +(l?'<button type="button" class="pc-linha" onclick="PrismoConta.sair()"><span class="ic"><span class="material-icons">logout</span></span><span><b>Sair da conta</b><small>Os lançamentos continuam no celular</small></span><span class="material-icons fim">chevron_right</span></button>':'')
+      +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e o backup na nuvem</small></span><span class="material-icons fim">'+fim+'</span></button>';
+  }
+
+  /* ID da conta: vem do servidor, criado no cadastro e fixo para sempre */
+  window.contaId=function(){return logado()?String(conta().contaId||''):'';};
+  window.mostrarContaId=function(){
+    var el=$c('cfg-conta-id');if(!el)return;var id=window.contaId();
+    el.innerText=/^\d{8}$/.test(id)?id.slice(0,4)+' '+id.slice(4):(logado()?'…':'—');
+    var h=$c('cfg-conta-id-dica');if(h)h.innerText=logado()?'Código fixo da sua conta: foi criado no cadastro e nunca muda.':'Usuários não têm ID. Crie sua conta para ganhar o seu ID fixo.';
+  };
+  window.copiarContaId=function(){
+    if(!exige('conta'))return;
+    var id=window.contaId();if(!id){carregarPerfil();return toast('Carregando o ID…');}
+    var ok=function(){toast('ID copiado: '+id);};
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(id).then(ok,function(){_copiaAntiga(id);ok();});return;}}catch(e){}
+    try{_copiaAntiga(id);}catch(e){}ok();
+  };
+
+  /* ── travas nos recursos ── */
+  function envolver(nome,rec,cond){
+    var f=window[nome];if(typeof f!=='function'||f.__pc)return;
+    var g=function(){if(!logado()&&(!cond||cond.apply(this,arguments))){trava(rec);return;}return f.apply(this,arguments);};
+    g.__pc=1;window[nome]=g;
+  }
+  function limiteCal(){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(DIAS_CAL-1));return d;}
+  function instalarTravas(){
+    envolver('abrirCarteira','carteira');
+    envolver('abrirModalRelatorio','relatorio');
+    envolver('abrirComparativo','comparativo');
+    envolver('abrirModalPecaForm','pecas',function(id){if(id)return false;try{carregarPecasStorage();return (pecasManut||[]).length>=LIMITE_PECAS;}catch(e){return false;}});
+    envolver('salvarPeca','pecas',function(){try{if(editandoPecaId)return false;carregarPecasStorage();return (pecasManut||[]).length>=LIMITE_PECAS;}catch(e){return false;}});
+    /* calendário: usuário vê só os últimos 30 dias */
+    envolver('navegarCalendario','calendario',function(delta){
+      if(delta>=0)return false;
+      var m=calMes+delta,a=calAno;if(m<0){m=11;a--;}
+      return new Date(a,m+1,0)<limiteCal();
+    });
+    var rg=window.renderizarGradeCalendario;
+    if(typeof rg==='function'&&!rg.__pc){
+      window.renderizarGradeCalendario=function(){
+        var lim=limiteCal();
+        if(!logado()&&Array.isArray(calRegistros)){
+          try{calRegistros=calRegistros.filter(function(r){return new Date(calAno,calMes,Number(r.dia)||1)>=lim;});}catch(e){}
+        }
+        var out=rg.apply(this,arguments);
+        try{
+          var g=$c('cal-grade'),av=$c('pc-cal-aviso');
+          if(g&&!av){av=document.createElement('div');av.id='pc-cal-aviso';av.className='pc-cal-aviso';av.onclick=function(){trava('calendario');};av.innerHTML='<span class="material-icons">lock</span><span>Usuário: só os últimos '+DIAS_CAL+' dias · <b style="color:#3fb950">Criar conta</b></span>';g.parentNode.insertBefore(av,g);}
+          if(av)av.style.display=logado()?'none':'flex';
+        }catch(e){}
+        return out;
+      };
+      window.renderizarGradeCalendario.__pc=1;
+    }
+    /* assistente de rotas */
+    if(window.PrismoRotas&&!PrismoRotas.__pc){
+      var ab=PrismoRotas.abrir,pw=PrismoRotas.power;
+      PrismoRotas.abrir=function(){if(!exige('rotas'))return;return ab.apply(this,arguments);};
+      PrismoRotas.power=function(){if(!exige('rotas'))return;return pw.apply(this,arguments);};
+      PrismoRotas.__pc=1;
+    }
+    var tf=window.toqueFotoDrawer;
+    if(typeof tf==='function'&&!tf.__pc){window.toqueFotoDrawer=function(){if(!exige('rotas'))return;return tf.apply(this,arguments);};window.toqueFotoDrawer.__pc=1;}
+    /* turno: só para começar um turno novo (um turno já aberto sempre pode ser finalizado) */
+    if(window.PrismoTurno&&!PrismoTurno.__pc){
+      var bt=PrismoTurno.botao;
+      PrismoTurno.botao=function(){
+        var ativo=false;try{var n=nat();if(n&&n.turnoEstado)ativo=!!JSON.parse(n.turnoEstado()||'{}').ativo;}catch(e){}
+        if(!ativo&&!exige('turno'))return;
+        return bt.apply(this,arguments);
+      };
+      PrismoTurno.__pc=1;
+    }
+    /* cadeados visuais */
+    try{
+      var cart=$c('btn-carteira-status');if(cart&&!cart.querySelector('.pc-cad')){cart.style.position='relative';cart.insertAdjacentHTML('beforeend','<span class="pc-cad pc-cad-mini"><span class="material-icons">lock</span></span>');}
+      var sub=$c('acc-rotas-sub');if(sub&&sub.parentNode&&!sub.parentNode.querySelector('.pc-cad')){var p=sub.parentNode.querySelector('p');if(p)p.insertAdjacentHTML('beforeend','<span class="pc-cad pc-cad-tag"><span class="material-icons">lock</span>Conta</span>');}
+    }catch(e){}
+  }
+
+  /* ── início ── */
+  function iniciar(){
+    instalarTravas();
+    sincronizar();
+    if(precisaBloquear())bloquear();     /* abre já bloqueado */
+    if(!modo()){
+      /* primeira vez (ou saiu da conta): mostra a tela de entrada depois do carregamento */
+      setTimeout(function(){if(!modo()&&!aberto())abrir('inicio');},1200);
+    }
+    if(logado()){
+      setTimeout(function(){
+        carregarPerfil();
+        var bk=ler(K_BKP);
+        if(!bk||Date.now()-bk>20*3600*1000)setTimeout(function(){fazerBackup(true);},8000); /* backup automático 1x por dia */
+      },2500);
+    }
+    setTimeout(verLink,900);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){saiuEm=Date.now();return;}
+    if(precisaBloquear()&&!bloqueado&&saiuEm&&Date.now()-saiuEm>BLOQ_MIN*60000)bloquear();
+    try{desenharSeguranca();}catch(e){}
+    if(logado()){var bk=ler(K_BKP);if(!bk||Date.now()-bk>20*3600*1000)fazerBackup(true);}
+  });
+
+  function olho(id,b){var e=$c(id);if(!e)return;var v=e.type==='password';e.type=v?'text':'password';var i=b&&b.querySelector('.material-icons');if(i)i.textContent=v?'visibility_off':'visibility';}
+
+  return {logado:logado,exige:exige,trava:trava,fecharTrava:fecharTrava,abrir:abrir,fechar:fechar,voltar:voltar,
+    entrar:entrar,criar:criar,verificar:verificar,reenviar:reenviar,recuperar:recuperar,trocarPorCodigo:trocarPorCodigo,salvarSenha:salvarSenha,
+    mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:google,semConta:semConta,
+    verLink:verLink,backup:function(){fazerBackup(false);},restaurar:restaurar,sair:sair,excluir:excluir,olho:olho,
+    tecla:tecla,cancelarPin:cancelarPin,criarPin:criarPin,pedirBio:pedirBio,escolherBio:escolherBio,segEscolher:segEscolher,
+    esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
+    _conta:conta,_sessao:sessao};
+})();
+</script>
+
 </body>
 </html>
 

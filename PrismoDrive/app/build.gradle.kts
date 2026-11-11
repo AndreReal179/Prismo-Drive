@@ -29,9 +29,9 @@ android {
         applicationId = "com.prismo.drive"
         minSdk = 24
         targetSdk = 34
-        // versionName = "1.9" é a versão BASE. O GitHub completa sozinho: 1.9, 1.9.1, 1.9.2…
+        // versionName é a versão BASE (mínima). O GitHub completa sozinho: 1.9.2, 1.9.3…
         // Para começar uma versão nova (1.8.1, 1.8.2…), troque só o número aqui.
-        versionName = "1.9"
+        versionName = "1.9.2"
         // versionCode é automático (sempre maior que o da v1.6 = 29)
         versionCode = codigoVersao
         System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { versionName = it }
@@ -89,6 +89,10 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
+    // Conta: "Entrar com Google" nativo (o Google não permite login dentro de WebView)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
 
 // Novidades do app: antes de cada build monta assets/novidades.js com a versão atual (NOVIDADES.md),

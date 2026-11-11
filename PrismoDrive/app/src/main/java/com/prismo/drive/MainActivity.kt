@@ -66,16 +66,40 @@ class MainActivity : Activity() {
         }, 600)
     }
 
+    /** Link do e-mail da conta (confirmar cadastro / nova senha): com.prismo.drive://auth#… */
+    @Volatile private var linkConta: String? = null
+
+    fun consumirLinkConta(): String { val l = linkConta ?: ""; linkConta = null; return l }
+
+    private fun lerLinkConta(i: Intent?) {
+        val d = i?.data ?: return
+        if (!d.scheme.equals("com.prismo.drive", true) || !d.host.equals("auth", true)) return
+        linkConta = d.toString()
+        i.data = null
+        if (::web.isInitialized) handler.postDelayed({
+            runCatching { web.evaluateJavascript("try{window.PrismoConta&&PrismoConta.verLink();}catch(e){}", null) }
+        }, 600)
+    }
+
+    /** Roda um trecho de JavaScript na página (de qualquer thread). */
+    fun rodarJs(js: String) {
+        handler.post {
+            if (!isDestroyed && ::web.isInitialized) runCatching { web.evaluateJavascript(js, null) }
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         lerAcao(intent)
+        lerLinkConta(intent)
     }
 
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lerAcao(intent)
+        lerLinkConta(intent)
 
         web = WebView(this).apply {
             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.bg_dark))
@@ -462,6 +486,9 @@ class MainActivity : Activity() {
 (function(){try{
  function el(i){return document.getElementById(i);}
  function vis(e){if(!e)return false;if(e.classList&&e.classList.contains('hidden'))return false;return getComputedStyle(e).display!=='none';}
+ var pcv=window.PrismoConta?PrismoConta.voltar():false;
+ if(pcv==='min')return '0';
+ if(pcv)return '1';
  var c=el('carteira-app');
  if(c&&c.style.display==='block'&&typeof fecharCarteira==='function'){fecharCarteira();return '1';}
  if(vis(el('modal-turno-fim'))&&typeof PrismoTurno!=='undefined'){PrismoTurno.fecharFim();return '1';}

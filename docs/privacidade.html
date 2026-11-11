@@ -31,11 +31,14 @@ footer a{margin-right:14px}
 <ul>
 <li><b>Cadastro com e-mail:</b> nome, e-mail e senha.</li>
 <li><b>Entrar com Google:</b> nome e e-mail da sua conta Google. Não temos acesso à sua senha do Google nem a outros dados dela.</li>
+<li><b>ID da conta:</b> um número de 8 dígitos criado no cadastro, que identifica a sua conta e não muda.</li>
 </ul>
-<p>A senha nunca é guardada em texto: o serviço de autenticação armazena apenas uma versão criptografada (hash), que não pode ser lida. Esses dados ficam no <b>Supabase</b>, nosso provedor de banco de dados e autenticação, em servidores localizados nos Estados Unidos. Essa transferência internacional segue o que a LGPD permite (art. 33), com provedor que adota medidas de segurança adequadas. Usamos esses dados para identificar a sua conta, permitir recuperar a senha e, quando disponíveis, oferecer backup e recursos de assinatura.</p>
+<p>A senha nunca é guardada em texto: o serviço de autenticação armazena apenas uma versão criptografada (hash), que não pode ser lida. Esses dados ficam no <b>Supabase</b>, nosso provedor de banco de dados e autenticação, em servidores localizados nos Estados Unidos. Essa transferência internacional segue o que a LGPD permite (art. 33), com provedor que adota medidas de segurança adequadas. Usamos esses dados para identificar a sua conta, permitir recuperar a senha, guardar o backup e, quando disponíveis, oferecer recursos de assinatura.</p>
 
-<h2>2. Dados que ficam só no seu celular</h2>
-<p>Rotas, ganhos, combustível, carteira, dívidas, metas, manutenção e configurações ficam salvos <b>no próprio aparelho</b>. Eles não são enviados para os nossos servidores.</p>
+<h2>2. Dados do app e backup na nuvem</h2>
+<p>Rotas, ganhos, combustível, carteira, dívidas, metas, manutenção e configurações ficam salvos <b>no próprio aparelho</b>.</p>
+<p><b>Sem conta</b>, esses dados não saem do celular.</p>
+<p><b>Com conta</b>, o app faz um <b>backup</b> desses dados nos servidores do Supabase (Estados Unidos), cerca de uma vez por dia e quando você toca em “Fazer backup”, para você recuperar tudo ao trocar de celular. O backup fica ligado só à sua conta, só você tem acesso a ele e ele é apagado quando você exclui a conta. Junto com o backup guardamos a data, a versão do app e o modelo do celular. O relatório do Assistente de rotas e os quilômetros medidos pelo GPS não entram no backup.</p>
 
 <h2>3. Localização</h2>
 <p>A localização é opcional e usada só para medir os quilômetros rodados:</p>
