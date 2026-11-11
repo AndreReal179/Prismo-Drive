@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       currency_id: "BRL",
       unit_price: p.preco,
     }],
-    payer: { email: u.user.email || perfil?.email || undefined },
+    // sem payer.email: se for o mesmo e-mail da conta que recebe, o Mercado Pago bloqueia o pagamento
     external_reference: ped.id,
     metadata: { conta_id: contaId, plano: id, dias: p.dias },
     notification_url: `${url}/functions/v1/mp-webhook`,

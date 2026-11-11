@@ -4,3 +4,7 @@
 • 🟢 Administração agora no verde do app
 • 📅 Carteira: agora dá para cadastrar uma dívida que já está vencida, informando a data em que venceu
 • ⛽ Carteira: movimentar saldo como Combustível não precisa mais de descrição
+• 📜 Termos de uso e condições: transparência total sobre GPS, dados, assistente de rotas, pagamentos e reembolso. Ficam no Perfil e no Guia do app
+• 🧾 Meus pagamentos no Perfil: veja suas compras do Pro, a situação de cada uma e até quando seu Pro vale
+• 🔄 Quem já é Pro vê só o plano Pro e o botão Renovar, com os dias somados
+• 🚀 Aviso de atualização: quando sair uma versão nova, o app avisa por notificação de manhã, à tarde e à noite. É só tocar para atualizar

@@ -57,6 +57,22 @@ class MainActivity : Activity() {
 
     fun consumirAcao(): String { val a = acaoPendente ?: ""; acaoPendente = null; return a }
 
+    /** Tocou na notificação "Nova atualização disponível": já começa a baixar. */
+    private fun lerAtualizar(i: Intent?) {
+        if (i?.getBooleanExtra(AvisoAtualizacao.EXTRA_ATUALIZAR, false) != true) return
+        i.removeExtra(AvisoAtualizacao.EXTRA_ATUALIZAR)
+        handler.postDelayed({
+            if (isFinishing || isDestroyed) return@postDelayed
+            if (Atualizador.ultimo?.optBoolean("nova") == true) baixarAtualizacao()
+            else Atualizador.verificar(this) { ev ->
+                runOnUiThread {
+                    tratarAtualizacao(ev, false)
+                    if (ev.optString("tipo") == "resultado" && ev.optBoolean("nova")) baixarAtualizacao()
+                }
+            }
+        }, 1500)
+    }
+
     private fun lerAcao(i: Intent?) {
         val a = i?.getStringExtra(com.prismo.drive.rota.Turno.EXTRA_ACAO) ?: return
         i.removeExtra(com.prismo.drive.rota.Turno.EXTRA_ACAO)
@@ -100,6 +116,7 @@ class MainActivity : Activity() {
         super.onNewIntent(intent)
         setIntent(intent)
         lerAcao(intent)
+        lerAtualizar(intent)
         lerLinkConta(intent)
     }
 
@@ -107,6 +124,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lerAcao(intent)
+        lerAtualizar(intent)
+        runCatching { AvisoAtualizacao.agendar(this) }
         lerLinkConta(intent)
 
         web = WebView(this).apply {

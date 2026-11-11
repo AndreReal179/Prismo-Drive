@@ -37,6 +37,10 @@ class BootReceiver : BroadcastReceiver() {
         } catch (_: Throwable) {
         }
         try {
+            AvisoAtualizacao.agendar(context)
+        } catch (_: Throwable) {
+        }
+        try {
             WidgetUtil.atualizarTodos(context)
             WidgetUtil.agendarMeiaNoite(context)
         } catch (_: Throwable) {

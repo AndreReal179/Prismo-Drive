@@ -66,6 +66,11 @@
             android:name=".WidgetMeiaNoite"
             android:exported="false" />
 
+        <!-- Aviso de atualização: confere de manhã, à tarde e à noite -->
+        <receiver
+            android:name=".AtualizacaoReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

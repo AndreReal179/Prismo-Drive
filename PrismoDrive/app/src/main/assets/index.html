@@ -1343,6 +1343,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
         </button>
         <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
           <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
+          <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
         </div>
       </div>
 
@@ -4325,6 +4326,7 @@ window.getPerfilAtivo=function(){try{return perfilAtivo;}catch(e){return '';}};
     <span class="gd-badge">📖 Guia do App</span>
     <div class="gd-title">Aprenda a usar<br>o Prismo Drive</div>
     <div class="gd-sub">Transparência, passo a passo e prints de cada função</div>
+    <button type="button" class="gd-termos-link" onclick="PrismoConta.termos()"><span class="material-icons">gavel</span>Termos de uso e condições</button>
   </div>
   <div class="gd-chips" id="gd-chips"></div>
   <div id="gd-scroll"></div>
@@ -4678,6 +4680,7 @@ window.PrismoNotif=(function(){
     }
     try{planoDividas(plano,agora);}catch(e){}
     try{planoManutencao(plano,agora);}catch(e){}
+    try{if(window.PrismoAnuncios)window.PrismoAnuncios.plano(plano,agora);}catch(e){} /* notificações publicadas pelo administrador */
     plano.sort(function(a,b){return a.at-b.at;});
     return plano.slice(0,300); /* o Android limita a quantidade de alarmes por app (500) */
   }
@@ -5560,6 +5563,154 @@ window.PrismoTurno=(function(){
   return {render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao};
 })();
 </script>
+
+<template id="tpl-termos"><div class="tm-doc"><p class="tm-ver">Versão 1.0 · atualizado em 11/11/2026</p>
+<p class="tm-intro">Aqui explicamos, de forma simples e sem letras miúdas, como o Prismo Drive funciona, o que ele usa do seu celular, o que guardamos e quais são seus direitos.</p>
+<h3>1. Quem somos</h3>
+<p>O Prismo Drive é um aplicativo da <b>Prismo Lab</b> (65.489.707 ANDRE REAL DE SOUZA, microempreendedor individual). Contato para qualquer assunto, inclusive dados pessoais e reembolso: <b>prismolabtec@gmail.com</b>.</p>
+<p>Ao criar sua conta ou continuar usando o app, você confirma que leu e concorda com estes Termos de Uso e Condições. Se não concordar, não use o app.</p>
+<h3>2. O que o Prismo Drive faz (e o que não faz)</h3>
+<p>É uma ferramenta para motoristas e entregadores de aplicativo organizarem ganhos, gastos, combustível, quilometragem, manutenção do veículo, metas e contas a pagar.</p>
+<p><b>O Prismo Drive não é ligado à Uber, 99, iFood, InDrive ou qualquer outra plataforma</b>, e não tem acordo com elas. Os nomes dessas empresas aparecem só para identificar os apps que você usa.</p>
+<p>Os cálculos (lucro, R$/km, custo de combustível, metas) são <b>estimativas</b> feitas com os dados que você informa. O app não garante ganhos e não substitui contador ou consultor financeiro. As decisões são sempre suas.</p>
+<h3>3. Tipos de uso e planos</h3>
+<ul><li><b>Usuário (sem conta):</b> usa o básico, com os dados só no celular. Sem Carteira, sem Assistente de rotas e com Manutenção limitada.</li><li><b>Free (conta grátis):</b> dados guardados na conta, ID fixo, biometria/PIN e recursos básicos. O plano Free <b>pode exibir anúncios</b>.</li><li><b>Pro:</b> tudo liberado e sem anúncios: Carteira e plano de quitação, Assistente de rotas, Turno com GPS, Balanço semanal, Comparativo, widgets, manutenção sem limite e calendário completo.</li><li><b>Administrador:</b> uso interno da equipe Prismo.</li></ul>
+<p>Contas novas ganham <b>7 dias de Pro grátis</b>, uma vez por pessoa.</p>
+<h3>4. Sua conta</h3>
+<p>Você pode entrar com e-mail e senha (confirmados por um código enviado ao seu e-mail) ou com sua conta Google. Cada conta recebe um <b>ID fixo de 8 números</b>, usado para suporte e códigos.</p>
+<p>Você é responsável por manter sua senha em segredo. Use apenas uma conta por pessoa e dados verdadeiros.</p>
+<p>O bloqueio por <b>biometria ou PIN</b> é feito pelo próprio Android: o Prismo Drive <b>nunca vê nem guarda sua digital ou seu rosto</b>. O PIN fica guardado de forma protegida (criptografado) só no seu celular.</p>
+<p>Você pode <b>excluir sua conta a qualquer momento</b> em Menu › Perfil › Excluir conta. Isso apaga seu ID e os dados guardados na conta.</p>
+<h3>5. Quais dados guardamos e por quê</h3>
+<p>Guardamos apenas o necessário para o app funcionar:</p>
+<ul><li><b>Cadastro:</b> nome, e-mail, ID da conta, plano e datas (criação, validade do Pro).</li><li><b>Seus lançamentos:</b> corridas e ganhos, abastecimentos, odômetro, metas, manutenção, contas e dívidas da Carteira, turnos e configurações do app.</li><li><b>Pagamentos:</b> plano comprado, valor, data, forma (Pix ou cartão) e situação. <b>Não recebemos nem guardamos número de cartão</b>: isso fica só com o Mercado Pago.</li></ul>
+<p>Esses dados ficam no seu celular e, se você tem conta, também na sua conta (servidores do Supabase, nos Estados Unidos, com conexão criptografada). Assim você troca de celular sem perder nada. O backup é automático a cada lançamento.</p>
+<p><b>Não vendemos seus dados e não os usamos para publicidade de terceiros.</b> A equipe Prismo só consulta seus lançamentos quando você pede suporte ou por obrigação legal. O administrador vê nome, e-mail, ID, plano e pagamentos para atender você.</p>
+<h3>6. Localização (GPS)</h3>
+<p>O GPS é usado <b>somente</b> quando você liga o <b>Turno com GPS</b> ou recursos do Assistente de rotas, para medir a distância percorrida, os quilômetros com e sem passageiro e o custo de combustível.</p>
+<p>Para medir o turno com a tela desligada, o Android pede a permissão de localização <b>“o tempo todo”</b>. Enquanto o turno está ligado, aparece uma <b>notificação fixa</b> avisando. Ao encerrar o turno, o GPS para.</p>
+<p>O trajeto e a quilometragem do turno ficam salvos no seu celular e no backup da sua conta. <b>Não compartilhamos sua localização com ninguém</b>, nem com as plataformas. Você pode negar ou retirar a permissão a qualquer momento nas configurações do Android: só o Turno com GPS deixa de funcionar.</p>
+<h3>7. Assistente de rotas (serviço de acessibilidade)</h3>
+<p>O Assistente de rotas usa o <b>serviço de acessibilidade do Android</b>, que você liga manualmente nas configurações do celular. Ele <b>lê apenas as telas do iFood e do InDrive</b>: as ofertas (valor, distância, tempo e avaliação) para mostrar se a corrida vale a pena, e a tela de “rota concluída” do iFood para lançar o ganho no app.</p>
+<p>Telas de outros apps são ignoradas. O serviço <b>não lê senhas, mensagens nem dados bancários</b>. A leitura é processada no seu celular; só os ganhos que você lança ficam guardados nos seus dados.</p>
+<p><b>Aceite automático (opcional):</b> existe uma opção, <b>desligada de fábrica</b>, que toca em “aceitar” por você nas ofertas que atendem aos critérios que você definir (valor mínimo, R$/km e avaliação). Ela só funciona se você ligar. Algumas plataformas proíbem automação em seus próprios termos: <b>se você ligar o aceite automático, faz isso por sua conta e risco</b>, e a Prismo não se responsabiliza por advertências ou bloqueios aplicados pelas plataformas. Recomendamos ler os termos de cada plataforma.</p>
+<p>Por segurança, desligue o serviço antes de abrir o app do banco. Você pode desligá-lo a qualquer momento em Configurações › Acessibilidade.</p>
+<h3>8. Notificações</h3>
+<p>O app envia lembretes que você configura (contas a vencer, manutenção, meta, odômetro e fechamento do mês) e <b>comunicados do Prismo Drive</b> (novidades, avisos e promoções), em horários de manhã, tarde ou noite. Você pode desativar as notificações nas configurações do Android a qualquer momento.</p>
+<h3>9. Planos pagos, preços e pagamento</h3>
+<ul><li><b>Mensal</b> (30 dias): R$ 29,90</li><li><b>Trimestral</b> (90 dias): R$ 79,90</li><li><b>Semestral</b> (180 dias): R$ 149,90, em até 3x no cartão</li><li><b>Anual</b> (365 dias): R$ 249,90, em até 3x no cartão</li></ul>
+<p>O pagamento é feito pelo <b>Mercado Pago</b>, por Pix ou cartão. <b>Não existe renovação automática nem cobrança recorrente</b>: cada compra vale pelos dias do plano escolhido. Se você ainda tem Pro e compra outro plano, <b>os dias se somam</b>.</p>
+<p>O Pro é liberado sozinho quando o Mercado Pago aprova o pagamento (o Pix costuma aprovar na hora; o cartão pode passar por análise). Os preços podem mudar para compras futuras, sem afetar os dias que você já comprou.</p>
+<p>Quando o Pro vence, a conta volta para Free: <b>nenhum dado é apagado</b>, os recursos Pro só ficam bloqueados até você renovar. Para confirmar a validade do Pro, o app usa a hora do servidor e precisa de internet pelo menos uma vez a cada 7 dias.</p>
+<h3>10. Arrependimento, cancelamento e reembolso</h3>
+<p>Pelo <b>Código de Defesa do Consumidor (art. 49)</b>, você pode desistir da compra em até <b>7 dias corridos</b> a partir do pagamento, sem precisar explicar o motivo. Devolvemos <b>100% do valor</b>, pelo mesmo meio de pagamento, e os dias daquele plano são retirados da sua conta.</p>
+<p>Para pedir, envie um e-mail para <b>prismolabtec@gmail.com</b> com seu <b>ID</b> e a data da compra. Respondemos em até 5 dias úteis.</p>
+<p>Depois dos 7 dias, como não há cobrança recorrente, não há o que cancelar: o plano simplesmente vale até o fim. Não fazemos reembolso proporcional, exceto quando uma falha nossa impedir o uso do Pro (analisamos cada caso) ou quando a lei exigir.</p>
+<p>Cobrança em duplicidade é devolvida integralmente. Se o pagamento for estornado ou contestado no cartão, os dias correspondentes são retirados da conta.</p>
+<h3>11. Uso correto e segurança no trânsito</h3>
+<p><b>Não mexa no celular dirigindo.</b> Use o app com o veículo parado e respeite o Código de Trânsito Brasileiro.</p>
+<p>É proibido: tentar fraudar pagamentos ou códigos, modificar o app para liberar o Pro, revender códigos, invadir contas de outras pessoas ou usar o app para algo ilegal. Nesses casos a conta pode ser suspensa.</p>
+<h3>12. Disponibilidade e responsabilidade</h3>
+<p>O app funciona offline na maior parte das funções. Conta, backup, pagamentos, comunicados e atualizações precisam de internet e dependem de serviços de terceiros (Supabase, Mercado Pago, Google e GitHub). Fazemos o possível para manter tudo funcionando, mas podem ocorrer falhas temporárias.</p>
+<p>As atualizações do app são baixadas pelo próprio app, direto do repositório oficial do Prismo Drive no GitHub.</p>
+<p>A Prismo não se responsabiliza por decisões tomadas com base nas estimativas do app, nem por bloqueios aplicados pelas plataformas de transporte e entrega.</p>
+<h3>13. Seus direitos (LGPD)</h3>
+<p>Pela Lei Geral de Proteção de Dados (Lei 13.709/2018), você pode pedir a qualquer momento: confirmação e acesso aos seus dados, correção, cópia (portabilidade), exclusão e informações sobre com quem compartilhamos. Muitos desses pedidos você mesmo faz no app (Perfil, Configurações › Backup e Excluir conta). Para os demais, escreva para <b>prismolabtec@gmail.com</b>; respondemos em até 15 dias.</p>
+<p>Veja também a nossa <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</p>
+<h3>14. Idade</h3>
+<p>O Prismo Drive é destinado a <b>maiores de 18 anos</b>.</p>
+<h3>15. Mudanças nestes termos</h3>
+<p>Podemos atualizar estes termos. Quando a mudança for importante, o app mostra a nova versão e pede seu aceite de novo. A versão e a data ficam no topo do documento.</p>
+<h3>16. Lei aplicável</h3>
+<p>Estes termos seguem as leis brasileiras. Eventuais disputas podem ser resolvidas no foro do seu domicílio, como garante o Código de Defesa do Consumidor.</p>
+<p class="tm-fim">✔ Fim dos termos. Obrigado por ler!</p></div></template>
+<style id="estilo-termos-vendas">
+.tm-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(0,6,3,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:tmIn .2s ease;}
+@keyframes tmIn{from{opacity:0}to{opacity:1}}
+.tm-sheet{width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;background:linear-gradient(180deg,#0f1a14,#0a110d);border:1px solid rgba(63,185,80,.25);border-bottom:none;border-radius:24px 24px 0 0;padding:16px 16px max(16px,env(safe-area-inset-bottom));box-shadow:0 -20px 60px rgba(0,0,0,.6);animation:tmUp .28s cubic-bezier(.2,.9,.3,1.1);}
+@keyframes tmUp{from{transform:translateY(40px)}to{transform:none}}
+.tm-top{display:flex;align-items:center;gap:12px;}
+.tm-ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(234,179,8,.13);border:1px solid rgba(250,204,21,.4);flex-shrink:0;}
+.tm-ic .material-icons{color:#facc15;font-size:21px;}
+.tm-ic.verde{background:rgba(46,164,79,.13);border-color:rgba(63,185,80,.4);}.tm-ic.verde .material-icons{color:#3fb950;}
+.tm-tt{flex:1;min-width:0;}.tm-tt b{display:block;font-size:16px;font-weight:900;color:#e6edf3;}.tm-tt small{display:block;font-size:.68rem;color:#8b949e;font-weight:600;margin-top:2px;}
+.tm-x{width:36px;height:36px;border-radius:11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#c9d1d9;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.tm-barra{height:4px;border-radius:99px;background:rgba(255,255,255,.07);margin:12px 0 10px;overflow:hidden;}
+.tm-barra i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#2ea44f,#4ade80);transition:width .15s;}
+.tm-box{flex:1;min-height:180px;max-height:56vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.07);padding:14px 14px 18px;overscroll-behavior:contain;}
+.tm-doc{color:#c9d1d9;font-size:12.5px;line-height:1.55;}
+.tm-doc h3{font-size:13.5px;font-weight:900;color:#e6edf3;margin:16px 0 6px;display:flex;align-items:center;gap:6px;}
+.tm-doc h3::before{content:'';width:4px;height:14px;border-radius:2px;background:#3fb950;flex-shrink:0;}
+.tm-doc p{margin:0 0 8px;}.tm-doc b{color:#e6edf3;}.tm-doc a{color:#7ee2a0;}
+.tm-doc ul{margin:0 0 8px;padding-left:18px;}.tm-doc li{margin-bottom:4px;}
+.tm-ver{font-size:.66rem!important;color:#8b949e;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.tm-intro{padding:10px 12px;border-radius:12px;background:rgba(46,164,79,.08);border:1px solid rgba(63,185,80,.2);color:#c8f7d5!important;}
+.tm-fim{margin-top:14px!important;text-align:center;font-weight:800;color:#7ee2a0!important;}
+.tm-aviso{display:flex;gap:8px;align-items:flex-start;font-size:.68rem;color:#8b949e;line-height:1.45;margin:12px 2px 10px;}
+.tm-aviso .material-icons{font-size:16px;color:#3fb950;flex-shrink:0;}.tm-aviso b{color:#c9d1d9;}
+.tm-ok{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:16px;border:none;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;background:rgba(255,255,255,.06);color:#6e7681;transition:all .25s;}
+.tm-ok:disabled{cursor:not-allowed;}
+.tm-ok.pronto{background:linear-gradient(135deg,#2ea44f,#4ade80);color:#04210d;box-shadow:0 12px 26px -12px rgba(63,185,80,.8);}
+.tm-nao{width:100%;margin-top:8px;padding:10px;border:none;background:transparent;color:#8b949e;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.gd-termos-btn{margin-top:8px;background:rgba(234,179,8,.08)!important;border-color:rgba(250,204,21,.3)!important;color:#facc15!important;}
+.gd-termos-link{margin-top:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:99px;border:1px solid rgba(250,204,21,.35);background:rgba(234,179,8,.1);color:#facc15;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;}
+.gd-termos-link .material-icons{font-size:15px;}
+/* Meus pagamentos / vendas */
+.mp-box{min-height:220px;}
+.mp-vazio{display:flex;flex-direction:column;align-items:center;gap:6px;padding:30px 10px;text-align:center;color:#8b949e;font-size:13px;font-weight:700;}
+.mp-vazio .material-icons{font-size:30px;color:#3fb950;}.mp-vazio small{font-weight:600;font-size:11px;}
+.mp-res{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.mp-res div{padding:10px 12px;border-radius:12px;background:rgba(46,164,79,.08);border:1px solid rgba(63,185,80,.2);}
+.mp-res small{display:block;font-size:.6rem;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}.mp-res b{font-size:17px;font-weight:900;color:#7ee2a0;}
+.mp-card{padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:8px;}
+.mp-l1{display:flex;align-items:center;gap:10px;}
+.mp-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(234,179,8,.12);border:1px solid rgba(250,204,21,.3);flex-shrink:0;}
+.mp-ic .material-icons{font-size:17px;color:#facc15;}
+.mp-t{flex:1;min-width:0;}.mp-t b{display:block;font-size:13px;font-weight:900;color:#e6edf3;}.mp-t small{display:block;font-size:.64rem;color:#8b949e;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;}
+.mp-v{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;}.mp-v b{font-size:14px;font-weight:900;color:#e6edf3;}
+.mp-st{margin-top:4px;font-size:.56rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;}
+.mp-st.verde{color:#7ee2a0;background:rgba(46,164,79,.14);border:1px solid rgba(63,185,80,.4);}
+.mp-st.ouro{color:#facc15;background:rgba(234,179,8,.12);border:1px solid rgba(250,204,21,.35);}
+.mp-st.verm{color:#ff9b95;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.35);}
+.mp-st.cinza{color:#8b949e;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);}
+.mp-l2{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.08);font-size:.68rem;font-weight:700;color:#7ee2a0;}
+.mp-l2 .material-icons{font-size:15px;}.mp-l2.verm{color:#ff9b95;}
+.ap-preco.ativo{color:#3fb950!important;}
+.pa-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);margin-bottom:12px;}
+.pa-tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:10px;border:none;background:transparent;color:#8b949e;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;}
+.pa-tabs button .material-icons{font-size:18px;}
+.pa-tabs button.on{background:linear-gradient(135deg,rgba(46,164,79,.25),rgba(46,164,79,.1));color:#7ee2a0;box-shadow:inset 0 0 0 1px rgba(63,185,80,.4);}
+.pv-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.pv-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.pv-tile{padding:10px 9px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);}
+.pv-tile.hoje{background:linear-gradient(160deg,rgba(46,164,79,.2),rgba(46,164,79,.05));border-color:rgba(63,185,80,.4);}
+.pv-tile small{display:block;font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#8b949e;}
+.pv-tile b{display:block;font-size:14px;font-weight:900;color:#e6edf3;margin-top:3px;white-space:nowrap;}
+.pv-tile.hoje b{color:#7ee2a0;}.pv-tile span{font-size:.6rem;color:#8b949e;font-weight:700;}
+.pv-planos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.pv-planos span{text-align:center;padding:7px 2px;border-radius:10px;background:rgba(234,179,8,.07);border:1px solid rgba(250,204,21,.2);font-size:.58rem;font-weight:700;color:#c9d1d9;}
+.pv-planos b{display:block;font-size:15px;font-weight:900;color:#facc15;}
+.pv-est{display:flex;align-items:center;gap:6px;font-size:.66rem;color:#ff9b95;font-weight:700;margin-top:8px;}.pv-est .material-icons{font-size:14px;}
+.an-in{width:100%;margin-bottom:8px;}
+.an-txt-w{position:relative;}.an-txt{resize:none;height:auto!important;padding-top:10px!important;min-height:76px;font-family:inherit;line-height:1.4;padding-bottom:18px;}
+.an-txt-w span{position:absolute;right:10px;bottom:14px;font-size:.58rem;color:#6e7681;font-weight:700;}
+.an-lb{font-size:.58rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#7ee2a0;margin:10px 0 6px;}
+.an-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.an-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#c9d1d9;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;}
+.an-chip .material-icons{font-size:15px;}.an-chip small{font-size:.6rem;color:#8b949e;font-weight:700;margin-left:2px;}
+.an-chip.on{background:rgba(46,164,79,.18);border-color:rgba(63,185,80,.55);color:#7ee2a0;}.an-chip.on small{color:#7ee2a0;}
+.an-sem{display:grid;grid-template-columns:repeat(7,1fr);}.an-sem .an-chip{height:38px;justify-content:center;padding:0;border-radius:12px;}
+.an-tur{display:grid;grid-template-columns:repeat(3,1fr);}.an-tur .an-chip{flex-direction:column;border-radius:13px;padding:9px 4px;gap:2px;}
+.an-tur .an-chip .material-icons{font-size:19px;}
+.an-prev{padding:11px 13px;border-radius:16px;background:#1b1f24;border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 20px -10px rgba(0,0,0,.8);}
+.an-n-top{display:flex;justify-content:space-between;font-size:.6rem;color:#8b949e;font-weight:700;margin-bottom:5px;}
+.an-n-app{display:flex;align-items:center;gap:5px;color:#7ee2a0;}.an-n-app .material-icons{font-size:13px;}
+.an-prev b{display:block;font-size:13px;font-weight:800;color:#e6edf3;}.an-prev p{font-size:12px;color:#c9d1d9;margin:2px 0 0;line-height:1.4;word-break:break-word;}
+.an-qtd{display:flex;align-items:flex-start;gap:6px;font-size:.68rem;color:#c8f7d5;font-weight:600;margin:10px 0;line-height:1.4;}.an-qtd .material-icons{font-size:16px;color:#3fb950;}.an-qtd b{color:#7ee2a0;}
+.an-pub{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#2ea44f,#4ade80);color:#04210d;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px -12px rgba(63,185,80,.8);}
+.an-pub:disabled{opacity:.7;}
+.an-obs{font-size:.6rem;color:#6e7681;margin-top:8px;line-height:1.45;}
+</style>
 <!-- ══ CONTA (login / código / usuário / segurança / planos / dados na conta) · v1.9.4 ══ -->
 <style>
 #conta-app{display:none;position:fixed;inset:0;z-index:100002;background:radial-gradient(120% 70% at 50% -10%,rgba(46,164,79,.22),transparent 60%),#070b0f;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#e6edf3;}
@@ -5585,7 +5736,7 @@ window.PrismoTurno=(function(){
 .pc-ou{display:flex;align-items:center;gap:12px;color:#6e7681;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:16px 0 6px;}
 .pc-ou:before,.pc-ou:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.08);}
 .pc-campo{display:block;margin-top:12px;}
-.pc-campo span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin:0 0 7px 2px;}
+.pc-campo > span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin:0 0 7px 2px;}
 .pc-in{position:relative;}
 .pc-in input{width:100%;height:52px;border-radius:15px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#e6edf3;font-size:16px;font-weight:600;padding:0 48px 0 16px;outline:none;font-family:inherit;}
 .pc-in input:focus{border-color:rgba(63,185,80,.6);background:rgba(46,164,79,.06);}
@@ -5965,7 +6116,7 @@ window.PrismoConta=(function(){
   var G_SVG='<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   function topo(volta){return '<div class="pc-topo">'+(volta?'<button class="pc-voltar" onclick="PrismoConta.abrir(\''+volta+'\')" aria-label="Voltar"><span class="material-icons">'+(volta==='__fechar'?'close':'arrow_back')+'</span></button>':'<span></span>')+'<span></span></div>';}
   function hero(ic,t,s,ouro){return '<div class="pc-hero"><div class="pc-logo"'+(ouro?' style="background:linear-gradient(135deg,#b7791f,#eab308);box-shadow:0 18px 40px -14px rgba(234,179,8,.65)"':'')+'><span class="material-icons">'+ic+'</span></div><div class="pc-h1">'+t+'</div>'+(s?'<div class="pc-sub">'+s+'</div>':'')+'</div>';}
-  var RODAPE='<div class="pc-rodape">Ao continuar você aceita a <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</div>';
+  var RODAPE='<div class="pc-rodape">Ao criar a conta você aceita os <a href="#" onclick="PrismoConta.termos();return false;">Termos de uso e condições</a> e a <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</div>';
   var MSGS='<div class="pc-erro" id="pc-erro"></div><div class="pc-ok" id="pc-ok"></div>';
   function it(ic,t,s,ok){return '<div class="pc-item'+(ok?' ok':'')+'"><span class="material-icons">'+ic+'</span><div>'+t+(s?'<small>'+s+'</small>':'')+'</div></div>';}
   function li(t,nao){return '<li'+(nao?' class="nao"':'')+'><span class="material-icons">'+(nao?'lock':'check_circle')+'</span><span>'+t+'</span></li>';}
@@ -6297,7 +6448,7 @@ window.PrismoConta=(function(){
   }
 
   function depoisDeEntrar(novo){
-    sincronizar();desbloqueadoEm=Date.now();
+    sincronizar();desbloqueadoEm=Date.now();setTimeout(termosEnviar,4000);
     mostrarOk('Conta conectada! Carregando seus dados…');
     fechar();
     syncMostrar('Carregando seus dados…');
@@ -6761,11 +6912,16 @@ window.PrismoConta=(function(){
     if(!box){
       box=document.createElement('div');box.id='pa-acc';box.className='acc-item';
       box.style.cssText='background:#0d1117;border:1px solid rgba(63,185,80,.25);border-radius:16px;';
-      box.innerHTML='<button type="button" onclick="PrismoConta.adminAbrir()" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;"><div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,.12);border:1px solid rgba(63,185,80,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#7ee2a0;">admin_panel_settings</span></div><div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Administração</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Clientes, Pro e códigos</p></div><span id="pa-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span></button>'
+      box.innerHTML='<button type="button" onclick="PrismoConta.adminAbrir()" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;"><div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,.12);border:1px solid rgba(63,185,80,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#7ee2a0;">admin_panel_settings</span></div><div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Administração</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Clientes, vendas e anúncios</p></div><span id="pa-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span></button>'
         +'<div id="pa-corpo" style="display:none;padding:0 16px 14px;">'
+        +'<div class="pa-tabs"><button type="button" class="on" data-t="cli" onclick="PrismoConta.adminAba(\'cli\')"><span class="material-icons">group</span>Clientes</button><button type="button" data-t="ven" onclick="PrismoConta.adminAba(\'ven\')"><span class="material-icons">payments</span>Vendas</button><button type="button" data-t="anu" onclick="PrismoConta.adminAba(\'anu\')"><span class="material-icons">campaign</span>Anunciar</button></div>'
+        +'<div class="pa-pane" id="pa-p-cli">'
         +'<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">person_search</span>Buscar cliente</p><div class="pa-lin"><input id="pa-busca" class="pa-in" placeholder="ID (8 números), e-mail ou nome" onkeydown="if(event.key===\'Enter\')PrismoConta.adminBuscar()"><button class="pa-bt" onclick="PrismoConta.adminBuscar()"><span class="material-icons">search</span></button></div><div class="pa-res" id="pa-res"></div></div>'
         +'<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">redeem</span>Gerar códigos Pro</p><div class="pa-lin"><select id="pa-dias" class="pa-in" style="flex:1.2"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option><option value="180">180 dias</option><option value="365">365 dias</option></select><input id="pa-qtd" class="pa-in" type="number" min="1" max="50" value="1" style="flex:.6" aria-label="Quantidade"><button class="pa-bt" onclick="PrismoConta.adminGerar()"><span class="material-icons">add</span>Gerar</button></div><div class="pa-res" id="pa-gerados"></div></div>'
         +'<div class="pa-box"><p class="pa-tit" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span class="material-icons" style="font-size:13px">receipt_long</span>Últimos códigos</span><button class="pa-bt" style="height:28px;font-size:10px" onclick="PrismoConta.adminCodigos()"><span class="material-icons" style="font-size:13px">refresh</span></button></p><div class="pa-res" id="pa-codigos"><small style="color:#8b949e">Toque em atualizar.</small></div></div>'
+        +'</div>'
+        +'<div class="pa-pane" id="pa-p-ven" style="display:none"></div>'
+        +'<div class="pa-pane" id="pa-p-anu" style="display:none"></div>'
         +'</div>';
       perfil.parentNode.insertBefore(box,perfil);
     }
@@ -6907,7 +7063,9 @@ window.PrismoConta=(function(){
       if(!opc){opc=document.createElement('div');opc.id='pc-opcoes-box';opc.className='pc-conta-box';alvo.appendChild(opc);}
       var fim=l?'chevron_right':'lock';
       opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
+        +'<button type="button" class="pc-linha" onclick="PrismoConta.meusPagamentos()"><span class="ic"><span class="material-icons">receipt_long</span></span><span><b>Meus pagamentos</b><small>Compras do Pro, comprovantes e reembolso</small></span><span class="material-icons fim">'+fim+'</span></button>'
         +'<button type="button" class="pc-linha" onclick="PrismoConta.mudarSenhaAbrir()"><span class="ic"><span class="material-icons">key</span></span><span><b>Trocar senha</b><small>Troque a senha de entrar com e-mail</small></span><span class="material-icons fim">'+fim+'</span></button>'
+        +'<button type="button" class="pc-linha" onclick="PrismoConta.termos()"><span class="ic"><span class="material-icons">gavel</span></span><span><b>Termos de uso</b><small>GPS, dados, pagamentos e reembolso</small></span><span class="material-icons fim">chevron_right</span></button>'
         +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e os dados guardados na conta</small></span><span class="material-icons fim">'+fim+'</span></button>';
     }
     /* Configurações › Backup */
@@ -6980,7 +7138,7 @@ window.PrismoConta=(function(){
   function apPlano(){for(var i=0;i<AP_PLANOS.length;i++)if(AP_PLANOS[i].id===apSel)return AP_PLANOS[i];return AP_PLANOS[0];}
   function apEco(x){var cheio=AP_PLANOS[0].preco*x.meses;return {v:cheio-x.preco,pct:Math.round((1-x.preco/cheio)*100)};}
   function apGrade(){
-    var h='<div class="ap-pl-tit"><span class="material-icons">sell</span>Escolha seu plano</div><div class="ap-grade">';
+    var pp=plano(),h='<div class="ap-pl-tit"><span class="material-icons">'+((pp==='pro'||pp==='admin')?'autorenew':'sell')+'</span>'+((pp==='pro'||pp==='admin')?'Renovar: escolha por quanto tempo':'Escolha seu plano')+'</div><div class="ap-grade">';
     AP_PLANOS.forEach(function(x){
       var e=apEco(x),pm=x.preco/x.meses;
       h+='<button type="button" class="ap-op'+(x.id===apSel?' sel':'')+(x.selo?' destaque':'')+'" data-p="'+x.id+'" onclick="PrismoConta.apEscolher(\''+x.id+'\')">'
@@ -6995,7 +7153,7 @@ window.PrismoConta=(function(){
     var x=apPlano(),e=apEco(x);
     return h+'</div><p class="ap-eco-lin" id="ap-eco-lin">'+(e.v>0.005?'<span class="material-icons">savings</span><span>Você economiza <b>'+apR(e.v)+'</b> em relação ao mensal</span>':'<span class="material-icons">autorenew</span><span>Renove quando quiser · os dias se somam</span>')+'</p>';
   }
-  function apBotao(){var x=apPlano();return '<span class="material-icons">workspace_premium</span><span class="ap-as-t"><b>Assinar Pro '+x.nome+'</b><small>'+x.dias+' dias de Pro · tudo liberado</small></span><span class="ap-as-v">'+apR(x.preco)+(x.meses>1?'<small>'+apR(x.preco/x.meses)+'/mês</small>':'')+'</span>';}
+  function apBotao(){var x=apPlano(),pp=plano(),ren=(pp==='pro'||pp==='admin');return '<span class="material-icons">'+(ren?'autorenew':'workspace_premium')+'</span><span class="ap-as-t"><b>'+(ren?'Renovar':'Assinar')+' Pro '+x.nome+'</b><small>'+(ren?'+'+x.dias+' dias somados ao seu Pro':x.dias+' dias de Pro · tudo liberado')+'</small></span><span class="ap-as-v">'+apR(x.preco)+(x.meses>1?'<small>'+apR(x.preco/x.meses)+'/mês</small>':'')+'</span>';}
   function apEscolher(id){
     apSel=id;
     document.querySelectorAll('.ap-op').forEach(function(b){var on=b.getAttribute('data-p')===id;b.classList.toggle('sel',on);var ck=b.querySelector('.ap-op-ck');if(ck)ck.textContent=on?'check_circle':'radio_button_unchecked';});
@@ -7042,24 +7200,222 @@ window.PrismoConta=(function(){
       });
     })();
   }
+  /* ══ Termos de uso e condições ══ */
+  var TERMOS_V='1.0',K_TERMOS='prismo_termos';
+  function termosAceitos(){var t=ler(K_TERMOS);return !!(t&&t.v===TERMOS_V);}
+  function folhaFechar(id){var o=$c(id||'tm-ov');if(o)o.remove();}
+  function termosAbrir(modo,ok,rot,obrigatorio){
+    folhaFechar('tm-ov');
+    var tpl=document.getElementById('tpl-termos'),corpo=tpl?tpl.innerHTML:'';
+    var o=document.createElement('div');o.id='tm-ov';o.className='tm-ov';
+    var aceitar=modo==='aceitar';
+    o.innerHTML='<div class="tm-sheet" role="dialog" aria-modal="true" aria-label="Termos de uso e condições">'
+      +'<div class="tm-top"><div class="tm-ic"><span class="material-icons">gavel</span></div><div class="tm-tt"><b>Termos de uso e condições</b><small>'+(aceitar?'Leia até o final para continuar':'Versão '+TERMOS_V+' · Prismo Drive')+'</small></div>'
+      +((!aceitar||!obrigatorio)?'<button type="button" class="tm-x" aria-label="Fechar" onclick="PrismoConta.folhaFechar()"><span class="material-icons">close</span></button>':'')+'</div>'
+      +'<div class="tm-barra"><i id="tm-prog"></i></div>'
+      +'<div class="tm-box" id="tm-box">'+corpo+'</div>'
+      +(aceitar?'<p class="tm-aviso"><span class="material-icons">info</span><span>Ao tocar em <b>Concordar</b>, você aceita os Termos de uso e condições do Prismo Drive.</span></p>'
+        +'<button type="button" class="tm-ok" id="tm-ok" disabled><span class="material-icons">lock</span><span id="tm-ok-t">Role até o final para liberar</span></button>'
+        +(obrigatorio?'':'<button type="button" class="tm-nao" onclick="PrismoConta.folhaFechar()">Agora não</button>')
+        :'<button type="button" class="tm-ok pronto" onclick="PrismoConta.folhaFechar()"><span class="material-icons">check</span>Entendi</button>')
+      +'</div>';
+    document.body.appendChild(o);
+    var box=$c('tm-box'),bt=$c('tm-ok'),pr=$c('tm-prog'),liberado=false;
+    function ver(){
+      var max=box.scrollHeight-box.clientHeight,pc=max<=8?1:Math.min(1,box.scrollTop/max);
+      if(pr)pr.style.width=Math.round(pc*100)+'%';
+      if(aceitar&&!liberado&&pc>=0.985){
+        liberado=true;bt.disabled=false;bt.classList.add('pronto');
+        bt.innerHTML='<span class="material-icons">check_circle</span><span>Concordar'+(rot?' e '+rot.toLowerCase():'')+'</span>';
+      }
+    }
+    box.addEventListener('scroll',ver,{passive:true});setTimeout(ver,60);
+    if(aceitar&&bt)bt.onclick=function(){if(bt.disabled)return;gravar(K_TERMOS,{v:TERMOS_V,em:Date.now(),env:false});folhaFechar('tm-ov');termosEnviar();if(ok)ok();};
+  }
+  function comTermos(fn,rot){if(termosAceitos())return fn();termosAbrir('aceitar',fn,rot,false);}
+  function termosEnviar(){
+    var t=ler(K_TERMOS);if(!t||t.env||!logado())return;
+    rpc('aceitar_termos',{versao:t.v}).then(function(r){if(r.status===200){t.env=true;gravar(K_TERMOS,t);}});
+  }
+  /* quem já tinha conta antes dos termos: pede o aceite uma vez */
+  function termosConferir(){
+    if(!logado()||termosAceitos()||$c('tm-ov'))return;
+    var sy=$c('pc-sync');if(bloqueado||aberto()||(sy&&sy.style.display&&sy.style.display!=='none'))return setTimeout(termosConferir,4000);
+    termosAbrir('aceitar',function(){toast('Obrigado! Termos aceitos.');},'continuar',true);
+  }
+
+  /* ══ Meus pagamentos (Perfil) ══ */
+  var NOME_PL={mensal:'Mensal',trimestral:'Trimestral',semestral:'Semestral',anual:'Anual'};
+  function stPag(x){
+    if(x.revertido_em)return ['verm','Estornado'];
+    if(x.aplicado_em)return ['verde','Aprovado'];
+    if(x.status==='in_process'||x.status==='pending'||x.status==='authorized')return ['ouro','Em análise'];
+    if(x.status==='aguardando'&&Date.now()-Date.parse(x.criado_em)<3600e3)return ['ouro','Aguardando'];
+    return ['cinza','Não concluído'];
+  }
+  function meusPagamentos(){
+    if(!logado())return abrir('criar');
+    folhaFechar('tm-ov');
+    var o=document.createElement('div');o.id='tm-ov';o.className='tm-ov';
+    o.innerHTML='<div class="tm-sheet"><div class="tm-top"><div class="tm-ic verde"><span class="material-icons">receipt_long</span></div><div class="tm-tt"><b>Meus pagamentos</b><small>Compras do Pro feitas pelo app</small></div><button type="button" class="tm-x" aria-label="Fechar" onclick="PrismoConta.folhaFechar()"><span class="material-icons">close</span></button></div>'
+      +'<div class="tm-box mp-box" id="mp-lista"><div class="mp-vazio"><span class="material-icons ap-gira">autorenew</span>Carregando…</div></div>'
+      +'<p class="tm-aviso"><span class="material-icons">support_agent</span><span>Arrependeu? Você tem <b>7 dias</b> após a compra para pedir o reembolso integral: <b>prismolabtec@gmail.com</b> · informe seu ID <b>'+esc(conta().contaId||'')+'</b>.</span></p></div>';
+    document.body.appendChild(o);
+    token().then(function(t){if(!t)return {status:401};return http('GET','/rest/v1/pagamentos?select=criado_em,plano,dias,valor,status,aplicado_em,revertido_em,pro_ate_depois,detalhe&status=not.in.(criado,erro_mp)&order=criado_em.desc&limit=50',null,t);}).then(function(r){
+      var b=$c('mp-lista');if(!b)return;
+      if(r.status!==200||!Array.isArray(r.json)){b.innerHTML='<div class="mp-vazio"><span class="material-icons">wifi_off</span>'+(r.status===0?'Sem internet. Tente de novo.':'Não foi possível carregar agora.')+'</div>';return;}
+      var lista=r.json.filter(function(x){var st=stPag(x);return !(st[1]==='Não concluído'&&!x.detalhe);});
+      if(!lista.length){b.innerHTML='<div class="mp-vazio"><span class="material-icons">receipt_long</span>Nenhuma compra ainda.<small>Quando você assinar o Pro, o comprovante aparece aqui.</small></div>';return;}
+      var tot=0;lista.forEach(function(x){if(x.aplicado_em&&!x.revertido_em)tot+=Number(x.valor)||0;});
+      b.innerHTML='<div class="mp-res"><div><small>Compras aprovadas</small><b>'+lista.filter(function(x){return x.aplicado_em&&!x.revertido_em;}).length+'</b></div><div><small>Total pago</small><b>'+apR(tot)+'</b></div></div>'
+        +lista.map(function(x){var st=stPag(x),met=x.detalhe&&x.detalhe.metodo;met=met==='pix'?'Pix':(met?'Cartão':'');
+          return '<div class="mp-card"><div class="mp-l1"><span class="mp-ic"><span class="material-icons">workspace_premium</span></span><div class="mp-t"><b>Pro '+(NOME_PL[x.plano]||x.plano)+'</b><small>'+dataBr(x.criado_em)+(met?' · '+met:'')+'</small></div><div class="mp-v"><b>'+apR(Number(x.valor)||0)+'</b><span class="mp-st '+st[0]+'">'+st[1]+'</span></div></div>'
+            +(x.aplicado_em&&!x.revertido_em?'<div class="mp-l2"><span class="material-icons">add_circle</span>+'+x.dias+' dias de Pro'+(x.pro_ate_depois?' · ficou até '+dataBr(x.pro_ate_depois):'')+'</div>':'')
+            +(x.revertido_em?'<div class="mp-l2 verm"><span class="material-icons">undo</span>Valor devolvido e dias retirados</div>':'')+'</div>';}).join('');
+    });
+  }
+
+  /* ══ Administração: Vendas ══ */
+  function adminAba(t){
+    document.querySelectorAll('.pa-tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});
+    ['cli','ven','anu'].forEach(function(k){var e=$c('pa-p-'+k);if(e)e.style.display=k===t?'':'none';});
+    if(t==='ven')adminVendas();
+    if(t==='anu')adminAnunciarTela();
+  }
+  function adminVendas(){
+    var box=$c('pa-p-ven');if(!box)return;
+    if(!box.innerHTML)box.innerHTML='<div class="mp-vazio"><span class="material-icons ap-gira">autorenew</span>Carregando vendas…</div>';
+    rpc('admin_vendas',{dias:60}).then(function(r){
+      if(r.status!==200||!r.json){box.innerHTML='<div class="mp-vazio"><span class="material-icons">wifi_off</span>'+esc(msgErro(r))+'<button class="pa-bt" style="margin-top:8px" onclick="PrismoConta.adminVendas()">Tentar de novo</button></div>';return;}
+      var j=r.json,pl=j.planos||{},tile=function(t,o,cls){o=o||{};return '<div class="pv-tile '+(cls||'')+'"><small>'+t+'</small><b>'+apR(Number(o.total)||0)+'</b><span>'+(o.qtd||0)+' venda'+(o.qtd==1?'':'s')+'</span></div>';};
+      box.innerHTML='<div class="pv-top"><p class="pa-tit" style="margin:0"><span class="material-icons" style="font-size:13px">insights</span>Resumo</p><button class="pa-bt" style="height:28px;font-size:10px" onclick="PrismoConta.adminVendas()"><span class="material-icons" style="font-size:13px">refresh</span></button></div>'
+        +'<div class="pv-tiles">'+tile('Hoje',j.hoje,'hoje')+tile('Este mês',j.mes)+tile('Total',j.geral)+'</div>'
+        +'<div class="pv-planos">'+['mensal','trimestral','semestral','anual'].map(function(k){return '<span><b>'+(pl[k]||0)+'</b>'+NOME_PL[k]+'</span>';}).join('')+'</div>'
+        +(j.estornos?'<p class="pv-est"><span class="material-icons">undo</span>'+j.estornos+' estorno'+(j.estornos==1?'':'s')+' no total</p>':'')
+        +'<p class="pa-tit" style="margin:14px 0 8px"><span class="material-icons" style="font-size:13px">receipt_long</span>Últimas vendas (60 dias)</p>'
+        +((j.lista||[]).length?(j.lista||[]).map(function(x){var st=stPag(x),met=x.metodo==='pix'?'Pix':(x.metodo?'Cartão':'—');
+          return '<div class="mp-card"><div class="mp-l1"><span class="mp-ic"><span class="material-icons">person</span></span><div class="mp-t"><b>'+esc(x.nome||'(sem nome)')+'</b><small>ID '+esc(x.conta_id||'')+' · '+dataBr(x.criado_em)+'</small><small>Pro '+(NOME_PL[x.plano]||x.plano)+' · '+met+'</small></div><div class="mp-v"><b>'+apR(Number(x.valor)||0)+'</b><span class="mp-st '+st[0]+'">'+st[1]+'</span></div></div></div>';}).join('')
+          :'<div class="mp-vazio"><span class="material-icons">shopping_bag</span>Nenhuma venda nos últimos 60 dias.</div>');
+    });
+  }
+
+  /* ══ Administração: Anunciar (notificação para os clientes) ══ */
+  var anu={publico:'todos',dias:3,semana:[0,1,2,3,4,5,6],turnos:['manha']};
+  var TURNOS=[['manha','Manhã','8h','wb_sunny'],['tarde','Tarde','13h','light_mode'],['noite','Noite','19h','dark_mode']];
+  function hojeISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function anuQtd(){
+    var ini=($c('an-ini')||{}).value||hojeISO(),pp=ini.split('-'),n=0;
+    for(var d=0;d<anu.dias;d++){var dia=new Date(+pp[0],+pp[1]-1,+pp[2]+d);if(anu.semana.indexOf(dia.getDay())>=0)n+=anu.turnos.length;}
+    return n;
+  }
+  function anuPrevia(){
+    var t=($c('an-tit')||{}).value||'',x=($c('an-txt')||{}).value||'',c=$c('an-cont'),pv=$c('an-prev'),q=$c('an-qtd');
+    if(c)c.textContent=x.length+'/300';
+    if(pv)pv.innerHTML='<div class="an-n-top"><span class="an-n-app"><span class="material-icons">directions_car</span>Prismo Drive</span><span>agora</span></div><b>'+esc(t.trim()||'Prismo Drive')+'</b><p>'+(esc(x.trim())||'<i>Sua mensagem aparece aqui</i>')+'</p>';
+    var n=anuQtd();if(q)q.innerHTML='<span class="material-icons">notifications_active</span><span>Cada cliente vai receber <b>'+n+' notificaç'+(n===1?'ão':'ões')+'</b> ('+anu.dias+' dia'+(anu.dias===1?'':'s')+' · '+anu.turnos.map(function(k){return TURNOS.filter(function(z){return z[0]===k;})[0][1].toLowerCase();}).join(', ')+')</span>';
+  }
+  function anuChip(grupo,val){
+    if(grupo==='publico')anu.publico=val;
+    else if(grupo==='dias')anu.dias=val;
+    else{var arr=anu[grupo],i=arr.indexOf(val);if(i>=0){if(arr.length>1)arr.splice(i,1);}else arr.push(val);}
+    document.querySelectorAll('[data-an="'+grupo+'"]').forEach(function(b){var v=b.getAttribute('data-v');v=grupo==='publico'?v:Number.isNaN(+v)?v:+v;var on=grupo==='publico'||grupo==='dias'?(anu[grupo]===v):(anu[grupo].indexOf(v)>=0);b.classList.toggle('on',on);});
+    anuPrevia();
+  }
+  function adminAnunciarTela(){
+    var box=$c('pa-p-anu');if(!box)return;
+    var chip=function(g,v,t,ic,sub){var on=g==='publico'||g==='dias'?anu[g]===v:anu[g].indexOf(v)>=0;return '<button type="button" class="an-chip'+(on?' on':'')+'" data-an="'+g+'" data-v="'+v+'" onclick="PrismoConta.anuChip(\''+g+'\','+(typeof v==='number'?v:'\''+v+'\'')+')">'+(ic?'<span class="material-icons">'+ic+'</span>':'')+t+(sub?'<small>'+sub+'</small>':'')+'</button>';};
+    box.innerHTML='<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">edit_note</span>Nova notificação</p>'
+      +'<input id="an-tit" class="pa-in an-in" maxlength="40" placeholder="Título (ex.: Promoção de fim de semana)" oninput="PrismoConta.anuPrevia()">'
+      +'<div class="an-txt-w"><textarea id="an-txt" class="pa-in an-in an-txt" maxlength="300" rows="3" placeholder="Escreva a mensagem que vai aparecer na notificação" oninput="PrismoConta.anuPrevia()"></textarea><span id="an-cont">0/300</span></div>'
+      +'<p class="an-lb">Para quem</p><div class="an-chips">'+chip('publico','todos','Todos','groups')+chip('publico','free','Free','person')+chip('publico','pro','Pro','workspace_premium')+chip('publico','usuario','Sem conta','person_outline')+'</div>'
+      +'<p class="an-lb">Começa em</p><input id="an-ini" type="date" class="pa-in an-in" value="'+hojeISO()+'" min="'+hojeISO()+'" onchange="PrismoConta.anuPrevia()">'
+      +'<p class="an-lb">Por quantos dias</p><div class="an-chips">'+[1,3,7,15,30].map(function(d){return chip('dias',d,d+(d===1?' dia':' dias'));}).join('')+'</div>'
+      +'<p class="an-lb">Dias da semana</p><div class="an-chips an-sem">'+['D','S','T','Q','Q','S','S'].map(function(l,i){return chip('semana',i,l);}).join('')+'</div>'
+      +'<p class="an-lb">Turnos</p><div class="an-chips an-tur">'+TURNOS.map(function(z){return chip('turnos',z[0],z[1],z[3],z[2]);}).join('')+'</div>'
+      +'<p class="an-lb">Prévia</p><div class="an-prev" id="an-prev"></div>'
+      +'<p class="an-qtd" id="an-qtd"></p>'
+      +'<button type="button" class="an-pub" id="an-pub" onclick="PrismoConta.anuPublicar()"><span class="material-icons">send</span>Publicar notificação</button>'
+      +'<p class="an-obs">O celular de cada cliente busca os anúncios quando o app abre (e a cada 20 min com ele aberto) e agenda as notificações nos horários escolhidos.</p></div>'
+      +'<div class="pa-box"><p class="pa-tit" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span class="material-icons" style="font-size:13px">campaign</span>Notificações publicadas</span><button class="pa-bt" style="height:28px;font-size:10px" onclick="PrismoConta.anuLista()"><span class="material-icons" style="font-size:13px">refresh</span></button></p><div class="pa-res" id="an-lista"></div></div>';
+    anuPrevia();anuLista();
+  }
+  function anuPublicar(){
+    var t=(($c('an-tit')||{}).value||'').trim(),x=(($c('an-txt')||{}).value||'').trim(),ini=($c('an-ini')||{}).value||hojeISO();
+    if(x.length<3){toast('Escreva a mensagem da notificação.');return;}
+    var n=anuQtd();if(!n){toast('Nenhum dia escolhido cai nesse período.');return;}
+    var pub={todos:'todos os clientes',free:'os clientes Free',pro:'os clientes Pro',usuario:'quem usa sem conta'}[anu.publico];
+    confirmar('Publicar para '+pub+'? Cada um vai receber '+n+' notificaç'+(n===1?'ão':'ões')+'.',function(){
+      var b=$c('an-pub');if(b){b.disabled=true;b.innerHTML='<span class="material-icons ap-gira">autorenew</span>Publicando…';}
+      rpc('admin_anunciar',{titulo:t,texto:x,publico:anu.publico,inicio:ini,dias:anu.dias,semana:anu.semana.slice().sort(),turnos:anu.turnos.slice()}).then(function(r){
+        if(b){b.disabled=false;b.innerHTML='<span class="material-icons">send</span>Publicar notificação';}
+        if(r.status===200){toast('Notificação publicada!');var a=$c('an-tit'),z=$c('an-txt');if(a)a.value='';if(z)z.value='';anuPrevia();anuLista();avisosBaixar(true);return;}
+        toast(msgErro(r));
+      });
+    },'Publicar');
+  }
+  function anuLista(){
+    var box=$c('an-lista');if(!box)return;
+    rpc('admin_avisos').then(function(r){
+      if(r.status!==200||!Array.isArray(r.json)){box.innerHTML='<small style="color:#ff9b95">'+esc(msgErro(r))+'</small>';return;}
+      if(!r.json.length){box.innerHTML='<small style="color:#8b949e">Nenhuma notificação publicada ainda.</small>';return;}
+      var hj=hojeISO();
+      box.innerHTML=r.json.map(function(a){
+        var pp=a.inicio.split('-'),fim=new Date(+pp[0],+pp[1]-1,+pp[2]+a.dias-1),fimISO=fim.getFullYear()+'-'+String(fim.getMonth()+1).padStart(2,'0')+'-'+String(fim.getDate()).padStart(2,'0');
+        var est=!a.ativo?['cinza','Encerrada']:(fimISO<hj?['cinza','Terminou']:(a.inicio>hj?['ouro','Agendada']:['verde','Ativa']));
+        return '<div class="mp-card"><div class="mp-l1"><span class="mp-ic"><span class="material-icons">campaign</span></span><div class="mp-t"><b>'+esc(a.titulo)+'</b><small>'+esc(a.texto)+'</small><small>'+pp[2]+'/'+pp[1]+' até '+String(fim.getDate()).padStart(2,'0')+'/'+String(fim.getMonth()+1).padStart(2,'0')+' · '+(a.turnos||[]).map(function(k){return TURNOS.filter(function(z){return z[0]===k;})[0][1];}).join(', ')+' · '+({todos:'Todos',free:'Free',pro:'Pro',usuario:'Sem conta'}[a.publico])+'</small></div><div class="mp-v"><span class="mp-st '+est[0]+'">'+est[1]+'</span>'+(a.ativo&&fimISO>=hj?'<button class="pa-bt verm" style="height:26px;font-size:10px;margin-top:6px" onclick="PrismoConta.anuEncerrar('+a.id+')">Encerrar</button>':'')+'</div></div></div>';
+      }).join('');
+    });
+  }
+  function anuEncerrar(id){
+    confirmar('Encerrar esta notificação? Os clientes deixam de recebê-la a partir da próxima vez que o app atualizar.',function(){
+      rpc('admin_encerrar_aviso',{aviso:id}).then(function(r){if(r.status===200){toast('Notificação encerrada.');anuLista();avisosBaixar(true);}else toast(msgErro(r));});
+    },'Encerrar',null,null,true);
+  }
+
+  /* ══ Anúncios: o app baixa e agenda as notificações (PrismoNotif chama PrismoAnuncios.plano) ══ */
+  var K_AVISOS='prismo_avisos',K_AVISOS_EM='prismo_avisos_em';
+  function avisosBaixar(forcar){
+    var ult=Number(ler(K_AVISOS_EM))||0;if(!forcar&&Date.now()-ult<20*60000)return;
+    (logado()?token():Promise.resolve(null)).then(function(t){return http('GET','/rest/v1/avisos?select=id,titulo,texto,publico,inicio,dias,semana,turnos&order=id.desc&limit=20',null,t);}).then(function(r){
+      if(r.status===200&&Array.isArray(r.json)){gravar(K_AVISOS,r.json);gravar(K_AVISOS_EM,Date.now());try{window.PrismoNotif&&PrismoNotif.reagendar();}catch(e){}}
+    });
+  }
+  window.PrismoAnuncios={plano:function(arr,agora){
+    var av=ler(K_AVISOS)||[],pp=plano(),grupo=pp==='admin'?'pro':pp,HORA={manha:8,tarde:13,noite:19},ORD=['manha','tarde','noite'],n=0;
+    av.forEach(function(a){
+      if(a.publico!=='todos'&&a.publico!==grupo)return;
+      var ini=String(a.inicio||'').split('-');if(ini.length<3)return;
+      for(var d=0;d<a.dias&&d<60;d++){
+        var dia=new Date(+ini[0],+ini[1]-1,+ini[2]+d);
+        if((a.semana||[]).indexOf(dia.getDay())<0)continue;
+        (a.turnos||[]).forEach(function(tu){
+          var h=HORA[tu];if(h==null||n>=90)return;
+          var at=new Date(dia.getFullYear(),dia.getMonth(),dia.getDate(),h,0,0,0).getTime();if(at<=agora)return;
+          arr.push({id:20000+(a.id%500)*200+d*3+ORD.indexOf(tu),at:at,rep:0,t:a.titulo||'Prismo Drive',b:a.texto});n++;
+        });
+      }
+    });
+  }};
+
   function desenharPlano(){
     var box=$c('acc-plano');if(!box)return;
     var p=plano(),l=logado(),c=conta();
     var li2=function(t,n,ads){return '<li class="'+(n?'nao':'')+(ads?' ads':'')+'"><span class="material-icons">'+(ads?'campaign':(n?'block':'check_circle'))+'</span><span>'+t+'</span></li>';};
     var seu='<span class="ap-seu">seu plano</span>';
-    var html=''
+    var temPro=(p==='pro'||p==='admin');
+    var html=(temPro?'':''
       /* Free */
       +'<div class="ap-card free'+(p==='free'?' atual':'')+'"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">person</span></span>'
         +'<span class="ap-t"><b>Free'+(p==='free'?seu:'')+'</b><small><span class="ap-ads"><span class="material-icons">campaign</span>Com anúncios</span></small></span>'
         +'<span class="ap-preco">Grátis</span><span class="material-icons ap-chev">expand_more</span></button>'
         +'<div class="ap-body"><ul>'+li2('Anúncios em alguns pontos do app',0,1)+li2('Lançar corridas, abastecer, resumo do dia e do mês')+li2('Dados guardados na conta, ID, biometria e PIN')+li2('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')
-        +li2('Sem Carteira, Assistente de rotas, Turno, Balanço, Comparativo e widgets',1)+'</ul></div></div>'
+        +li2('Sem Carteira, Assistente de rotas, Turno, Balanço, Comparativo e widgets',1)+'</ul></div></div>')
       /* Pro */
       +'<div class="ap-card pro'+(p==='pro'||p==='admin'?' atual':'')+' aberta"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">workspace_premium</span></span>'
         +'<span class="ap-t"><b>Pro'+(p==='pro'?seu:(p==='admin'?'<span class="ap-seu">liberado</span>':''))+'</b><small>'+(p==='pro'?'Vale até '+dataBr(new Date(c.proAte).toISOString())+' · '+diasPro()+' dia'+(diasPro()===1?'':'s'):'Tudo liberado · sem anúncios')+'</small></span>'
-        +'<span class="ap-preco"><small>a partir de</small>R$ 29,90<small>/mês</small></span><span class="material-icons ap-chev">expand_more</span></button>'
+        +(temPro?'<span class="ap-preco ativo"><small>status</small>Ativo</span>':'<span class="ap-preco"><small>a partir de</small>R$ 29,90<small>/mês</small></span>')+'<span class="material-icons ap-chev">expand_more</span></button>'
         +'<div class="ap-body"><ul>'+li2('Sem anúncios')+li2('Carteira completa e plano de quitação')+li2('Assistente de rotas em tempo real (iFood e InDrive)')+li2('Turno com GPS, Balanço semanal e Comparativo')+li2('Widgets, manutenção sem limite e calendário completo')+'</ul>'
         +apGrade()
         +'<p class="ap-nota">Os dias se somam: se ainda tem Pro e paga outro plano, os dias novos entram depois dos que você já tem. Quando vence, nada é apagado: só volta o cadeado.</p></div></div>';
@@ -7187,6 +7543,9 @@ window.PrismoConta=(function(){
     setInterval(cicloSync,3000);
     setInterval(function(){if(logado()&&!document.hidden&&Date.now()-(conta().lido||0)>30*60000)carregarPerfil();},60000);
     setTimeout(verLink,900);
+    setTimeout(function(){avisosBaixar(false);},3500);
+    setInterval(function(){if(!document.hidden)avisosBaixar(false);},5*60000);
+    setTimeout(function(){termosEnviar();termosConferir();},7000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
   document.addEventListener('visibilitychange',function(){
@@ -7195,6 +7554,7 @@ window.PrismoConta=(function(){
     try{desenharSeguranca();desenharMenu();}catch(e){}
     if(logado()&&saiuEm&&Date.now()-saiuEm>60000){carregarPerfil();conferirNuvem();}
     if(ler(K_PAG))setTimeout(function(){voltouPagamento('');},1500);
+    setTimeout(function(){avisosBaixar(false);},2500);
   });
   /* fechou a Carteira: envia logo */
   try{var fc=window.fecharCarteira;if(typeof fc==='function'){window.fecharCarteira=function(){var r=fc.apply(this,arguments);if(logado())setTimeout(function(){if(!ler(K_PEND)&&assinatura()!==ler(K_SYNC_SIG))subir(true);},1500);return r;};}}catch(e){}
@@ -7202,8 +7562,8 @@ window.PrismoConta=(function(){
   function olho(id,b){var e=$c(id);if(!e)return;var v=e.type==='password';e.type=v?'text':'password';var i=b&&b.querySelector('.material-icons');if(i)i.textContent=v?'visibility_off':'visibility';}
 
   return {logado:logado,plano:plano,liberado:liberado,exige:exige,exigeConta:exigeConta,trava:trava,fecharTrava:fecharTrava,abrir:abrir,fechar:fechar,voltar:voltar,
-    entrar:entrar,criar:criar,verificar:verificar,reenviar:reenviar,recuperar:recuperar,trocarPorCodigo:trocarPorCodigo,salvarSenha:salvarSenha,
-    mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:google,semConta:semConta,resgatar:resgatar,
+    entrar:entrar,criar:function(){comTermos(criar,'Criar conta');},verificar:verificar,reenviar:reenviar,recuperar:recuperar,trocarPorCodigo:trocarPorCodigo,salvarSenha:salvarSenha,
+    mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:function(){comTermos(google,'Continuar');},semConta:semConta,resgatar:resgatar,
     verLink:verLink,backup:function(){if(ler(K_PEND))return PrismoConta.backupForcado();subir(false);},restaurar:function(){confirmar('Baixar os dados guardados na conta? Os deste celular viram uma cópia de segurança.',function(){syncMostrar('Baixando os dados da sua conta…');baixarEaplicar('Antes de baixar da conta (manual)').then(function(r){if(r!==true)syncErro(r&&r.erro,function(){baixarEaplicar('Antes de baixar da conta (manual)');});});},'Baixar');},
     backupForcado:function(){confirmar('Enviar os dados DESTE celular para a conta? Eles substituem os que estão na conta.',function(){subir(false,true);},'Enviar',null,null,true);},
     restaurarCopia:restaurarCopia,
@@ -7212,6 +7572,9 @@ window.PrismoConta=(function(){
     esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
     desenharPlano:desenharPlano,resgatarMenu:resgatarMenu,planoMenu:abrirPlanoMenu,apToggle:apToggle,cfResumos:cfResumos,
     assinar:assinar,voltouPagamento:voltouPagamento,
+    termos:function(){termosAbrir('ler');},folhaFechar:function(){folhaFechar('tm-ov');},meusPagamentos:meusPagamentos,
+    adminAba:adminAba,adminVendas:adminVendas,anuChip:anuChip,anuPrevia:anuPrevia,anuPublicar:anuPublicar,anuLista:anuLista,anuEncerrar:anuEncerrar,
+    termosAceitos:termosAceitos,
     apEscolher:apEscolher,
     adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,
     _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura,_syncMostrar:syncMostrar,_syncFim:syncFim};
