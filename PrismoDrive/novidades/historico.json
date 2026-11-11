@@ -1,5 +1,14 @@
 [
  {
+  "versao": "1.9.7",
+  "data": "2026-11-11",
+  "itens": [
+   "✏️ Assistente de rotas no menu: novo texto \"Calcule suas rotas em tempo real\"",
+   "🧹 Card Custo combustível mais limpo: saiu o \"Calculado por odômetro\"",
+   "⚙️ Configurações reorganizadas em seções: Ganhos e meta, Veículo, Notificações, Backup e Segurança"
+  ]
+ },
+ {
   "versao": "1.9.6",
   "data": "2026-11-11",
   "itens": [
