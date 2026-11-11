@@ -105,6 +105,22 @@ class PrismoBridge(private val activity: Activity) {
         Conta.salvar(activity, json)
     }
 
+    // ── Dados da conta (assistente, turno, iFood, widgets) ──
+
+    @JavascriptInterface
+    fun dadosAssinatura(): String = try { DadosConta.assinatura(activity) } catch (_: Throwable) { "" }
+
+    @JavascriptInterface
+    fun dadosExportar(): String = try { DadosConta.exportar(activity) } catch (_: Throwable) { "{}" }
+
+    @JavascriptInterface
+    fun dadosImportar(json: String?): Boolean = try { DadosConta.importar(activity, json) } catch (_: Throwable) { false }
+
+    @JavascriptInterface
+    fun dadosLimpar() {
+        try { DadosConta.limpar(activity) } catch (_: Throwable) {}
+    }
+
     // ── Segurança: bloqueio do app por biometria ou PIN ──
 
     @JavascriptInterface

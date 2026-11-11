@@ -5462,7 +5462,7 @@ window.PrismoTurno=(function(){
   return {render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao};
 })();
 </script>
-<!-- ══ CONTA (login / cadastro por código / usuário / segurança) · v1.9.2 ══ -->
+<!-- ══ CONTA (login / código / usuário / segurança / planos / dados na conta) · v1.9.3 ══ -->
 <style>
 #conta-app{display:none;position:fixed;inset:0;z-index:100002;background:radial-gradient(120% 70% at 50% -10%,rgba(46,164,79,.22),transparent 60%),#070b0f;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#e6edf3;}
 #conta-app *,#conta-bloq *{box-sizing:border-box;}
@@ -5487,7 +5487,7 @@ window.PrismoTurno=(function(){
 .pc-ou{display:flex;align-items:center;gap:12px;color:#6e7681;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:16px 0 6px;}
 .pc-ou:before,.pc-ou:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.08);}
 .pc-campo{display:block;margin-top:12px;}
-.pc-campo > span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin:0 0 7px 2px;}
+.pc-campo span{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8b949e;margin:0 0 7px 2px;}
 .pc-in{position:relative;}
 .pc-in input{width:100%;height:52px;border-radius:15px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#e6edf3;font-size:16px;font-weight:600;padding:0 48px 0 16px;outline:none;font-family:inherit;}
 .pc-in input:focus{border-color:rgba(63,185,80,.6);background:rgba(46,164,79,.06);}
@@ -5574,6 +5574,45 @@ body.pc-sem-conta .pc-cad{display:inline-flex;}
 .pc-linha[aria-disabled="true"]{opacity:.5;}
 .pc-cal-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:12px;background:rgba(240,136,62,.08);border:1px solid rgba(240,136,62,.28);color:#f0b27a;font-size:12px;font-weight:700;align-items:center;gap:8px;cursor:pointer;}
 .pc-cal-aviso .material-icons{font-size:15px;color:#f0883e;}
+/* planos */
+.pc-plano{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:.58rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;}
+.pc-plano .material-icons{font-size:11px !important;}
+.pc-plano.pro{background:linear-gradient(135deg,rgba(234,179,8,.18),rgba(245,158,11,.10));border:1px solid rgba(250,204,21,.45);color:#facc15;}
+.pc-plano.admin{background:rgba(168,85,247,.14);border:1px solid rgba(192,132,252,.45);color:#d8b4fe;}
+.pc-plano.free{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#c9d1d9;}
+.pc-plano.usuario{background:rgba(240,136,62,.10);border:1px solid rgba(240,136,62,.35);color:#f0883e;}
+.pt-ic.pro{background:rgba(234,179,8,.12);border-color:rgba(250,204,21,.4);}
+.pt-ic.pro .material-icons{color:#facc15;}
+.pc-ouro{background:linear-gradient(135deg,#b7791f,#eab308);color:#1a1300;box-shadow:0 12px 26px -14px rgba(234,179,8,.8);}
+.pc-planos{display:flex;flex-direction:column;gap:10px;}
+.pc-pl{border-radius:18px;padding:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);}
+.pc-pl.atual{border-color:rgba(63,185,80,.55);}
+.pc-pl.pro{border-color:rgba(250,204,21,.45);background:linear-gradient(170deg,rgba(234,179,8,.08),rgba(255,255,255,.02));}
+.pc-pl h4{font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;}
+.pc-pl p{font-size:12.5px;color:#8b949e;margin-top:6px;line-height:1.45;}
+.pc-pl ul{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;}
+.pc-pl li{font-size:12.5px;color:#c9d1d9;display:flex;gap:7px;align-items:flex-start;}
+.pc-pl li .material-icons{font-size:15px;color:#3fb950;margin-top:1px;}
+.pc-pl li.nao .material-icons{color:#f0883e;}
+/* painel do administrador */
+.pa-box{margin-top:10px;border-radius:14px;padding:13px;background:linear-gradient(170deg,#140f1c,#0d1117);border:1px solid rgba(192,132,252,.22);}
+.pa-tit{font-size:.58rem;font-weight:900;color:#d8b4fe;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.pa-lin{display:flex;gap:8px;}
+.pa-in{flex:1;min-width:0;height:42px;border-radius:11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#e6edf3;font-size:14px;font-weight:700;padding:0 12px;outline:none;font-family:inherit;}
+.pa-in:focus{border-color:rgba(192,132,252,.6);}
+.pa-bt{height:42px;border-radius:11px;border:1px solid rgba(192,132,252,.45);background:rgba(168,85,247,.16);color:#e9d5ff;font-size:12px;font-weight:900;padding:0 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit;white-space:nowrap;}
+.pa-bt.verde{border-color:rgba(46,164,79,.45);background:rgba(46,164,79,.14);color:#7ee2a0;}
+.pa-bt.verm{border-color:rgba(248,81,73,.4);background:rgba(248,81,73,.08);color:#ff9b95;}
+.pa-bt .material-icons{font-size:15px;}
+.pa-res{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+.pa-card{border-radius:12px;padding:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);}
+.pa-card b{font-size:13.5px;color:#e6edf3;}
+.pa-card small{display:block;font-size:.66rem;color:#8b949e;margin-top:3px;line-height:1.4;}
+.pa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px;}
+.pa-cod{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;font-weight:800;color:#e6edf3;}
+.pa-cod span{font-family:inherit;}
+.pa-cod em{font-style:normal;font-size:.6rem;font-weight:800;color:#8b949e;font-family:inherit;}
+.pa-cod em.livre{color:#7ee2a0;}
 </style>
 
 <div id="conta-app" role="dialog" aria-modal="true">
@@ -5585,14 +5624,7 @@ body.pc-sem-conta .pc-cad{display:inline-flex;}
 </div>
 
 <div id="conta-trava" onclick="if(event.target===this)PrismoConta.fecharTrava()">
-  <div class="pt-box">
-    <div class="pt-ic"><span class="material-icons">lock</span></div>
-    <div class="pt-t" id="pt-t">Recurso da conta</div>
-    <div class="pt-s" id="pt-s"></div>
-    <button class="pc-btn pc-pri" onclick="PrismoConta.fecharTrava();PrismoConta.abrir('criar')"><span class="material-icons">person_add</span>Criar conta grátis</button>
-    <button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir('inicio')"><span class="material-icons">login</span>Já tenho conta · Entrar</button>
-    <button class="pc-link" onclick="PrismoConta.fecharTrava()">Agora não</button>
-  </div>
+  <div class="pt-box" id="pt-box"></div>
 </div>
 
 <script>
@@ -5601,8 +5633,10 @@ window.PrismoConta=(function(){
   var CHAVE='sb_publishable_OGjy3PepqOrIiVmw4s9EWA_kJGoFOFL';   /* chave pública (pode ficar no app) */
   var REDIR='com.prismo.drive://auth';
   var K_SESSAO='prismo_sessao',K_CONTA='prismo_conta',K_MODO='prismo_conta_modo',K_BKP='prismo_backup_em';
-  var NAO_COPIAR={prismo_sessao:1,prismo_conta:1,prismo_conta_modo:1,prismo_backup_em:1,prismo_conta_id:1};
-  var LIMITE_PECAS=3,DIAS_CAL=30,BLOQ_MIN=3;   /* bloqueia de novo depois de 3 min fora do app */
+  var K_DONO='prismo_dono',K_SYNC_EM='prismo_sync_em',K_SYNC_SIG='prismo_sync_sig',K_SYNC_BASE='prismo_sync_base',K_AVISO='prismo_aviso_pro',K_PLANO_ANT='prismo_plano_ant';
+  /* chaves de controle: nunca vão para a conta */
+  function naoCopiar(k){return /^(prismo_sessao|prismo_conta|prismo_backup_em|prismo_dono|prismo_sync_|prismo_aviso_pro|prismo_plano_ant)/.test(k||'');}
+  var LIMITE_PECAS=3,DIAS_CAL=30,BLOQ_MIN=3,DIA=86400000;
 
   function $c(id){return document.getElementById(id);}
   function nat(){try{return window.PrismoNative||null;}catch(e){return null;}}
@@ -5610,21 +5644,40 @@ window.PrismoConta=(function(){
   function gravar(k,v){try{if(v===null||v===undefined)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
   function toast(m,e){try{showToast(m,e);}catch(x){}}
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function dataCurta(ms){try{var d=new Date(ms);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}catch(e){return '';}}
+  function dataBr(iso){try{var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return '';}}
 
-  /* ── estado ── */
+  /* ── estado da conta ── */
   function sessao(){return ler(K_SESSAO);}
   function conta(){return ler(K_CONTA)||{};}
   function modo(){try{return localStorage.getItem(K_MODO)||'';}catch(e){return '';}}
   function logado(){var s=sessao();return !!(s&&s.refresh_token);}
+  function uid(){return ((sessao()||{}).user||{}).id||'';}
+  /* hora certa = relógio do celular corrigido pela hora do servidor */
+  function agora(){return Date.now()+(Number(conta().desvio)||0);}
+  /* plano efetivo: usuario · free · pro · admin */
+  function plano(){
+    if(!logado())return 'usuario';
+    var c=conta();
+    if(c.plano==='admin')return 'admin';
+    if(c.proAte&&c.proAte>agora())return 'pro';
+    return 'free';
+  }
+  function liberado(){var p=plano();return p==='pro'||p==='admin';}
+  function diasPro(){var c=conta();return c.proAte?Math.max(0,Math.ceil((c.proAte-agora())/DIA)):0;}
+  var NOME_PLANO={usuario:'Usuário',free:'Free',pro:'Pro',admin:'Administrador'};
+  var IC_PLANO={usuario:'person_outline',free:'person',pro:'workspace_premium',admin:'admin_panel_settings'};
+  function chipPlano(p){p=p||plano();return '<span class="pc-plano '+p+'"><span class="material-icons">'+IC_PLANO[p]+'</span>'+NOME_PLANO[p]+(p==='pro'?' · até '+dataCurta(conta().proAte):'')+'</span>';}
 
   /* avisa o Android (assistente de rotas e widgets) e atualiza a tela */
   function sincronizar(){
     var c=conta(),l=logado();
-    try{var n=nat();if(n&&typeof n.contaEstado==='function')n.contaEstado(JSON.stringify({logado:l,contaId:c.contaId||'',nome:c.nome||''}));}catch(e){}
-    try{document.body.classList.toggle('pc-sem-conta',!l);}catch(e){}
+    try{var n=nat();if(n&&typeof n.contaEstado==='function')n.contaEstado(JSON.stringify({logado:l,contaId:c.contaId||'',nome:c.nome||'',plano:l?(c.plano||'free'):'',proAte:l?(c.proAte?Math.round(c.proAte-(Number(c.desvio)||0)):0):0}));}catch(e){}
+    try{document.body.classList.toggle('pc-sem-conta',!liberado());}catch(e){}
     try{if(typeof mostrarContaId==='function')mostrarContaId();}catch(e){}
     try{desenharMenu();}catch(e){}
     try{desenharSeguranca();}catch(e){}
+    try{desenharAdmin();}catch(e){}
   }
 
   /* ── HTTP: pelo Android quando existe (sem CORS), senão fetch ── */
@@ -5639,7 +5692,7 @@ window.PrismoConta=(function(){
       var n=nat();
       if(n&&typeof n.http==='function'){
         var id='h'+(++seq)+'_'+Date.now();pend[id]=ok;
-        setTimeout(function(){if(pend[id]){delete pend[id];ok({status:0,json:null,texto:''});}},45000);
+        setTimeout(function(){if(pend[id]){delete pend[id];ok({status:0,json:null,texto:''});}},60000);
         try{n.http(id,metodo,url,JSON.stringify(h),txt);}catch(e){delete pend[id];ok({status:0,json:null,texto:''});}
         return;
       }
@@ -5648,6 +5701,7 @@ window.PrismoConta=(function(){
       }catch(e){ok({status:0,json:null,texto:''});}
     });
   }
+  function rpc(nome,args){return token().then(function(t){if(!t)return {status:0,json:null};return http('POST','/rest/v1/rpc/'+nome,args||{},t);});}
   function msgErro(r){
     if(!r||r.status===0)return 'Sem internet. Verifique a conexão e tente de novo.';
     var j=r.json||{},c=(j.error_code||j.code||j.error||'')+'',m=(j.msg||j.message||j.error_description||'')+'';
@@ -5659,6 +5713,11 @@ window.PrismoConta=(function(){
     if(/over_email_send_rate_limit|rate limit|too many|security purposes/i.test(c+m)||r.status===429)return 'Muitas tentativas agora. Espere um minuto e tente de novo.';
     if(/email_address_invalid|invalid.*email|validate email/i.test(c+m))return 'E-mail inválido.';
     if(/same_password|different from the old/i.test(c+m))return 'A nova senha precisa ser diferente da atual.';
+    if(/codigo_invalido/.test(m))return 'Código não encontrado. Confira as letras e os números.';
+    if(/codigo_usado/.test(m))return 'Este código já foi usado.';
+    if(/sem_permissao/.test(m))return 'Só administradores podem fazer isso.';
+    if(/conta_nao_encontrada/.test(m))return 'Conta não encontrada.';
+    if(/conta_admin/.test(m))return 'Contas de administrador não têm prazo de Pro.';
     return 'Não foi possível concluir agora. Tente de novo.'+(m?' ('+m+')':'');
   }
 
@@ -5685,6 +5744,7 @@ window.PrismoConta=(function(){
     return renovando;
   }
   function limparSeguranca(){try{var n=nat();if(n&&n.segurancaLimpar)n.segurancaLimpar();}catch(e){}}
+  /* sessão vencida: pede para entrar de novo, mas NÃO apaga os dados (podem ter mudanças não enviadas) */
   function encerrarLocal(aviso){
     var email=(conta().email)||((sessao()||{}).user||{}).email||'';
     gravar(K_SESSAO,null);gravar(K_CONTA,null);
@@ -5694,16 +5754,30 @@ window.PrismoConta=(function(){
     if(aviso){dados.email=email;abrir('entrar');mostrarErro(aviso);}
   }
 
-  /* perfil (nome + ID fixo da conta) */
+  /* conta do servidor: nome, ID fixo, plano e validade do Pro (com a hora do servidor) */
   function carregarPerfil(){
-    return token().then(function(t){
-      var s=sessao();if(!t||!s||!s.user||!s.user.id)return null;
-      return http('GET','/rest/v1/perfis?select=nome,email,conta_id&id=eq.'+encodeURIComponent(s.user.id),null,t).then(function(r){
-        var p=r.status===200&&Array.isArray(r.json)?r.json[0]:null;
-        if(p){gravar(K_CONTA,{contaId:p.conta_id||'',nome:p.nome||'',email:p.email||s.user.email||''});sincronizar();}
-        return p;
-      });
+    return rpc('minha_conta').then(function(r){
+      var p=r.status===200?r.json:null;
+      if(p&&p.conta_id){
+        var srv=Date.parse(p.agora)||Date.now();
+        gravar(K_CONTA,{contaId:p.conta_id||'',nome:p.nome||'',email:p.email||'',plano:p.plano||'free',proAte:p.pro_ate?Date.parse(p.pro_ate):0,desvio:srv-Date.now(),lido:Date.now()});
+        sincronizar();avisosPlano();
+      }
+      return p;
     });
+  }
+  /* avisos: Pro vence em até 3 dias · Pro venceu */
+  function avisosPlano(){
+    var p=plano(),ant=ler(K_PLANO_ANT),hoje=new Date().toDateString(),n=nat();
+    function notif(id,t,x){try{if(n&&n.notificar)n.notificar(id,t,x);}catch(e){}}
+    if(p==='pro'){
+      var d=diasPro();
+      if(d<=3&&ler(K_AVISO)!==hoje){gravar(K_AVISO,hoje);var t='Seu Pro vence '+(d<=1?'amanhã':'em '+d+' dias');toast(t+'. Renove para não perder os recursos.');notif(9401,t,'Renove o Prismo Drive Pro para continuar com todos os recursos.');}
+    }else if(p==='free'&&(ant==='pro')){
+      notif(9402,'Seu Pro venceu','Seus dados continuam salvos. Renove para liberar os recursos Pro de novo.');
+      toast('Seu Pro venceu. Seus dados continuam salvos.',true);
+    }
+    gravar(K_PLANO_ANT,p);
   }
 
   /* ── telas ── */
@@ -5715,14 +5789,16 @@ window.PrismoConta=(function(){
   function campoCodigo(enter){return '<label class="pc-campo"><span>Código do e-mail</span><div class="pc-in"><input id="pc-cod" class="pc-codigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="······" oninput="this.value=this.value.replace(/\\D/g,\'\')" '+(enter?'onkeydown="if(event.key===\'Enter\')'+enter+'"':'')+'></div></label>';}
   var G_SVG='<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
   function topo(volta){return '<div class="pc-topo">'+(volta?'<button class="pc-voltar" onclick="PrismoConta.abrir(\''+volta+'\')" aria-label="Voltar"><span class="material-icons">'+(volta==='__fechar'?'close':'arrow_back')+'</span></button>':'<span></span>')+'<span></span></div>';}
-  function hero(ic,t,s){return '<div class="pc-hero"><div class="pc-logo"><span class="material-icons">'+ic+'</span></div><div class="pc-h1">'+t+'</div>'+(s?'<div class="pc-sub">'+s+'</div>':'')+'</div>';}
+  function hero(ic,t,s,ouro){return '<div class="pc-hero"><div class="pc-logo"'+(ouro?' style="background:linear-gradient(135deg,#b7791f,#eab308);box-shadow:0 18px 40px -14px rgba(234,179,8,.65)"':'')+'><span class="material-icons">'+ic+'</span></div><div class="pc-h1">'+t+'</div>'+(s?'<div class="pc-sub">'+s+'</div>':'')+'</div>';}
   var RODAPE='<div class="pc-rodape">Ao continuar você aceita a <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</div>';
   var MSGS='<div class="pc-erro" id="pc-erro"></div><div class="pc-ok" id="pc-ok"></div>';
   function it(ic,t,s,ok){return '<div class="pc-item'+(ok?' ok':'')+'"><span class="material-icons">'+ic+'</span><div>'+t+(s?'<small>'+s+'</small>':'')+'</div></div>';}
+  function li(t,nao){return '<li'+(nao?' class="nao"':'')+'><span class="material-icons">'+(nao?'lock':'check_circle')+'</span><span>'+t+'</span></li>';}
+  var RECURSOS_PRO='Carteira, Assistente de rotas, Turno com GPS, Balanço semanal, Comparativo, widgets, manutenção sem limite e calendário completo';
 
   var TELAS={
     inicio:function(){
-      return topo(logado()?null:(modo()==='livre'?'__fechar':null))+hero('directions_car','Prismo Drive','Entre para salvar tudo na nuvem, trocar de celular sem perder nada e liberar todos os recursos.')
+      return topo(logado()?null:(modo()==='livre'?'__fechar':null))+hero('directions_car','Prismo Drive','Entre para guardar seus dados na sua conta, trocar de celular sem perder nada e ganhar 7 dias de Pro grátis.')
         +MSGS
         +'<button class="pc-btn pc-google" id="pc-bt-google" onclick="PrismoConta.google()">'+G_SVG+'Entrar com Google</button>'
         +'<div class="pc-ou">ou</div>'
@@ -5741,7 +5817,7 @@ window.PrismoConta=(function(){
         +'<button class="pc-link" onclick="PrismoConta.abrir(\'criar\')">Ainda não tem conta? <b>Criar conta</b></button>';
     },
     criar:function(){
-      return topo('inicio')+hero('person_add','Criar conta','É grátis. Você recebe um código no e-mail para confirmar.')
+      return topo('inicio')+hero('person_add','Criar conta','É grátis e você ganha 7 dias de Pro. Você recebe um código no e-mail para confirmar.')
         +campo('pc-nome','Nome','text','Como você quer ser chamado','autocomplete="name" value="'+esc(dados.nome||'')+'"')
         +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'"')
         +campo('pc-senha','Senha','password','Mínimo de 6 caracteres','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.criar()"')
@@ -5751,7 +5827,6 @@ window.PrismoConta=(function(){
         +'<button class="pc-btn pc-google" id="pc-bt-google" onclick="PrismoConta.google()">'+G_SVG+'Criar com Google</button>'
         +'<button class="pc-link" onclick="PrismoConta.abrir(\'entrar\')">Já tem conta? <b>Entrar</b></button>'+RODAPE;
     },
-    /* código de verificação do cadastro */
     codigo:function(){
       return topo('criar')+hero('mark_email_read','Digite o código','Enviamos um código para <b>'+esc(dados.email||'')+'</b>. Ele vale por 1 hora.')
         +campoCodigo('PrismoConta.verificar()')
@@ -5761,12 +5836,11 @@ window.PrismoConta=(function(){
         +'<div class="pc-item ok"><span class="material-icons">info</span><div>Procure também no spam ou em Promoções.<small>Remetente: Prismo Drive</small></div></div>';
     },
     esqueci:function(){
-      return topo('entrar')+hero('lock_reset','Esqueci minha senha','Digite o e-mail da conta. Vamos enviar um código para você criar uma senha nova.')
+      return topo(logado()?'__fechar':'entrar')+hero('lock_reset','Esqueci minha senha','Digite o e-mail da conta. Vamos enviar um código para você criar uma senha nova.')
         +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'" onkeydown="if(event.key===\'Enter\')PrismoConta.recuperar()"')
         +MSGS
         +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.recuperar()">Enviar código</button>';
     },
-    /* código da recuperação + nova senha */
     recuperar:function(){
       return topo('esqueci')+hero('password','Nova senha','Digite o código que enviamos para <b>'+esc(dados.email||'')+'</b> e escolha a nova senha.')
         +campoCodigo()
@@ -5776,7 +5850,6 @@ window.PrismoConta=(function(){
         +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.trocarPorCodigo()">Salvar nova senha</button>'
         +'<button class="pc-link" id="pc-reenviar" onclick="PrismoConta.recuperar(true)">Não chegou? <b>Reenviar código</b></button>';
     },
-    /* link antigo do e-mail (versão 1.9.1) */
     novasenha:function(){
       return topo(null)+hero('password','Nova senha','Crie a nova senha da sua conta.')
         +campo('pc-senha','Nova senha','password','Mínimo de 6 caracteres','autocomplete="new-password"')
@@ -5784,7 +5857,6 @@ window.PrismoConta=(function(){
         +MSGS
         +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.salvarSenha()">Salvar nova senha</button>';
     },
-    /* Perfil › Opções › Mudar senha */
     mudarsenha:function(){
       var temSenha=dados.temSenha!==false;
       return topo('__fechar')+hero('key',temSenha?'Mudar senha':'Criar senha',temSenha?'Confirme a senha atual e escolha a nova.':'Você entra com o Google. Crie uma senha para também poder entrar com e-mail.')
@@ -5795,7 +5867,6 @@ window.PrismoConta=(function(){
         +'<button class="pc-btn pc-pri" id="pc-bt" onclick="PrismoConta.mudarSenha()">Salvar nova senha</button>'
         +(temSenha?'<button class="pc-link" onclick="PrismoConta.esqueciLogado()">Esqueci a senha atual</button>':'');
     },
-    /* depois de entrar: escolher a proteção */
     protecao:function(){
       var e=seg(),bio=!!e.bio;
       return topo(null)+hero('shield','Proteja sua conta','Escolha como desbloquear o app sempre que abrir. Dá para trocar depois em Configurações › Segurança.')
@@ -5805,29 +5876,48 @@ window.PrismoConta=(function(){
         +'<button class="pc-link" onclick="PrismoConta.pularProtecao()">Agora não</button>';
     },
     semconta:function(){
-      return topo('inicio')+hero('person_outline','Continuar como usuário','Como usuário (sem conta) você usa o básico agora e cria a conta quando quiser. Seus lançamentos continuam no celular.')
+      return topo('inicio')+hero('person_outline','Continuar como usuário','Como usuário (sem conta) você usa o básico. Seus lançamentos ficam só neste celular.')
         +'<div class="pc-tit2">Bloqueado para usuários</div><div class="pc-lista">'
-        +it('lock','Carteira','Dívidas, contas do mês, metas e plano de quitação')
-        +it('lock','Assistente de rotas','Selo em cada corrida do iFood e InDrive e leitura automática dos ganhos')
-        +it('lock','Turno com GPS','Contador de km e tempo do turno')
-        +it('lock','Balanço semanal e Comparativo','Imagem do fechamento e comparação de dias')
-        +it('lock','Widgets na tela inicial','')
-        +it('lock','Backup na nuvem','Sem conta, se perder o celular perde os dados')
+        +it('lock','Recursos Pro','Carteira, Assistente de rotas, Turno, Balanço semanal, Comparativo e widgets')
+        +it('lock','Dados guardados na conta','Sem conta, se perder ou trocar o celular perde os dados')
         +it('lock','Segurança e opções da conta','Biometria, PIN, mudar senha')
         +it('block','Manutenção: até '+LIMITE_PECAS+' itens','')
-        +it('history','Calendário: só os últimos '+DIAS_CAL+' dias','Os dias mais antigos voltam quando você entrar')
+        +it('history','Calendário: só os últimos '+DIAS_CAL+' dias','')
         +'</div><div class="pc-tit2">Liberado para usuários</div><div class="pc-lista">'
         +it('check_circle','Lançar corridas, abastecer e o resumo do dia e do mês','',true)
         +it('check_circle','Avisos de manutenção','',true)
         +'</div>'
-        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
+        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>'
         +'<button class="pc-btn pc-sec" onclick="PrismoConta.semConta()">Continuar como usuário</button>';
+    },
+    /* comparação dos planos */
+    planos:function(){
+      var p=plano();
+      function card(id,tit,sub,itens){return '<div class="pc-pl '+(id==='pro'?'pro ':'')+(p===id?'atual':'')+'"><h4>'+chipPlano(id).replace(' · até '+dataCurta(conta().proAte),'')+(p===id?'<span style="font-size:11px;color:#3fb950;font-weight:800">· seu plano</span>':'')+'</h4><p>'+sub+'</p><ul>'+itens+'</ul></div>';}
+      return topo('__fechar')+hero('workspace_premium','Planos',p==='pro'?'Seu Pro vale até <b>'+dataCurta(conta().proAte)+'</b> ('+diasPro()+' dias).':(p==='admin'?'Você é Administrador: tudo liberado.':'Conheça o que cada plano libera.'),true)
+        +'<div class="pc-planos">'
+        +card('usuario','Usuário','Sem conta. Os dados ficam só neste celular.',li('Lançar corridas, abastecer, resumo do dia e do mês')+li('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')+li('Dados guardados na conta',1)+li('Recursos Pro',1))
+        +card('free','Free','Conta grátis.',li('Tudo do usuário')+li('Dados guardados na sua conta e ID fixo')+li('Biometria, PIN e opções da conta')+li('Recursos Pro',1))
+        +card('pro','Pro','30 dias, renovável. Quando vence, nada é apagado: só volta o cadeado.',li('Tudo do Free')+li('Carteira completa e plano de quitação')+li('Assistente de rotas (iFood e InDrive)')+li('Turno com GPS, Balanço semanal e Comparativo')+li('Widgets, manutenção sem limite e calendário completo'))
+        +'</div>'
+        +(logado()?'<button class="pc-btn pc-ouro" onclick="PrismoConta.abrir(\'resgatar\')"><span class="material-icons">redeem</span>Tenho um código Pro</button>'
+          :'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>')
+        +'<div class="pc-rodape">Para comprar o Pro fale com a equipe Prismo: <a href="mailto:prismolabtec@gmail.com?subject=Quero%20o%20Prismo%20Drive%20Pro">prismolabtec@gmail.com</a>'+(conta().contaId?'<br>Informe o seu ID: <b style="color:#e6edf3">'+esc(conta().contaId)+'</b>':'')+'</div>';
+    },
+    /* resgatar código Pro */
+    resgatar:function(){
+      return topo('__fechar')+hero('redeem','Resgatar código Pro','Digite o código que você recebeu. Os dias entram na hora, somados ao que já tiver.',true)
+        +'<label class="pc-campo"><span>Código</span><div class="pc-in"><input id="pc-codpro" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="PD-XXXX-XXXX" style="text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.08em;text-align:center" onkeydown="if(event.key===\'Enter\')PrismoConta.resgatar()"></div></label>'
+        +MSGS
+        +'<button class="pc-btn pc-ouro" id="pc-bt" onclick="PrismoConta.resgatar()"><span class="material-icons">redeem</span>Resgatar</button>'
+        +'<button class="pc-link" onclick="PrismoConta.abrir(\'planos\')">Ver planos</button>';
     }
   };
 
   function abrir(t){
     if(t==='__fechar'){fechar();return;}
     if(!TELAS[t])t='inicio';
+    if((t==='resgatar')&&!logado()){trava('conta');return;}
     var e=$c('pc-email'),nm=$c('pc-nome');if(e)dados.email=e.value.trim().toLowerCase();if(nm)dados.nome=nm.value.trim();
     tela=t;
     var box=$c('pc-tela');if(!box)return;
@@ -5835,6 +5925,7 @@ window.PrismoConta=(function(){
     var app=$c('conta-app');app.style.display='block';app.scrollTop=0;
     try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur();}catch(e){}
     if(t==='codigo'||t==='recuperar')setTimeout(function(){var c=$c('pc-cod');if(c)c.focus();},250);
+    if(t==='planos'||t==='resgatar'){try{fecharDrawer();}catch(x){}}
   }
   function fechar(){var app=$c('conta-app');if(app)app.style.display='none';}
   function aberto(){var a=$c('conta-app');return !!(a&&a.style.display==='block');}
@@ -5843,7 +5934,6 @@ window.PrismoConta=(function(){
   function ocupado(sim,id,txt){var b=$c(id||'pc-bt');if(!b)return;if(sim){b.dataset.html=b.innerHTML;b.disabled=true;b.innerHTML='<span class="pc-carregando"></span>'+(txt||'');}else{b.disabled=false;if(b.dataset.html)b.innerHTML=b.dataset.html;}}
   function val(id){var e=$c(id);return e?e.value.trim():'';}
   function emailOk(e){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);}
-  /* espera 60 s para pedir outro código */
   var esperaAte=0;
   function esperaReenviar(){
     var b=$c('pc-reenviar');if(!b)return;var f=Math.ceil((esperaAte-Date.now())/1000);
@@ -5875,7 +5965,7 @@ window.PrismoConta=(function(){
       ocupado(false);
       if(r.status>=200&&r.status<300){
         var j=r.json||{};
-        if(j.access_token&&guardarSessao(j,'email'))return depoisDeEntrar(true);         /* confirmação de e-mail desligada */
+        if(j.access_token&&guardarSessao(j,'email'))return depoisDeEntrar(true);
         var u=j.user||j;
         if(u&&Array.isArray(u.identities)&&u.identities.length===0){abrir('entrar');return mostrarErro('Este e-mail já tem conta. Entre com a senha ou use "Esqueci minha senha".');}
         esperaAte=Date.now()+60000;abrir('codigo');esperaReenviar();return;
@@ -5902,7 +5992,6 @@ window.PrismoConta=(function(){
       esperaReenviar();
     });
   }
-  /* esqueci a senha: manda o código (de novo=true reenvia da própria tela) */
   function recuperar(deNovo){
     var email=deNovo?dados.email:val('pc-email').toLowerCase();dados.email=email;
     if(!emailOk(email||''))return mostrarErro('Digite um e-mail válido.');
@@ -5930,7 +6019,7 @@ window.PrismoConta=(function(){
     ocupado(true,'pc-bt','Salvando…');
     http('POST','/auth/v1/verify',{type:'recovery',email:dados.email,token:cod}).then(function(r){
       if(r.status!==200||!r.json||!r.json.access_token){ocupado(false);return mostrarErro(msgErro(r));}
-      var antes=((sessao()||{}).user||{}).id,mesmo=logado()&&antes&&r.json.user&&antes===r.json.user.id;
+      var antes=uid(),mesmo=logado()&&antes&&r.json.user&&antes===r.json.user.id;
       guardarSessao(r.json,'email');
       http('PUT','/auth/v1/user',{password:a},r.json.access_token).then(function(x){
         ocupado(false);
@@ -5952,9 +6041,9 @@ window.PrismoConta=(function(){
     });
   }
 
-  /* ── Perfil › Opções › Mudar senha (só contas) ── */
+  /* ── Perfil › Opções › Mudar senha ── */
   function abrirMudarSenha(){
-    if(!exige('opcoes'))return;
+    if(!exigeConta('opcoes'))return;
     try{fecharDrawer();}catch(e){}
     dados.temSenha=true;abrir('mudarsenha');
     token().then(function(t){
@@ -5988,8 +6077,26 @@ window.PrismoConta=(function(){
       });
     });
   }
-  function esqueciLogado(){dados.email=conta().email||((sessao()||{}).user||{}).email||'';recuperarDireto();}
-  function recuperarDireto(){abrir('esqueci');var e=$c('pc-email');if(e)e.value=dados.email||'';}
+  function esqueciLogado(){dados.email=conta().email||((sessao()||{}).user||{}).email||'';abrir('esqueci');var e=$c('pc-email');if(e)e.value=dados.email||'';}
+
+  /* ── resgatar código Pro ── */
+  function resgatar(){
+    var c=val('pc-codpro').toUpperCase();
+    if(c.replace(/[^A-Z0-9]/g,'').length<10)return mostrarErro('Digite o código completo (PD-XXXX-XXXX).');
+    ocupado(true,'pc-bt','Resgatando…');
+    rpc('resgatar_codigo',{codigo:c}).then(function(r){
+      ocupado(false);
+      if(r.status===200&&r.json&&r.json.conta_id){
+        var p=r.json,srv=Date.parse(p.agora)||Date.now();
+        var c0=conta();c0.plano=p.plano;c0.proAte=p.pro_ate?Date.parse(p.pro_ate):0;c0.desvio=srv-Date.now();gravar(K_CONTA,c0);
+        gravar(K_PLANO_ANT,plano());sincronizar();
+        abrir('planos');
+        toast('Pronto! +'+(p.dias||'')+' dias de Pro. Vale até '+dataCurta(c0.proAte)+'.');
+        return;
+      }
+      mostrarErro(msgErro(r));
+    });
+  }
 
   /* ── Google ── */
   function google(){
@@ -6015,13 +6122,14 @@ window.PrismoConta=(function(){
 
   function depoisDeEntrar(novo){
     sincronizar();desbloqueadoEm=Date.now();
-    mostrarOk('Conta conectada! Carregando…');
+    mostrarOk('Conta conectada! Carregando seus dados…');
     carregarPerfil().then(function(){
+      return dadosAoEntrar();
+    }).then(function(recarrega){
+      if(recarrega)return; /* a página vai recarregar com os dados da conta */
       var c=conta();
-      return conferirBackup().then(function(){
-        toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome?(novo?'':', '+c.nome.split(' ')[0]):'')+(c.contaId?' · ID '+c.contaId:''));
-        if(nat()&&!metodoSeg()&&typeof (nat()||{}).segurancaEstado==='function')abrir('protecao');else fechar();
-      });
+      toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome&&!novo?', '+c.nome.split(' ')[0]:'')+(plano()==='pro'&&novo?' · 7 dias de Pro grátis':'')+(c.contaId?' · ID '+c.contaId:''));
+      if(nat()&&!metodoSeg()&&typeof (nat()||{}).segurancaEstado==='function')abrir('protecao');else fechar();
     });
   }
 
@@ -6042,69 +6150,132 @@ window.PrismoConta=(function(){
     });
   }
 
-  /* ── backup na nuvem ── */
+  /* ══ Dados na conta ══
+     Com conta, tudo o que é lançado vai para a conta pouco depois de cada mudança.
+     Sair da conta limpa o celular (vira um app novo); entrar de novo traz os dados de volta.
+     Quem já usava sem conta: os dados ficam e viram o primeiro envio da conta nova. */
   function copiaLocal(){
     var o={};
-    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||NAO_COPIAR[k])continue;o[k]=localStorage.getItem(k);}}catch(e){}
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||naoCopiar(k)||k===K_MODO)continue;o[k]=localStorage.getItem(k);}}catch(e){}
     return o;
   }
   function temDadosLocais(){
     try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';if(/^prismo_rows/.test(k)&&(localStorage.getItem(k)||'').length>4)return true;}}catch(e){}
     return false;
   }
-  function versao(){try{var n=nat();if(n&&n.versao)return n.versao()||'';}catch(e){}return '';}
-  function fazerBackup(silencioso){
-    return token().then(function(t){
-      var s=sessao();if(!t||!s||!s.user||!s.user.id){if(!silencioso)toast('Entre na conta para fazer backup',true);return false;}
-      var agora=new Date().toISOString();
-      return http('POST','/rest/v1/backups?on_conflict=user_id',{user_id:s.user.id,dados:copiaLocal(),aparelho:(navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+)/)||[])[1]||'',versao:versao(),atualizado_em:agora},t,{'Prefer':'resolution=merge-duplicates,return=minimal'}).then(function(r){
-        if(r.status>=200&&r.status<300){gravar(K_BKP,Date.now());desenharMenu();if(!silencioso)toast('Backup feito! Seus dados estão na nuvem.');return true;}
-        if(!silencioso)toast(r.status===0?'Sem internet para o backup':'Não foi possível fazer o backup',true);return false;
-      });
-    });
+  function assinatura(){
+    var h=5381,ks=[];
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&!naoCopiar(k)&&k!==K_MODO)ks.push(k);}}catch(e){}
+    ks.sort();
+    ks.forEach(function(k){var v=k+'='+(localStorage.getItem(k)||'');for(var j=0;j<v.length;j++)h=((h<<5)+h+v.charCodeAt(j))|0;});
+    var nat0='';try{var n=nat();if(n&&n.dadosAssinatura)nat0=n.dadosAssinatura()||'';}catch(e){}
+    return (h>>>0).toString(36)+'.'+ks.length+'.'+nat0;
   }
-  function buscarBackup(soData){
+  function versao(){try{var n=nat();if(n&&n.versao)return n.versao()||'';}catch(e){}return '';}
+  function turnoAtivo(){try{var n=nat();if(n&&n.turnoEstado)return !!JSON.parse(n.turnoEstado()||'{}').ativo;}catch(e){}return false;}
+  var enviando=null;
+  /* envia os dados deste celular para a conta */
+  function subir(silencioso){
+    if(enviando)return enviando;
+    enviando=token().then(function(t){
+      var id=uid();if(!t||!id){if(!silencioso)toast('Entre na conta para guardar os dados',true);return false;}
+      var sig=assinatura(),nativo=null;
+      try{var n=nat();if(n&&n.dadosExportar)nativo=JSON.parse(n.dadosExportar()||'null');}catch(e){}
+      var em=new Date(agora()).toISOString();
+      return http('POST','/rest/v1/backups?on_conflict=user_id',{user_id:id,dados:{v:2,local:copiaLocal(),nativo:nativo},aparelho:(navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+)/)||[])[1]||'',versao:versao(),atualizado_em:em},t,{'Prefer':'resolution=merge-duplicates,return=minimal'}).then(function(r){
+        if(r.status>=200&&r.status<300){gravar(K_SYNC_EM,em);gravar(K_SYNC_SIG,sig);gravar(K_DONO,id);gravar(K_BKP,Date.now());desenharMenu();if(!silencioso)toast('Pronto! Seus dados estão na conta.');return true;}
+        if(!silencioso)toast(r.status===0?'Sem internet agora. Tentamos de novo sozinho.':'Não foi possível enviar agora',true);return false;
+      });
+    }).then(function(x){enviando=null;return x;},function(){enviando=null;return false;});
+    return enviando;
+  }
+  function buscarNuvem(soData){
     return token().then(function(t){
-      var s=sessao();if(!t||!s||!s.user)return null;
-      return http('GET','/rest/v1/backups?select='+(soData?'atualizado_em':'atualizado_em,dados')+'&user_id=eq.'+encodeURIComponent(s.user.id),null,t).then(function(r){
+      var id=uid();if(!t||!id)return {erro:true};
+      return http('GET','/rest/v1/backups?select='+(soData?'atualizado_em':'atualizado_em,dados')+'&user_id=eq.'+encodeURIComponent(id),null,t).then(function(r){
         if(r.status!==200||!Array.isArray(r.json))return {erro:true};
         return r.json[0]||null;
       });
     });
   }
-  function dataBr(iso){try{var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return '';}}
-  function aplicarBackup(b){
-    if(!b||!b.dados)return toast('Backup vazio',true);
-    var manter={};Object.keys(NAO_COPIAR).forEach(function(k){try{var v=localStorage.getItem(k);if(v!==null)manter[k]=v;}catch(e){}});
+  /* troca os dados deste celular pelos da conta e recarrega */
+  function aplicarNuvem(b){
+    if(!b||!b.dados)return false;
+    var d=b.dados,local=(d&&d.v===2)?(d.local||{}):d,nativo=(d&&d.v===2)?d.nativo:null;
+    var manter={};
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(naoCopiar(k)||k===K_MODO)manter[k]=localStorage.getItem(k);}}catch(e){}
     try{localStorage.clear();}catch(e){}
     Object.keys(manter).forEach(function(k){try{localStorage.setItem(k,manter[k]);}catch(e){}});
-    Object.keys(b.dados).forEach(function(k){try{localStorage.setItem(k,String(b.dados[k]));}catch(e){}});
-    gravar(K_BKP,Date.now());
-    toast('Dados restaurados! Recarregando…');
-    setTimeout(function(){try{location.reload();}catch(e){}},900);
+    Object.keys(local).forEach(function(k){if(!naoCopiar(k)&&k!==K_MODO){try{localStorage.setItem(k,String(local[k]));}catch(e){}}});
+    if(nativo){try{var n=nat();if(n&&n.dadosImportar)n.dadosImportar(JSON.stringify(nativo));}catch(e){}}
+    gravar(K_SYNC_EM,b.atualizado_em);gravar(K_DONO,uid());gravar(K_SYNC_BASE,1);gravar(K_BKP,Date.now());
+    toast('Carregando os dados da sua conta…');
+    setTimeout(function(){try{location.reload();}catch(e){}},700);
+    return true;
   }
-  function restaurar(){
-    buscarBackup(false).then(function(b){
-      if(!b)return toast('Ainda não há backup nesta conta',true);
-      if(b.erro)return toast('Sem internet para buscar o backup',true);
-      confirmar('Restaurar o backup de '+dataBr(b.atualizado_em)+'? Os dados deste celular serão trocados pelos da nuvem.',function(){aplicarBackup(b);},'Restaurar');
-    });
+  function baixarEaplicar(){return buscarNuvem(false).then(function(x){if(x&&!x.erro&&x.dados){aplicarNuvem(x);return true;}toast('Não foi possível baixar os dados agora',true);return false;});}
+  /* apaga TODOS os dados do motorista deste celular (ao sair/excluir a conta) */
+  function limparCelular(){
+    var n=nat();
+    try{if(n&&n.contaEstado)n.contaEstado(JSON.stringify({logado:false}));}catch(e){}   /* desliga o assistente antes */
+    limparSeguranca();
+    setTimeout(function(){
+      try{if(n&&n.dadosLimpar)n.dadosLimpar();}catch(e){}
+      try{localStorage.clear();}catch(e){}
+      try{location.reload();}catch(e){}
+    },2200);
   }
-  /* ao entrar: celular sem dados + backup na nuvem = oferece restaurar; senão sobe os dados deste celular */
-  function conferirBackup(){
-    return buscarBackup(true).then(function(b){
-      if(b&&b.erro)return;
-      if(b&&b.atualizado_em){
-        return new Promise(function(fim){
-          var txt=temDadosLocais()
-            ?'Sua conta tem um backup de '+dataBr(b.atualizado_em)+'. Quer usar os dados da nuvem? (os deste celular serão trocados)'
-            :'Encontramos seu backup de '+dataBr(b.atualizado_em)+'. Restaurar agora?';
-          confirmar(txt,function(){buscarBackup(false).then(function(x){if(x&&!x.erro)aplicarBackup(x);fim();});},'Usar da nuvem',function(){fazerBackup(true);fim();},'Manter os deste celular');
-        });
+  /* ao entrar: decide de onde vêm os dados. true = vai recarregar a página */
+  function dadosAoEntrar(){
+    var id=uid(),dono=ler(K_DONO);
+    return buscarNuvem(true).then(function(b){
+      if(b&&b.erro)return false;                                  /* sem internet: segue e sincroniza depois */
+      var temNuvem=!!(b&&b.atualizado_em);
+      if(dono&&dono===id){                                        /* mesma conta (entrou de novo) */
+        if(temNuvem&&b.atualizado_em!==ler(K_SYNC_EM)&&assinatura()===ler(K_SYNC_SIG))return baixarEaplicar();
+        subir(true);return false;
       }
-      return fazerBackup(true);
+      if(dono&&dono!==id){                                        /* dados de OUTRA conta neste celular */
+        if(temNuvem)return baixarEaplicar();
+        var n=nat();try{if(n&&n.dadosLimpar)n.dadosLimpar();}catch(e){}
+        var manter={};try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(naoCopiar(k)||k===K_MODO)manter[k]=localStorage.getItem(k);}}catch(e){}
+        try{localStorage.clear();}catch(e){}Object.keys(manter).forEach(function(k){localStorage.setItem(k,manter[k]);});
+        gravar(K_DONO,id);gravar(K_SYNC_BASE,1);setTimeout(function(){location.reload();},500);return true;
+      }
+      /* sem dono: dados de usuário (ou de quem já usava antes das contas) */
+      if(!temNuvem){subir(true);return false;}                    /* conta nova: os dados ficam e viram o 1º envio */
+      if(!temDadosLocais())return baixarEaplicar();
+      return new Promise(function(fim){
+        confirmar('Esta conta já tem dados salvos ('+dataBr(b.atualizado_em)+'). Usar os dados da conta? Os lançamentos de usuário deste celular serão trocados.',
+          function(){baixarEaplicar().then(fim);},'Usar os da conta',
+          function(){subir(true);fim(false);},'Usar os deste celular');
+      });
     });
   }
+  /* abriu o app com conta: confere se outro celular mudou os dados */
+  function conferirNuvem(){
+    if(!logado())return;
+    if(!ler(K_DONO)){subir(true);return;}   /* 1ª vez com dados na conta neste celular (veio da 1.9.2): os dados daqui valem */
+    buscarNuvem(true).then(function(b){
+      if(!b||b.erro)return;
+      var mudouNuvem=b.atualizado_em&&b.atualizado_em!==ler(K_SYNC_EM),mudouAqui=assinatura()!==ler(K_SYNC_SIG);
+      if(!b.atualizado_em){subir(true);return;}
+      if(!mudouNuvem){if(mudouAqui)subir(true);return;}
+      if(!mudouAqui){baixarEaplicar();return;}
+      confirmar('Seus dados mudaram em outro celular ('+dataBr(b.atualizado_em)+') e também neste. Qual você quer manter?',
+        function(){baixarEaplicar();},'Os da conta',function(){subir(true);},'Os deste celular');
+    });
+  }
+  /* envio automático: alguns segundos depois de cada mudança */
+  var sigVista='',mudouEm=0;
+  function cicloSync(){
+    if(!logado()||document.hidden)return;
+    var s=assinatura();
+    if(s===ler(K_SYNC_SIG)){sigVista=s;mudouEm=0;return;}
+    if(s!==sigVista){sigVista=s;mudouEm=Date.now();return;}   /* espera parar de mexer */
+    if(Date.now()-mudouEm>=15000)subir(true);
+  }
+
   function confirmar(msg,ok,txtOk,nao,txtNao,vermelho){
     try{
       if(typeof abrirConfirmacao==='function'){
@@ -6119,24 +6290,25 @@ window.PrismoConta=(function(){
 
   /* ── sair / excluir ── */
   function sair(){
-    confirmar('Sair da conta? Seus lançamentos continuam neste celular, mas os recursos da conta ficam bloqueados.',function(){
-      fazerBackup(true).then(function(){
+    if(turnoAtivo())return toast('Finalize o turno antes de sair da conta',true);
+    confirmar('Sair da conta? Seus dados ficam guardados na conta e este celular volta a ficar vazio, como um app novo.',function(){
+      toast('Guardando seus dados na conta…');
+      subir(true).then(function(ok){
+        if(!ok)return toast('Sem internet: conecte para sair sem perder dados.',true);
         var s=sessao();
-        var fim=function(){gravar(K_SESSAO,null);gravar(K_CONTA,null);gravar(K_BKP,null);try{localStorage.removeItem(K_MODO);}catch(e){}limparSeguranca();sincronizar();try{fecharDrawer();}catch(e){}abrir('inicio');};
+        var fim=function(){try{fecharDrawer();}catch(e){}toast('Você saiu da conta.');limparCelular();};
         if(s&&s.access_token)http('POST','/auth/v1/logout',null,s.access_token).then(fim);else fim();
       });
     },'Sair');
   }
   function excluir(){
-    if(!exige('opcoes'))return;
-    confirmar('Excluir sua conta para sempre? O ID '+(conta().contaId||'')+' e o backup na nuvem serão apagados. Os dados deste celular continuam.',function(){
+    if(!exigeConta('opcoes'))return;
+    if(turnoAtivo())return toast('Finalize o turno antes de excluir a conta',true);
+    confirmar('Excluir sua conta para sempre? O ID '+(conta().contaId||'')+' e todos os dados guardados na conta serão apagados, e este celular volta a ficar vazio.',function(){
       confirmar('Tem certeza? Isso não pode ser desfeito.',function(){
-        token().then(function(t){
-          if(!t)return toast('Sem internet. Tente de novo.',true);
-          http('POST','/rest/v1/rpc/excluir_minha_conta',{},t).then(function(r){
-            if(r.status>=200&&r.status<300){gravar(K_SESSAO,null);gravar(K_CONTA,null);gravar(K_BKP,null);try{localStorage.removeItem(K_MODO);}catch(e){}limparSeguranca();sincronizar();try{fecharDrawer();}catch(e){}toast('Conta excluída.');abrir('inicio');}
-            else toast(r.status===0?'Sem internet. Tente de novo.':'Não foi possível excluir agora',true);
-          });
+        rpc('excluir_minha_conta').then(function(r){
+          if(r.status>=200&&r.status<300){try{fecharDrawer();}catch(e){}toast('Conta excluída.');limparCelular();}
+          else toast(r.status===0?'Sem internet. Tente de novo.':'Não foi possível excluir agora',true);
         });
       },'Excluir conta',null,null,true);
     },'Continuar',null,null,true);
@@ -6146,9 +6318,7 @@ window.PrismoConta=(function(){
   function seg(){try{var n=nat();if(n&&typeof n.segurancaEstado==='function')return JSON.parse(n.segurancaEstado()||'{}')||{};}catch(e){}return {};}
   function metodoSeg(){var e=seg();if(e.metodo==='pin'&&!e.temPin)return '';return e.metodo||'';}
   var desbloqueadoEm=0,saiuEm=0,bloqueado=false;
-  /* pin: modo 'abrir' (desbloquear), 'novo' (criar), 'repete' (confirmar) */
   var pin={modo:'abrir',dig:'',primeiro:'',depois:null,cancelar:null};
-
   function avatarIni(){var c=conta();return esc(((c.nome||c.email||'P').trim().charAt(0)||'P').toUpperCase());}
   function desenharBloq(msg,erro){
     var box=$c('pb-tela');if(!box)return;var c=conta(),e=seg(),m=pin.modo;
@@ -6170,6 +6340,7 @@ window.PrismoConta=(function(){
       html+='<div class="pb-rodape">';
       if(m==='novo')html+='<button class="pc-btn pc-pri" id="pb-ok" '+(pin.dig.length>=4?'':'disabled')+' onclick="PrismoConta.tecla(\'ok\')">Continuar</button>';
       if(m==='abrir')html+='<button class="pc-link" onclick="PrismoConta.esqueciBloqueio()">Esqueci o PIN · <b>Entrar com a senha da conta</b></button>';
+      if(m==='abrir'&&pin.depois)html+='<button class="pc-link" onclick="PrismoConta.cancelarPin()">Cancelar</button>';
       html+='</div>';
     }
     box.innerHTML=html;
@@ -6188,10 +6359,7 @@ window.PrismoConta=(function(){
   function tecla(t){
     var e=seg(),n=nat();
     if(t==='<'){pin.dig=pin.dig.slice(0,-1);desenharBloq();return;}
-    if(t==='ok'){
-      if(pin.modo==='novo'&&pin.dig.length>=4){pin.primeiro=pin.dig;pin.dig='';pin.modo='repete';desenharBloq();}
-      return;
-    }
+    if(t==='ok'){if(pin.modo==='novo'&&pin.dig.length>=4){pin.primeiro=pin.dig;pin.dig='';pin.modo='repete';desenharBloq();}return;}
     if(pin.dig.length>=6)return;
     pin.dig+=t;
     if(pin.modo==='abrir'){
@@ -6219,9 +6387,8 @@ window.PrismoConta=(function(){
     }
   }
   function cancelarPin(){var c=pin.cancelar;pin={modo:'abrir',dig:'',primeiro:'',depois:null,cancelar:null};esconderBloqueio();if(c)c();}
-  /* abre a tela de criar PIN; depois=função ao terminar */
   function criarPin(daProtecao){
-    if(!exige('seguranca'))return;
+    if(!exigeConta('seguranca'))return;
     pin={modo:'novo',dig:'',primeiro:'',depois:daProtecao?function(){fechar();}:null,cancelar:null};
     desenharBloq();mostrarBloq();
   }
@@ -6234,9 +6401,8 @@ window.PrismoConta=(function(){
     if(d.ok){liberar();return;}
     if(d.erro!=='cancelado')desenharBloq(d.msg||'Não reconhecido. Tente de novo.',true);
   });
-  /* liga a biometria: confirma uma vez que funciona */
   function escolherBio(daProtecao){
-    if(!exige('seguranca'))return;
+    if(!exigeConta('seguranca'))return;
     var e=seg();if(!e.bio)return toast('Cadastre a digital ou o rosto nas configurações do Android',true);
     var n=nat();
     bioPendente=function(d){
@@ -6247,23 +6413,21 @@ window.PrismoConta=(function(){
     };
     try{n.bioAutenticar('Confirme sua biometria');}catch(x){bioPendente=null;}
   }
-  /* trocar / desligar exige desbloquear com o método atual */
   function comDesbloqueio(fn){
     var m=metodoSeg();if(!m)return fn();
     if(m==='bio'){bioPendente=function(d){if(d.ok)fn();else if(d.erro!=='cancelado')toast(d.msg||'Biometria não confirmada',true);};pedirBio();return;}
     pin={modo:'abrir',dig:'',primeiro:'',depois:fn,cancelar:null};bloqueado=true;
     desenharBloq('Digite o PIN atual');mostrarBloq();
-    /* deixa cancelar */
-    var r=document.querySelector('#pb-tela .pb-rodape');if(r)r.insertAdjacentHTML('beforeend','<button class="pc-link" onclick="PrismoConta.cancelarPin()">Cancelar</button>');
   }
   function segEscolher(op){
-    if(!exige('seguranca'))return;
+    if(!exigeConta('seguranca'))return;
     var atual=metodoSeg();
     if(op===atual&&op!=='pin')return;
     if(op==='bio')return comDesbloqueio(function(){escolherBio(false);});
     if(op==='pin')return comDesbloqueio(function(){criarPin(false);});
     if(op==='')return comDesbloqueio(function(){confirmar('Desligar o bloqueio? O app vai abrir sem pedir PIN ou biometria.',function(){limparSeguranca();desenharSeguranca();toast('Bloqueio desligado');},'Desligar',null,null,true);});
   }
+  /* esqueceu PIN / biometria falhou: entra de novo com a senha (os dados continuam no celular) */
   function esqueciBloqueio(){
     confirmar('Entrar de novo com a senha da conta? O PIN/biometria será desligado e você escolhe outro depois. Seus dados continuam no celular.',function(){
       var email=conta().email||((sessao()||{}).user||{}).email||'';
@@ -6274,45 +6438,138 @@ window.PrismoConta=(function(){
   }
   function pularProtecao(){fechar();toast('Você pode ligar o bloqueio em Configurações › Segurança.');}
 
-  /* Configurações › Segurança */
   function desenharSeguranca(){
     var alvo=$c('acc-cfg');if(!alvo)return;
     var box=$c('pc-seg-box');
     if(!box){box=document.createElement('div');box.id='pc-seg-box';box.className='pc-conta-box';box.style.marginTop='12px';alvo.appendChild(box);}
     var l=logado(),e=seg(),m=l?metodoSeg():'',temNat=!!(nat()&&typeof (nat()||{}).segurancaEstado==='function');
     function op(id,ic,t,s,dis){return '<button type="button" class="pc-linha'+(m===id&&l?' sel':'')+'" '+(dis?'aria-disabled="true"':'')+' onclick="PrismoConta.segEscolher(\''+id+'\')"><span class="ic"><span class="material-icons">'+ic+'</span></span><span><b>'+t+'</b><small>'+s+'</small></span><span class="material-icons fim">'+(l?(m===id?'radio_button_checked':'radio_button_unchecked'):'lock')+'</span></button>';}
-    box.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">shield</span>Segurança'+(l?'':'<span class="pc-cad pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Conta</span>')+'</p>'
+    box.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">shield</span>Segurança'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Conta</span>')+'</p>'
       +'<p style="font-size:.66rem;color:#8b949e;line-height:1.4">Bloqueio do app: pede a biometria ou o PIN sempre que abrir o Prismo Drive.</p>'
       +op('bio','fingerprint','Biometria',e.bio?'Digital ou rosto do celular':(temNat?'Cadastre a digital no Android para usar':'Disponível no app instalado'),l&&!e.bio)
       +op('pin','pin','PIN',m==='pin'?'Toque para trocar o PIN ('+(e.tamPin||'')+' números)':'De 4 a 6 números que você escolhe')
       +op('','lock_open','Desligado','O app abre direto');
   }
 
+  /* ══ Painel do Administrador ══ */
+  var ultimosCodigos=[];
+  function desenharAdmin(){
+    var perfil=document.querySelector('#drawer-menu .pd-acc-perfil');
+    var box=$c('pa-acc');
+    if(plano()!=='admin'){if(box)box.style.display='none';return;}
+    if(!perfil)return;
+    if(!box){
+      box=document.createElement('div');box.id='pa-acc';box.className='acc-item';
+      box.style.cssText='background:#0d1117;border:1px solid rgba(192,132,252,.25);border-radius:16px;';
+      box.innerHTML='<button type="button" onclick="PrismoConta.adminAbrir()" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;"><div style="width:32px;height:32px;border-radius:10px;background:rgba(168,85,247,.12);border:1px solid rgba(192,132,252,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#d8b4fe;">admin_panel_settings</span></div><div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Administração</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Clientes, Pro e códigos</p></div><span id="pa-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span></button>'
+        +'<div id="pa-corpo" style="display:none;padding:0 16px 14px;">'
+        +'<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">person_search</span>Buscar cliente</p><div class="pa-lin"><input id="pa-busca" class="pa-in" placeholder="ID (8 números), e-mail ou nome" onkeydown="if(event.key===\'Enter\')PrismoConta.adminBuscar()"><button class="pa-bt" onclick="PrismoConta.adminBuscar()"><span class="material-icons">search</span></button></div><div class="pa-res" id="pa-res"></div></div>'
+        +'<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">redeem</span>Gerar códigos Pro</p><div class="pa-lin"><select id="pa-dias" class="pa-in" style="flex:1.2"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option><option value="180">180 dias</option><option value="365">365 dias</option></select><input id="pa-qtd" class="pa-in" type="number" min="1" max="50" value="1" style="flex:.6" aria-label="Quantidade"><button class="pa-bt" onclick="PrismoConta.adminGerar()"><span class="material-icons">add</span>Gerar</button></div><div class="pa-res" id="pa-gerados"></div></div>'
+        +'<div class="pa-box"><p class="pa-tit" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span class="material-icons" style="font-size:13px">receipt_long</span>Últimos códigos</span><button class="pa-bt" style="height:28px;font-size:10px" onclick="PrismoConta.adminCodigos()"><span class="material-icons" style="font-size:13px">refresh</span></button></p><div class="pa-res" id="pa-codigos"><small style="color:#8b949e">Toque em atualizar.</small></div></div>'
+        +'</div>';
+      perfil.parentNode.insertBefore(box,perfil);
+    }
+    box.style.display='';
+  }
+  function adminAbrir(){var c=$c('pa-corpo'),i=$c('pa-icon');if(!c)return;var ab=c.style.display==='none';c.style.display=ab?'block':'none';if(i)i.style.transform=ab?'rotate(180deg)':'';if(ab)adminCodigos();}
+  var resAdmin=[];
+  function cardCliente(p,i){
+    var pro=p.pro_ate?Date.parse(p.pro_ate):0,ef=p.plano==='admin'?'admin':(pro>agora()?'pro':'free');
+    var dias=pro>agora()?Math.ceil((pro-agora())/DIA):0;
+    return '<div class="pa-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b>'+esc(p.nome||'(sem nome)')+'</b>'+chipPlano(ef).replace(' · até '+dataCurta(conta().proAte),'')+'</div>'
+      +'<small>ID '+esc(p.conta_id)+' · '+esc(p.email||'')+'<br>'+(ef==='pro'?'Pro até '+dataBr(p.pro_ate)+' ('+dias+' dias)':(p.pro_ate?'Pro venceu em '+dataBr(p.pro_ate):'Nunca teve Pro'))+'<br>Criada em '+dataBr(p.criado_em)+(p.sincronizado_em?' · dados enviados '+dataBr(p.sincronizado_em):'')+'</small>'
+      +(p.plano==='admin'?'':'<div class="pa-grid"><button class="pa-bt verde" onclick="PrismoConta.adminPro('+i+',7)">+7</button><button class="pa-bt verde" onclick="PrismoConta.adminPro('+i+',30)">+30</button><button class="pa-bt verde" onclick="PrismoConta.adminPro('+i+',90)">+90</button><button class="pa-bt verm" onclick="PrismoConta.adminPro('+i+',-7)">−7</button></div>'
+      +'<div class="pa-lin" style="margin-top:6px"><button class="pa-bt verm" style="flex:1" onclick="PrismoConta.adminFree('+i+')"><span class="material-icons">block</span>Tirar o Pro (Free)</button></div>')
+      +'</div>';
+  }
+  function desenharResultados(){var r=$c('pa-res');if(!r)return;r.innerHTML=resAdmin.length?resAdmin.map(cardCliente).join(''):'<small style="color:#8b949e">Nenhuma conta encontrada.</small>';}
+  function adminBuscar(){
+    var q=val('pa-busca');if(q.length<3)return toast('Digite o ID, o e-mail ou parte do nome',true);
+    var r=$c('pa-res');if(r)r.innerHTML='<small style="color:#8b949e">Buscando…</small>';
+    rpc('admin_buscar',{busca:q}).then(function(x){
+      if(x.status!==200){if(r)r.innerHTML='';return toast(msgErro(x),true);}
+      resAdmin=Array.isArray(x.json)?x.json:[];desenharResultados();
+    });
+  }
+  function adminPro(i,dias){
+    var p=resAdmin[i];if(!p)return;
+    confirmar((dias>0?'Dar '+dias+' dias de Pro para ':'Tirar '+(-dias)+' dias de Pro de ')+(p.nome||'')+' (ID '+p.conta_id+')?',function(){
+      rpc('admin_dar_pro',{conta:p.conta_id,dias:dias}).then(function(x){
+        if(x.status!==200)return toast(msgErro(x),true);
+        p.plano=x.json.plano;p.pro_ate=x.json.pro_ate;desenharResultados();
+        toast(dias>0?'Pro liberado até '+dataCurta(Date.parse(p.pro_ate)):'Dias removidos');
+        if(p.conta_id===conta().contaId)carregarPerfil();
+      });
+    },dias>0?'Dar Pro':'Tirar dias',null,null,dias<0);
+  }
+  function adminFree(i){
+    var p=resAdmin[i];if(!p)return;
+    confirmar('Tirar o Pro de '+(p.nome||'')+' (ID '+p.conta_id+')? A conta volta para Free na hora.',function(){
+      rpc('admin_tornar_free',{conta:p.conta_id}).then(function(x){
+        if(x.status!==200)return toast(msgErro(x),true);
+        p.plano='free';p.pro_ate=null;desenharResultados();toast('Conta agora é Free');
+      });
+    },'Tirar o Pro',null,null,true);
+  }
+  function copiar(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Copiado!');},function(){_copiaAntiga(t);toast('Copiado!');});return;}}catch(e){}try{_copiaAntiga(t);}catch(e){}toast('Copiado!');}
+  function adminGerar(){
+    var dias=Number(($c('pa-dias')||{}).value)||30,qtd=Math.max(1,Math.min(50,Number(($c('pa-qtd')||{}).value)||1));
+    confirmar('Gerar '+qtd+' código'+(qtd>1?'s':'')+' de '+dias+' dias de Pro?',function(){
+      rpc('admin_gerar_codigos',{dias:dias,qtd:qtd}).then(function(x){
+        if(x.status!==200)return toast(msgErro(x),true);
+        ultimosCodigos=Array.isArray(x.json)?x.json:[];
+        var g=$c('pa-gerados');
+        if(g)g.innerHTML=ultimosCodigos.map(function(c){return '<div class="pa-cod"><span>'+esc(c)+'</span><button class="pa-bt" style="height:28px" onclick="PrismoConta.copiar(\''+esc(c)+'\')"><span class="material-icons" style="font-size:13px">content_copy</span></button></div>';}).join('')
+          +(ultimosCodigos.length>1?'<button class="pa-bt" style="width:100%" onclick="PrismoConta.copiarTodos()"><span class="material-icons">content_copy</span>Copiar todos</button>':'');
+        toast(ultimosCodigos.length+' código(s) de '+dias+' dias gerado(s)');
+        adminCodigos();
+      });
+    },'Gerar');
+  }
+  function adminCodigos(){
+    var box=$c('pa-codigos');if(!box)return;
+    rpc('admin_codigos').then(function(x){
+      if(x.status!==200){box.innerHTML='<small style="color:#ff9b95">'+esc(msgErro(x))+'</small>';return;}
+      var l=Array.isArray(x.json)?x.json:[];
+      box.innerHTML=l.length?l.slice(0,30).map(function(c){return '<div class="pa-cod"><span>'+esc(c.codigo)+'</span><em class="'+(c.usado_em?'':'livre')+'">'+c.dias+'d · '+(c.usado_em?'usado '+(c.usado_conta?'por '+esc(c.usado_conta):'')+' '+dataCurta(Date.parse(c.usado_em)):'livre')+'</em></div>';}).join(''):'<small style="color:#8b949e">Nenhum código ainda.</small>';
+    });
+  }
+
   /* ── recurso bloqueado ── */
   var TRAVAS={
-    carteira:['Carteira','A Carteira (dívidas, contas do mês, metas e plano de quitação) é exclusiva de quem tem conta.'],
-    rotas:['Assistente de rotas','O assistente avalia cada corrida do iFood e do InDrive e lê seus ganhos sozinho. Crie sua conta grátis para usar.'],
-    turno:['Turno com GPS','O turno mede os km e o tempo pelo GPS. Crie sua conta grátis para usar.'],
-    relatorio:['Balanço semanal','A imagem do fechamento da semana é exclusiva de quem tem conta.'],
-    comparativo:['Comparativo','Comparar seus dias e semanas é exclusivo de quem tem conta.'],
-    pecas:['Limite da manutenção','Como usuário você monitora até '+LIMITE_PECAS+' itens. Crie sua conta grátis para monitorar quantos quiser.'],
-    calendario:['Histórico completo','Como usuário o calendário mostra só os últimos '+DIAS_CAL+' dias. Seus dados antigos estão guardados e voltam quando você entrar.'],
-    backup:['Backup na nuvem','Crie sua conta para guardar seus dados na nuvem e trocar de celular sem perder nada.'],
+    carteira:['Carteira','A Carteira (dívidas, contas do mês, metas e plano de quitação) é um recurso Pro.'],
+    rotas:['Assistente de rotas','O assistente avalia cada corrida do iFood e do InDrive e lê seus ganhos sozinho. É um recurso Pro.'],
+    turno:['Turno com GPS','O turno mede os km e o tempo pelo GPS. É um recurso Pro.'],
+    relatorio:['Balanço semanal','A imagem do fechamento da semana é um recurso Pro.'],
+    comparativo:['Comparativo','Comparar seus dias e semanas é um recurso Pro.'],
+    pecas:['Limite da manutenção','Sem o Pro você monitora até '+LIMITE_PECAS+' itens. No Pro, quantos quiser.'],
+    calendario:['Histórico completo','Sem o Pro o calendário mostra só os últimos '+DIAS_CAL+' dias. Seus dados antigos estão guardados.'],
     seguranca:['Segurança','Biometria e PIN protegem a sua conta. Crie sua conta grátis para usar.'],
     opcoes:['Opções da conta','Mudar senha e excluir conta são só para quem tem conta.'],
-    conta:['Sua conta','Crie sua conta grátis para ter o seu ID fixo e liberar todos os recursos.']
+    conta:['Sua conta','Crie sua conta grátis para guardar seus dados na conta, ter o seu ID fixo e ganhar 7 dias de Pro.']
   };
+  var SO_CONTA={seguranca:1,opcoes:1,conta:1};
   function trava(r){
-    var t=TRAVAS[r]||TRAVAS.conta;
-    $c('pt-t').textContent=t[0];$c('pt-s').textContent=t[1];
+    var t=TRAVAS[r]||TRAVAS.conta,box=$c('pt-box'),l=logado(),pro=!SO_CONTA[r];
+    var html='<div class="pt-ic'+(pro&&l?' pro':'')+'"><span class="material-icons">'+(pro&&l?'workspace_premium':'lock')+'</span></div><div class="pt-t">'+esc(t[0])+'</div><div class="pt-s">'+esc(t[1])+(pro&&!l?' Crie sua conta e ganhe 7 dias de Pro grátis.':'')+'</div>';
+    if(!l){
+      html+='<button class="pc-btn pc-pri" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
+        +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Já tenho conta · Entrar</button>';
+    }else{
+      html+='<button class="pc-btn pc-ouro" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'resgatar\')"><span class="material-icons">redeem</span>Tenho um código Pro</button>'
+        +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'planos\')"><span class="material-icons">workspace_premium</span>Ver planos</button>';
+    }
+    html+='<button class="pc-link" onclick="PrismoConta.fecharTrava()">Agora não</button>';
+    box.innerHTML=html;
     var m=$c('conta-trava');m.style.display='flex';
     try{if(navigator.vibrate)navigator.vibrate(15);}catch(e){}
   }
   function fecharTrava(){var m=$c('conta-trava');if(m)m.style.display='none';}
-  /* true = pode usar; false = mostrou o cadeado */
-  function exige(r){if(logado())return true;trava(r);return false;}
+  /* recursos Pro: true = pode usar; false = mostrou o cadeado */
+  function exige(r){if(liberado())return true;trava(r);return false;}
+  /* recursos de conta (qualquer plano) */
+  function exigeConta(r){if(logado())return true;trava(r);return false;}
 
-  /* botão voltar do Android: true = tratou · 'min' = minimiza o app · false = segue o normal */
   function voltar(){
     var b=$c('conta-bloq');
     if(b&&b.style.display==='block'){if(pin.modo!=='abrir'||pin.depois){cancelarPin();return true;}return 'min';}
@@ -6320,11 +6577,11 @@ window.PrismoConta=(function(){
     if(!aberto())return false;
     if(tela==='entrar'||tela==='criar'||tela==='semconta'){abrir('inicio');return true;}
     if(tela==='codigo'){abrir('criar');return true;}
-    if(tela==='esqueci'){abrir(logado()?'mudarsenha':'entrar');return true;}
+    if(tela==='esqueci'){if(logado())fechar();else abrir('entrar');return true;}
     if(tela==='recuperar'){abrir('esqueci');return true;}
-    if(tela==='mudarsenha'||tela==='protecao'){fechar();return true;}
+    if(tela==='mudarsenha'||tela==='protecao'||tela==='planos'||tela==='resgatar'){fechar();return true;}
     if(tela==='inicio'&&(logado()||modo()==='livre')){fechar();return true;}
-    return 'min'; /* tela inicial sem escolha: minimiza o app */
+    return 'min';
   }
 
   /* ── menu › Perfil: conta + Opções ── */
@@ -6334,24 +6591,26 @@ window.PrismoConta=(function(){
     if(!box){box=document.createElement('div');box.id='pc-conta-box';box.className='pc-conta-box';alvo.appendChild(box);}
     var opc=$c('pc-opcoes-box');
     if(!opc){opc=document.createElement('div');opc.id='pc-opcoes-box';opc.className='pc-conta-box';alvo.appendChild(opc);}
-    var c=conta(),s=sessao(),l=logado();
+    var c=conta(),s=sessao(),l=logado(),p=plano();
     if(!l){
-      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para ter seu ID fixo, backup na nuvem e todos os recursos.</p></div></div>'
+      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela, ter seu ID fixo e ganhar 7 dias de Pro.</p></div></div>'
         +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
     }else{
-      var bk=ler(K_BKP);
+      var bk=ler(K_BKP),pend=assinatura()!==ler(K_SYNC_SIG);
       box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av"><span class="material-icons">verified_user</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.nome||'Conta conectada')+'</p><p style="font-size:.66rem;color:#8b949e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||(s&&s.user&&s.user.email)||'')+'</p></div></div>'
-        +'<p style="font-size:.62rem;color:#6e7681;margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:#3fb950">cloud_done</span> '+(bk?'Último backup: '+dataBr(new Date(bk).toISOString()):'Ainda sem backup')+'</p>'
-        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Fazer backup</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Restaurar</button></div>';
+        +'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+chipPlano(p)+(p==='pro'?'<span style="font-size:.62rem;color:#8b949e">'+diasPro()+' dia'+(diasPro()===1?'':'s')+' restantes</span>':'')+'</div>'
+        +'<p style="font-size:.62rem;color:#6e7681;margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:'+(pend?'#f0883e':'#3fb950')+'">'+(pend?'cloud_sync':'cloud_done')+'</span> '+(pend?'Enviando as mudanças para a conta…':(bk?'Dados guardados na conta · '+dataBr(new Date(bk).toISOString()):'Dados ainda não enviados'))+'</p>'
+        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Enviar agora</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Baixar da conta</button></div>';
     }
     var fim=l?'chevron_right':'lock';
-    opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
+    opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
+      +'<button type="button" class="pc-linha" onclick="PrismoConta.abrir(\'planos\')"><span class="ic"><span class="material-icons" style="color:#facc15">workspace_premium</span></span><span><b>Planos</b><small>'+(p==='pro'?'Pro até '+dataCurta(c.proAte):(p==='admin'?'Administrador':'Conheça o Pro'))+'</small></span><span class="material-icons fim">chevron_right</span></button>'
+      +'<button type="button" class="pc-linha" onclick="PrismoConta.abrir(\'resgatar\')"><span class="ic"><span class="material-icons">redeem</span></span><span><b>Resgatar código Pro</b><small>Digite o código que você recebeu</small></span><span class="material-icons fim">'+fim+'</span></button>'
       +'<button type="button" class="pc-linha" onclick="PrismoConta.mudarSenhaAbrir()"><span class="ic"><span class="material-icons">key</span></span><span><b>Mudar senha</b><small>Troque a senha de entrar com e-mail</small></span><span class="material-icons fim">'+fim+'</span></button>'
-      +(l?'<button type="button" class="pc-linha" onclick="PrismoConta.sair()"><span class="ic"><span class="material-icons">logout</span></span><span><b>Sair da conta</b><small>Os lançamentos continuam no celular</small></span><span class="material-icons fim">chevron_right</span></button>':'')
-      +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e o backup na nuvem</small></span><span class="material-icons fim">'+fim+'</span></button>';
+      +(l?'<button type="button" class="pc-linha" onclick="PrismoConta.sair()"><span class="ic"><span class="material-icons">logout</span></span><span><b>Sair da conta</b><small>Os dados ficam na conta e o celular fica vazio</small></span><span class="material-icons fim">chevron_right</span></button>':'')
+      +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e os dados guardados na conta</small></span><span class="material-icons fim">'+fim+'</span></button>';
   }
 
-  /* ID da conta: vem do servidor, criado no cadastro e fixo para sempre */
   window.contaId=function(){return logado()?String(conta().contaId||''):'';};
   window.mostrarContaId=function(){
     var el=$c('cfg-conta-id');if(!el)return;var id=window.contaId();
@@ -6359,17 +6618,15 @@ window.PrismoConta=(function(){
     var h=$c('cfg-conta-id-dica');if(h)h.innerText=logado()?'Código fixo da sua conta: foi criado no cadastro e nunca muda.':'Usuários não têm ID. Crie sua conta para ganhar o seu ID fixo.';
   };
   window.copiarContaId=function(){
-    if(!exige('conta'))return;
+    if(!exigeConta('conta'))return;
     var id=window.contaId();if(!id){carregarPerfil();return toast('Carregando o ID…');}
-    var ok=function(){toast('ID copiado: '+id);};
-    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(id).then(ok,function(){_copiaAntiga(id);ok();});return;}}catch(e){}
-    try{_copiaAntiga(id);}catch(e){}ok();
+    copiar(id);
   };
 
-  /* ── travas nos recursos ── */
+  /* ── travas nos recursos Pro ── */
   function envolver(nome,rec,cond){
     var f=window[nome];if(typeof f!=='function'||f.__pc)return;
-    var g=function(){if(!logado()&&(!cond||cond.apply(this,arguments))){trava(rec);return;}return f.apply(this,arguments);};
+    var g=function(){if(!liberado()&&(!cond||cond.apply(this,arguments))){trava(rec);return;}return f.apply(this,arguments);};
     g.__pc=1;window[nome]=g;
   }
   function limiteCal(){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(DIAS_CAL-1));return d;}
@@ -6379,7 +6636,6 @@ window.PrismoConta=(function(){
     envolver('abrirComparativo','comparativo');
     envolver('abrirModalPecaForm','pecas',function(id){if(id)return false;try{carregarPecasStorage();return (pecasManut||[]).length>=LIMITE_PECAS;}catch(e){return false;}});
     envolver('salvarPeca','pecas',function(){try{if(editandoPecaId)return false;carregarPecasStorage();return (pecasManut||[]).length>=LIMITE_PECAS;}catch(e){return false;}});
-    /* calendário: usuário vê só os últimos 30 dias */
     envolver('navegarCalendario','calendario',function(delta){
       if(delta>=0)return false;
       var m=calMes+delta,a=calAno;if(m<0){m=11;a--;}
@@ -6389,20 +6645,19 @@ window.PrismoConta=(function(){
     if(typeof rg==='function'&&!rg.__pc){
       window.renderizarGradeCalendario=function(){
         var lim=limiteCal();
-        if(!logado()&&Array.isArray(calRegistros)){
+        if(!liberado()&&Array.isArray(calRegistros)){
           try{calRegistros=calRegistros.filter(function(r){return new Date(calAno,calMes,Number(r.dia)||1)>=lim;});}catch(e){}
         }
         var out=rg.apply(this,arguments);
         try{
           var g=$c('cal-grade'),av=$c('pc-cal-aviso');
-          if(g&&!av){av=document.createElement('div');av.id='pc-cal-aviso';av.className='pc-cal-aviso';av.onclick=function(){trava('calendario');};av.innerHTML='<span class="material-icons">lock</span><span>Usuário: só os últimos '+DIAS_CAL+' dias · <b style="color:#3fb950">Criar conta</b></span>';g.parentNode.insertBefore(av,g);}
-          if(av)av.style.display=logado()?'none':'flex';
+          if(g&&!av){av=document.createElement('div');av.id='pc-cal-aviso';av.className='pc-cal-aviso';av.onclick=function(){trava('calendario');};g.parentNode.insertBefore(av,g);}
+          if(av){av.innerHTML='<span class="material-icons">lock</span><span>Sem o Pro: só os últimos '+DIAS_CAL+' dias · <b style="color:#facc15">Ver o Pro</b></span>';av.style.display=liberado()?'none':'flex';}
         }catch(e){}
         return out;
       };
       window.renderizarGradeCalendario.__pc=1;
     }
-    /* assistente de rotas */
     if(window.PrismoRotas&&!PrismoRotas.__pc){
       var ab=PrismoRotas.abrir,pw=PrismoRotas.power;
       PrismoRotas.abrir=function(){if(!exige('rotas'))return;return ab.apply(this,arguments);};
@@ -6411,58 +6666,52 @@ window.PrismoConta=(function(){
     }
     var tf=window.toqueFotoDrawer;
     if(typeof tf==='function'&&!tf.__pc){window.toqueFotoDrawer=function(){if(!exige('rotas'))return;return tf.apply(this,arguments);};window.toqueFotoDrawer.__pc=1;}
-    /* turno: só para começar um turno novo (um turno já aberto sempre pode ser finalizado) */
     if(window.PrismoTurno&&!PrismoTurno.__pc){
       var bt=PrismoTurno.botao;
-      PrismoTurno.botao=function(){
-        var ativo=false;try{var n=nat();if(n&&n.turnoEstado)ativo=!!JSON.parse(n.turnoEstado()||'{}').ativo;}catch(e){}
-        if(!ativo&&!exige('turno'))return;
-        return bt.apply(this,arguments);
-      };
+      PrismoTurno.botao=function(){if(!turnoAtivo()&&!exige('turno'))return;return bt.apply(this,arguments);};
       PrismoTurno.__pc=1;
     }
-    /* cadeados visuais */
     try{
       var cart=$c('btn-carteira-status');if(cart&&!cart.querySelector('.pc-cad')){cart.style.position='relative';cart.insertAdjacentHTML('beforeend','<span class="pc-cad pc-cad-mini"><span class="material-icons">lock</span></span>');}
-      var sub=$c('acc-rotas-sub');if(sub&&sub.parentNode&&!sub.parentNode.querySelector('.pc-cad')){var p=sub.parentNode.querySelector('p');if(p)p.insertAdjacentHTML('beforeend','<span class="pc-cad pc-cad-tag"><span class="material-icons">lock</span>Conta</span>');}
+      var sub=$c('acc-rotas-sub');if(sub&&sub.parentNode&&!sub.parentNode.querySelector('.pc-cad')){var p=sub.parentNode.querySelector('p');if(p)p.insertAdjacentHTML('beforeend','<span class="pc-cad pc-cad-tag"><span class="material-icons">workspace_premium</span>Pro</span>');}
     }catch(e){}
   }
 
   /* ── início ── */
   function iniciar(){
     instalarTravas();
+    if(ler(K_SYNC_BASE)){gravar(K_SYNC_SIG,assinatura());gravar(K_SYNC_BASE,null);}   /* acabou de baixar da conta */
     sincronizar();
-    if(precisaBloquear())bloquear();     /* abre já bloqueado */
-    if(!modo()){
-      /* primeira vez (ou saiu da conta): mostra a tela de entrada depois do carregamento */
-      setTimeout(function(){if(!modo()&&!aberto())abrir('inicio');},1200);
-    }
+    if(precisaBloquear())bloquear();
+    if(!modo())setTimeout(function(){if(!modo()&&!aberto())abrir('inicio');},1200);
     if(logado()){
-      setTimeout(function(){
-        carregarPerfil();
-        var bk=ler(K_BKP);
-        if(!bk||Date.now()-bk>20*3600*1000)setTimeout(function(){fazerBackup(true);},8000); /* backup automático 1x por dia */
-      },2500);
+      setTimeout(function(){carregarPerfil();conferirNuvem();},2500);
     }
+    setInterval(cicloSync,10000);
+    setInterval(function(){if(logado()&&!document.hidden&&Date.now()-(conta().lido||0)>30*60000)carregarPerfil();},60000);
     setTimeout(verLink,900);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
   document.addEventListener('visibilitychange',function(){
-    if(document.hidden){saiuEm=Date.now();return;}
+    if(document.hidden){saiuEm=Date.now();if(logado()&&assinatura()!==ler(K_SYNC_SIG))subir(true);return;}
     if(precisaBloquear()&&!bloqueado&&saiuEm&&Date.now()-saiuEm>BLOQ_MIN*60000)bloquear();
-    try{desenharSeguranca();}catch(e){}
-    if(logado()){var bk=ler(K_BKP);if(!bk||Date.now()-bk>20*3600*1000)fazerBackup(true);}
+    try{desenharSeguranca();desenharMenu();}catch(e){}
+    if(logado()&&saiuEm&&Date.now()-saiuEm>60000){carregarPerfil();conferirNuvem();}
   });
+  /* fechou a Carteira: envia logo */
+  try{var fc=window.fecharCarteira;if(typeof fc==='function'){window.fecharCarteira=function(){var r=fc.apply(this,arguments);if(logado())setTimeout(function(){if(assinatura()!==ler(K_SYNC_SIG))subir(true);},1500);return r;};}}catch(e){}
 
   function olho(id,b){var e=$c(id);if(!e)return;var v=e.type==='password';e.type=v?'text':'password';var i=b&&b.querySelector('.material-icons');if(i)i.textContent=v?'visibility_off':'visibility';}
 
-  return {logado:logado,exige:exige,trava:trava,fecharTrava:fecharTrava,abrir:abrir,fechar:fechar,voltar:voltar,
+  return {logado:logado,plano:plano,liberado:liberado,exige:exige,exigeConta:exigeConta,trava:trava,fecharTrava:fecharTrava,abrir:abrir,fechar:fechar,voltar:voltar,
     entrar:entrar,criar:criar,verificar:verificar,reenviar:reenviar,recuperar:recuperar,trocarPorCodigo:trocarPorCodigo,salvarSenha:salvarSenha,
-    mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:google,semConta:semConta,
-    verLink:verLink,backup:function(){fazerBackup(false);},restaurar:restaurar,sair:sair,excluir:excluir,olho:olho,
+    mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:google,semConta:semConta,resgatar:resgatar,
+    verLink:verLink,backup:function(){subir(false);},restaurar:function(){confirmar('Baixar os dados guardados na conta? Os deste celular serão trocados por eles.',function(){baixarEaplicar();},'Baixar');},
+    sair:sair,excluir:excluir,olho:olho,copiar:copiar,copiarTodos:function(){copiar(ultimosCodigos.join('\n'));},
     tecla:tecla,cancelarPin:cancelarPin,criarPin:criarPin,pedirBio:pedirBio,escolherBio:escolherBio,segEscolher:segEscolher,
     esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
-    _conta:conta,_sessao:sessao};
+    adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,
+    _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura};
 })();
 </script>
 

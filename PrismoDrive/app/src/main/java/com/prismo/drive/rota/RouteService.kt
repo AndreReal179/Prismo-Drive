@@ -94,15 +94,15 @@ class RouteService : AccessibilityService() {
     }
 
     /**
-     * O assistente exige conta: sem conta conectada no app ele avisa e se desliga sozinho.
+     * O assistente é recurso Pro: sem Pro (ou Administrador) ele avisa e se desliga sozinho.
      * Retorna true quando desligou.
      */
     private fun semConta(): Boolean {
-        if (com.prismo.drive.Conta.logado(this)) return false
+        if (com.prismo.drive.Conta.liberado(this)) return false
         runCatching {
             com.prismo.drive.Notificacoes.mostrar(
                 this, 9300, "Assistente de rotas desligado",
-                "Entre na sua conta no Prismo Drive para usar o assistente de rotas."
+                "O assistente de rotas é recurso Pro. Abra o Prismo Drive para ver seu plano."
             )
         }
         shutdown()

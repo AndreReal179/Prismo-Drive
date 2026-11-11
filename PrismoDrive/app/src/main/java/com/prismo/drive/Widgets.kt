@@ -142,8 +142,8 @@ object WidgetUtil {
     private fun montar(ctx: Context, grande: Boolean): RemoteViews {
         val v = RemoteViews(ctx.packageName, if (grande) R.layout.widget_4x2 else R.layout.widget_2x2)
 
-        // Sem conta: o widget fica bloqueado (toque abre o app para entrar ou criar a conta)
-        if (!Conta.logado(ctx)) return bloqueado(ctx, v, grande)
+        // Sem Pro (usuário ou Free): o widget fica bloqueado (toque abre o app)
+        if (!Conta.liberado(ctx)) return bloqueado(ctx, v, grande)
 
         val d: JSONObject? = ler(ctx)
         val tem = d != null
@@ -263,13 +263,13 @@ object WidgetUtil {
         v.setProgressBar(R.id.wdg_barra, 100, 0, false)
         if (!grande) {
             v.setTextViewText(R.id.wdg_ganho, "🔒")
-            v.setTextViewText(R.id.wdg_lucro, "Entre na sua conta")
+            v.setTextViewText(R.id.wdg_lucro, "Recurso Pro")
             v.setTextColor(R.id.wdg_lucro, NEUTRO)
         } else {
             v.setTextViewText(R.id.wdg_atualizado, "Toque para entrar")
             v.setTextViewText(R.id.wdg_ganho, "🔒 Bloqueado")
             v.setViewVisibility(R.id.wdg_chip, View.GONE)
-            v.setTextViewText(R.id.wdg_meta, "Crie sua conta grátis para usar o widget")
+            v.setTextViewText(R.id.wdg_meta, "Widget é recurso Pro")
             v.setTextViewText(R.id.wdg_pct, "")
             v.setTextViewText(R.id.wdg_rotas, "—")
             v.setTextViewText(R.id.wdg_km, "—")

@@ -1,5 +1,8 @@
-• ✉️ Cadastro com código: ao criar a conta você recebe um código de 6 números no e-mail. Digite no app e pronto, sem precisar abrir link
-• 🔑 Esqueci minha senha com código: na tela de entrar, peça o código no e-mail, digite e crie a nova senha ali mesmo
-• 🛡️ Segurança (Menu › Configurações › Segurança): escolha desbloquear o app com biometria (digital ou rosto) ou com um PIN de 4 a 6 números. O app pede sempre que abrir
-• 🙋 Perfil › Opções: Mudar senha e Excluir conta, só para quem tem conta
-• 👤 Quem usa sem conta agora é chamado de usuário. Usuários usam o básico; os recursos da conta mostram um cadeado
+• ☁️ Seus dados na sua conta: com conta, tudo o que você lança vai para a conta sozinho, segundos depois. Trocou de celular? Entre na conta e está tudo lá, inclusive o relatório do assistente e os turnos
+• 🚪 Sair da conta deixa o celular limpo, como um app novo. Ao entrar de novo, seus dados voltam
+• 📦 Já usava o app sem conta? Ao criar a conta, nada se perde: os seus lançamentos viram o primeiro envio da conta
+• 👑 Planos: Free (conta grátis), Pro (todos os recursos, 30 dias renováveis) e Administrador. Toda conta nova ganha 7 dias de Pro
+• 🔒 Recursos Pro: Carteira, Assistente de rotas, Turno, Balanço semanal, Comparativo, widgets, manutenção sem limite e calendário completo
+• 🎟️ Resgatar código Pro (Menu › Perfil › Opções): digite o código e os dias entram na hora, somados ao que você já tem
+• 🔔 Aviso quando faltam 3 dias para o Pro vencer. Quando vence, nada é apagado: só volta o cadeado
+• 🛠️ Painel da Administração (só para administradores): buscar cliente pelo ID, dar ou tirar dias de Pro e gerar códigos

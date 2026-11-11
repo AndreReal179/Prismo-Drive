@@ -32,13 +32,15 @@ footer a{margin-right:14px}
 <li><b>Cadastro com e-mail:</b> nome, e-mail e senha.</li>
 <li><b>Entrar com Google:</b> nome e e-mail da sua conta Google. Não temos acesso à sua senha do Google nem a outros dados dela.</li>
 <li><b>ID da conta:</b> um número de 8 dígitos criado no cadastro, que identifica a sua conta e não muda.</li>
+<li><b>Segurança:</b> o PIN e a biometria do bloqueio do app ficam só no celular (o PIN guardado de forma criptografada) e nunca são enviados.</li>
 </ul>
 <p>A senha nunca é guardada em texto: o serviço de autenticação armazena apenas uma versão criptografada (hash), que não pode ser lida. Esses dados ficam no <b>Supabase</b>, nosso provedor de banco de dados e autenticação, em servidores localizados nos Estados Unidos. Essa transferência internacional segue o que a LGPD permite (art. 33), com provedor que adota medidas de segurança adequadas. Usamos esses dados para identificar a sua conta, permitir recuperar a senha, guardar o backup e, quando disponíveis, oferecer recursos de assinatura.</p>
 
 <h2>2. Dados do app e backup na nuvem</h2>
 <p>Rotas, ganhos, combustível, carteira, dívidas, metas, manutenção e configurações ficam salvos <b>no próprio aparelho</b>.</p>
 <p><b>Sem conta</b>, esses dados não saem do celular.</p>
-<p><b>Com conta</b>, o app faz um <b>backup</b> desses dados nos servidores do Supabase (Estados Unidos), cerca de uma vez por dia e quando você toca em “Fazer backup”, para você recuperar tudo ao trocar de celular. O backup fica ligado só à sua conta, só você tem acesso a ele e ele é apagado quando você exclui a conta. Junto com o backup guardamos a data, a versão do app e o modelo do celular. O relatório do Assistente de rotas e os quilômetros medidos pelo GPS não entram no backup.</p>
+<p><b>Com conta</b>, esses dados ficam <b>guardados na sua conta</b>, nos servidores do Supabase (Estados Unidos): o app envia as mudanças alguns segundos depois de cada lançamento, para você recuperar tudo ao trocar de celular. Isso inclui também o relatório do Assistente de rotas, os turnos e as rotas do iFood ainda não lançadas. Só você tem acesso a esses dados. Ao <b>sair da conta</b>, eles são apagados deste celular e continuam na conta; ao entrar de novo, voltam. Junto guardamos a data do envio, a versão do app e o modelo do celular.</p>
+<p><b>Plano da conta:</b> guardamos o plano (Free, Pro ou Administrador), até quando vale o Pro e os códigos Pro resgatados. Ações da equipe sobre o plano ficam registradas.</p>
 
 <h2>3. Localização</h2>
 <p>A localização é opcional e usada só para medir os quilômetros rodados:</p>
