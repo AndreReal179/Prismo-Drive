@@ -664,6 +664,30 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .tf-b2{background:#21262d;color:#c9d1d9;}
 .tf-b1{background:linear-gradient(135deg,#1A7A3A,#2EA44F);color:#fff;}
 /* configuração do odômetro */
+/* ── Configurações organizadas em seções ── */
+.cf-sec{display:flex;flex-direction:column;gap:7px;}
+.cf-tit{font-size:.58rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8b949e;display:flex;align-items:center;gap:6px;padding:0 4px;}
+.cf-tit .material-icons{font-size:14px;color:#6e7681;}
+.cf-card{background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+.cf-row{display:flex;align-items:center;gap:12px;padding:13px 14px;margin:0;}
+.cf-card > .cf-row ~ .cf-row{border-top:1px solid rgba(255,255,255,.06);}
+.cf-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .2s;}
+.cf-ic .material-icons{font-size:17px;color:#c9d1d9;}
+.cf-ic.verde{background:rgba(46,164,79,.10);border-color:rgba(46,164,79,.28);}.cf-ic.verde .material-icons{color:#3fb950;}
+.cf-ic.azul{background:rgba(56,139,253,.10);border-color:rgba(56,139,253,.28);}.cf-ic.azul .material-icons{color:#79b8ff;}
+.cf-ic.laranja{background:rgba(240,136,62,.10);border-color:rgba(240,136,62,.28);}.cf-ic.laranja .material-icons{color:#f0883e;}
+.cf-txt{flex:1;min-width:0;}
+.cf-txt b{display:block;font-size:13px;font-weight:800;color:#e6edf3;line-height:1.2;}
+.cf-txt small{display:block;font-size:.64rem;font-weight:600;color:#8b949e;margin-top:3px;line-height:1.35;}
+.cf-val{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px 10px;flex-shrink:0;}
+.cf-val:focus-within{border-color:rgba(46,164,79,.5);}
+.cf-val input{width:58px;background:transparent;border:none;outline:none;color:#e6edf3;font-size:16px;font-weight:900;text-align:right;padding:0;font-family:inherit;}
+.cf-val span{font-size:11px;font-weight:800;color:#8b949e;}
+.cf-chips{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:0 14px 14px;}
+.cf-nota{font-size:.62rem;color:#8b949e;line-height:1.5;padding:0 14px 13px;margin:0;}
+.cf-btns{display:flex;gap:8px;padding:0 14px 14px;}
+.cf-sec .pc-conta-box{margin-top:0 !important;border-radius:14px;border-color:rgba(255,255,255,.07);}
+.cf-sec .pc-conta-box > .pc-box-tit:first-child{display:none;}
 .cfg-odo{display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid rgba(56,139,253,.18);border-radius:12px;padding:12px 14px;cursor:pointer;}
 .cfg-odo-ic{width:32px;height:32px;border-radius:10px;background:rgba(56,139,253,.1);border:1px solid rgba(56,139,253,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cfg-odo-ic .material-icons{font-size:16px;color:#79b8ff;}
@@ -1184,8 +1208,8 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
     <div style="position:relative;padding:20px 22px 18px;flex-shrink:0;overflow:hidden;">
       <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:220px;height:160px;background:radial-gradient(ellipse,rgba(46,164,79,0.13) 0%,transparent 70%);pointer-events:none;"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;">
-        <div style="display:flex;align-items:center;gap:6px;"><span class="material-icons" style="font-size:13px;color:var(--green-lt);">directions_car</span><span style="font-size:0.58rem;font-weight:900;letter-spacing:0.22em;color:var(--green-lt);text-transform:uppercase;">Prismo Drive</span></div>
-        <button onclick="fecharDrawer()" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);"><span class="material-icons" style="font-size:15px;">close</span></button>
+        <div id="dw-id" style="display:flex;align-items:center;gap:8px;min-width:0;"><span style="font-size:0.62rem;font-weight:900;letter-spacing:0.16em;color:var(--green-lt);text-transform:uppercase;white-space:nowrap;">ID: <span id="dw-id-num" style="letter-spacing:0.08em;color:#e6edf3;">—</span></span><button type="button" id="dw-id-copiar" onclick="copiarContaId()" aria-label="Copiar ID" style="background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;color:#8b949e;"><span class="material-icons" style="font-size:15px;">content_copy</span></button></div>
+        <div style="display:flex;align-items:center;gap:8px;"><button type="button" id="dw-sair" onclick="PrismoConta.sair()" aria-label="Sair da conta" style="display:none;width:30px;height:30px;border-radius:9px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.25);align-items:center;justify-content:center;cursor:pointer;color:#ff9b95;"><span class="material-icons" style="font-size:15px;">logout</span></button><button onclick="fecharDrawer()" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);"><span class="material-icons" style="font-size:15px;">close</span></button></div>
       </div>
       <div style="display:flex;align-items:center;gap:16px;position:relative;">
         <div id="drawer-av-wrap" onclick="toqueFotoDrawer()" style="position:relative;flex-shrink:0;">
@@ -1211,37 +1235,27 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
       <div class="acc-item pd-acc-perfil" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
         <button type="button" onclick="toggleAccordion('acc-perfil')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
           <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--green-lt);">person</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Nome, foto e conta</p></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Foto, nome e opções da conta</p></div>
           <span id="acc-perfil-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
         </button>
         <div id="acc-perfil" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
           <div style="background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;">
-            <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">Sua identidade</p>
-            <div style="display:flex;align-items:center;gap:14px;">
-              <div onclick="escolherFotoPerfil()" style="position:relative;flex-shrink:0;cursor:pointer;transition:transform .15s;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform=''">
-                <div id="cfg-foto-prev" style="width:64px;height:64px;border-radius:50%;background:#0d1117;border:2px solid rgba(46,164,79,0.4);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(46,164,79,0.14);">👤</div>
-                <div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#165c2b,#2ea44f);border:2px solid #0d1117;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);"><span class="material-icons" style="font-size:12px;color:#fff;">photo_camera</span></div>
+            <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Sua identidade</p>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <div onclick="escolherFotoPerfil()" style="position:relative;cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform=''">
+                <div id="cfg-foto-prev" style="width:96px;height:96px;border-radius:50%;background:#0d1117;border:2px solid rgba(46,164,79,0.4);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 22px rgba(46,164,79,0.16);">👤</div>
+                <div style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#165c2b,#2ea44f);border:2px solid #0d1117;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);"><span class="material-icons" style="font-size:15px;color:#fff;">photo_camera</span></div>
               </div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome de exibição</p>
-                <input type="text" id="cfg-perfil-nome" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;outline:none;color:#e6edf3;font-size:14px;font-weight:800;padding:10px 12px;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(46,164,79,0.45)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'" placeholder="Seu nome...">
+              <div style="display:flex;gap:16px;">
+                <button type="button" onclick="escolherFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#3fb950;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">photo_library</span>Trocar foto</button>
+                <button type="button" onclick="removerFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#8b949e;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">delete_outline</span>Remover</button>
               </div>
             </div>
-            <div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>
-            <div style="display:flex;gap:8px;">
-              <button type="button" onclick="escolherFotoPerfil()" style="flex:1;cursor:pointer;border:1px solid rgba(46,164,79,0.4);background:rgba(46,164,79,0.12);color:#3fb950;border-radius:10px;padding:10px 6px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s;"><span class="material-icons" style="font-size:14px;">photo_library</span>Trocar foto</button>
-              <button type="button" onclick="removerFotoPerfil()" style="flex:1;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#8b949e;border-radius:10px;padding:10px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s;"><span class="material-icons" style="font-size:14px;">delete_outline</span>Remover</button>
-            </div>
-            <div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:11px;background:rgba(88,166,255,0.10);border:1px solid rgba(88,166,255,0.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:18px;color:#58a6ff;">badge</span></div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">ID da conta</p>
-                <p id="cfg-conta-id" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;font-weight:900;color:#e6edf3;letter-spacing:0.12em;margin-top:2px;">—</p>
-              </div>
-              <button type="button" onclick="copiarContaId()" style="cursor:pointer;border:1px solid rgba(88,166,255,0.35);background:rgba(88,166,255,0.10);color:#79b8ff;border-radius:10px;padding:8px 11px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;"><span class="material-icons" style="font-size:14px;">content_copy</span>Copiar</button>
-            </div>
-            <p id="cfg-conta-id-dica" style="font-size:0.62rem;color:#6e7681;margin-top:8px;line-height:1.4;">Código fixo da sua conta: foi criado no cadastro e nunca muda.</p>
+            <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+            <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome de exibição</p>
+            <input type="text" id="cfg-perfil-nome" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;outline:none;color:#e6edf3;font-size:14px;font-weight:800;padding:11px 12px;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(46,164,79,0.45)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'" placeholder="Seu nome...">
+            <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+            <div id="pf-conta"></div>
             <input type="hidden" id="cfg-perfil-foto">
           </div>
         </div>
@@ -1269,12 +1283,22 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
           </div>
         </div>
       </div>
+      <!-- ABA ADQUIRIR PLANO -->
+      <div class="acc-item pd-acc-plano" style="background:#0d1117;border:1px solid rgba(250,204,21,0.18);border-radius:16px;">
+        <button type="button" onclick="toggleAccordion('acc-plano')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+          <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.12);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:16px;color:#facc15;">workspace_premium</span></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Adquirir plano</p><p id="acc-plano-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Free e Pro</p></div>
+          <span id="acc-plano-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span>
+        </button>
+        <div id="acc-plano" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;"></div>
+      </div>
+
 
       <!-- ABA ASSISTENTE DE ROTAS -->
       <div class="acc-item pd-acc-rotas" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
         <button type="button" onclick="toggleAccordion('acc-rotas')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
           <div style="width:32px;height:32px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#58a6ff;">navigation</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Assistente de rotas</p><p id="acc-rotas-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">iFood e InDrive · avalia cada corrida</p></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Assistente de rotas</p><p id="acc-rotas-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Calcule suas rotas em tempo real</p></div>
           <span id="acc-rotas-dot" style="width:9px;height:9px;border-radius:50%;background:#6e7681;flex-shrink:0;"></span>
           <span id="acc-rotas-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
         </button>
@@ -1302,45 +1326,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
       </div>
 
       <!-- ABA CONFIGURAÇÕES -->
-      <div class="acc-item pd-acc-cfg" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-cfg')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--blue);">settings</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Configurações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Consumo, pagamento e meta</p></div>
-          <span id="acc-cfg-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-cfg" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
-          <div style="background:#161b22;border:1px solid rgba(56,139,253,0.12);border-radius:12px;padding:12px 14px;"><p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Dia de recebimento</p><select id="cfg-perfil-pagamento" style="display:none;"><option value="Segunda">Segunda-feira</option><option value="Terça">Terça-feira</option><option value="Quarta">Quarta-feira</option><option value="Quinta">Quinta-feira</option><option value="Sexta">Sexta-feira</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option></select><div id="cfg-pagamento-chips" style="display:flex;flex-wrap:wrap;gap:6px;"><button type="button" data-valor="Segunda" onclick="escolherDiaPagamento('Segunda')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">SEG</button><button type="button" data-valor="Terça" onclick="escolherDiaPagamento('Terça')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">TER</button><button type="button" data-valor="Quarta" onclick="escolherDiaPagamento('Quarta')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">QUA</button><button type="button" data-valor="Quinta" onclick="escolherDiaPagamento('Quinta')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">QUI</button><button type="button" data-valor="Sexta" onclick="escolherDiaPagamento('Sexta')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">SEX</button><button type="button" data-valor="Sábado" onclick="escolherDiaPagamento('Sábado')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">SÁB</button><button type="button" data-valor="Domingo" onclick="escolherDiaPagamento('Domingo')" style="flex:1 1 calc(25% - 6px);min-width:0;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.62rem;font-weight:900;letter-spacing:0.06em;cursor:pointer;transition:all .15s;">DOM</button></div></div>
-          <div style="background:#161b22;border:1px solid rgba(240,136,62,0.18);border-radius:12px;padding:12px 14px;"><p style="font-size:0.56rem;font-weight:700;color:var(--orange);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px;">Consumo do veículo</p><div style="display:flex;align-items:baseline;gap:6px;"><input type="number" id="cfg-consumo" step="0.1" min="0.1" inputmode="decimal" placeholder="10.0" onchange="salvarConsumoCfg()" onblur="salvarConsumoCfg()" style="flex:1;background:transparent;border:none;outline:none;color:#e6edf3;font-size:20px;font-weight:900;padding:0;min-width:0;"><span style="font-size:13px;font-weight:800;color:var(--muted);">km/l</span></div><p style="font-size:0.55rem;color:var(--muted);font-weight:500;margin-top:5px;">Fica salvo no aparelho e é usado em todas as rotas.</p></div>
-          <div style="background:linear-gradient(135deg,#140a00,#161b22);border:1px solid rgba(240,136,62,0.18);border-radius:12px;padding:12px 14px;"><p style="font-size:0.56rem;font-weight:700;color:#4ade80;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px;">Meta diária bruta</p><div style="display:flex;align-items:baseline;gap:4px;"><span style="font-size:13px;font-weight:800;color:var(--muted);">R$</span><input type="number" id="cfg-perfil-meta" step="1" style="flex:1;background:transparent;border:none;outline:none;color:#e6edf3;font-size:20px;font-weight:900;padding:0;min-width:0;" placeholder="250"></div></div>
-          <div class="cfg-odo" onclick="odoPedirSet(!odoPedirAtivo())">
-            <div class="cfg-odo-ic"><span class="material-icons">speed</span></div>
-            <div style="flex:1;min-width:0;">
-              <p class="cfg-odo-t">Pedir odômetro do dia</p>
-              <p id="cfg-odo-status" class="cfg-odo-s">Desligado</p>
-            </div>
-            <span id="cfg-odo-toggle" class="cfg-tg"><i></i></span>
-          </div>
-          <p class="cfg-odo-info">Ligado, o app pede o odômetro uma vez por dia. Isso garante um cálculo melhor do consumo de combustível (inclusive os km fora de rota) e do desgaste das peças do veículo na Manutenção.</p>
-          <div id="cfg-notif-card" style="background:#161b22;border:1px solid rgba(74,222,128,0.12);border-radius:12px;padding:13px 14px;transition:border-color .2s;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div id="upd-notif-ico" style="width:32px;height:32px;border-radius:10px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;"><span class="material-icons" style="font-size:16px;color:#4ade80;">notifications</span></div>
-              <div style="flex:1;min-width:0;">
-                <p style="font-size:0.56rem;font-weight:800;color:#4ade80;letter-spacing:0.12em;text-transform:uppercase;">Notificações</p>
-
-                <p id="upd-notif-status" style="font-size:11.5px;font-weight:700;color:#8b949e;margin-top:3px;line-height:1.35;">Verificando...</p>
-              </div>
-              <span id="upd-notif-pill" class="notif-pill">—</span>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:12px;">
-              <button type="button" class="notif-btn sec" onclick="PrismoNotif.testar()"><span class="material-icons" style="font-size:15px;">send</span>Testar</button>
-              <button type="button" class="notif-btn pri" onclick="PrismoNotif.ativar()"><span class="material-icons" style="font-size:15px;">notifications_active</span>Ativar</button>
-            </div>
-            <p style="font-size:0.55rem;color:#9da7b3;font-weight:500;margin-top:10px;line-height:1.45;">Avisos de dívidas, manutenção, meta batida, odômetro e fechamento do mês — mesmo com o app fechado.</p>
-
-          </div>
-
-        </div>
-      </div>
+      
 
 
             <!-- ABA GUIA DO APP -->
@@ -1379,6 +1365,82 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
             <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
             <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
           </div>
+        </div>
+      </div>
+
+      <div class="acc-item pd-acc-cfg" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+        <button type="button" onclick="toggleAccordion('acc-cfg')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+          <div style="width:32px;height:32px;border-radius:10px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--blue);">settings</span></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Configurações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Meta, veículo, avisos, backup e segurança</p></div>
+          <span id="acc-cfg-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+        </button>
+        <div id="acc-cfg" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:16px;">
+
+          <!-- Ganhos e meta -->
+          <section class="cf-sec">
+            <p class="cf-tit"><span class="material-icons">payments</span>Ganhos e meta</p>
+            <div class="cf-card">
+              <label class="cf-row" for="cfg-perfil-meta">
+                <span class="cf-ic verde"><span class="material-icons">flag</span></span>
+                <span class="cf-txt"><b>Meta diária</b><small>Quanto você quer faturar por dia (bruto)</small></span>
+                <span class="cf-val"><span>R$</span><input type="number" id="cfg-perfil-meta" step="1" inputmode="decimal" placeholder="250"></span>
+              </label>
+              <div class="cf-row" style="padding-bottom:10px;">
+                <span class="cf-ic azul"><span class="material-icons">event</span></span>
+                <span class="cf-txt"><b>Dia de recebimento</b><small>O dia em que os apps pagam você</small></span>
+              </div>
+              <select id="cfg-perfil-pagamento" style="display:none;"><option value="Segunda">Segunda-feira</option><option value="Terça">Terça-feira</option><option value="Quarta">Quarta-feira</option><option value="Quinta">Quinta-feira</option><option value="Sexta">Sexta-feira</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option></select>
+              <div id="cfg-pagamento-chips" class="cf-chips"><button type="button" data-valor="Segunda" onclick="escolherDiaPagamento('Segunda')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEG</button><button type="button" data-valor="Terça" onclick="escolherDiaPagamento('Terça')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">TER</button><button type="button" data-valor="Quarta" onclick="escolherDiaPagamento('Quarta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUA</button><button type="button" data-valor="Quinta" onclick="escolherDiaPagamento('Quinta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUI</button><button type="button" data-valor="Sexta" onclick="escolherDiaPagamento('Sexta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEX</button><button type="button" data-valor="Sábado" onclick="escolherDiaPagamento('Sábado')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SÁB</button><button type="button" data-valor="Domingo" onclick="escolherDiaPagamento('Domingo')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">DOM</button></div>
+            </div>
+          </section>
+
+          <!-- Veículo -->
+          <section class="cf-sec">
+            <p class="cf-tit"><span class="material-icons">directions_car</span>Veículo</p>
+            <div class="cf-card">
+              <label class="cf-row" for="cfg-consumo">
+                <span class="cf-ic laranja"><span class="material-icons">local_gas_station</span></span>
+                <span class="cf-txt"><b>Consumo</b><small>Usado no custo de combustível de todas as rotas</small></span>
+                <span class="cf-val"><input type="number" id="cfg-consumo" step="0.1" min="0.1" inputmode="decimal" placeholder="10,0" onchange="salvarConsumoCfg()" onblur="salvarConsumoCfg()"><span>km/l</span></span>
+              </label>
+              <div class="cf-row" style="cursor:pointer;" onclick="odoPedirSet(!odoPedirAtivo())">
+                <span class="cf-ic azul"><span class="material-icons">speed</span></span>
+                <span class="cf-txt"><b>Pedir odômetro do dia</b><small id="cfg-odo-status">Desligado</small></span>
+                <span id="cfg-odo-toggle" class="cfg-tg"><i></i></span>
+              </div>
+              <p class="cf-nota">Ligado, o app pede o odômetro uma vez por dia: melhora o cálculo do combustível (inclusive os km fora de rota) e do desgaste das peças na Manutenção.</p>
+            </div>
+          </section>
+
+          <!-- Notificações -->
+          <section class="cf-sec">
+            <p class="cf-tit"><span class="material-icons">notifications</span>Notificações</p>
+            <div id="cfg-notif-card" class="cf-card">
+              <div class="cf-row">
+                <span id="upd-notif-ico" class="cf-ic verde"><span class="material-icons">notifications</span></span>
+                <span class="cf-txt"><b>Avisos no celular</b><small id="upd-notif-status">Verificando...</small></span>
+                <span id="upd-notif-pill" class="notif-pill">—</span>
+              </div>
+              <p class="cf-nota" style="margin-top:-6px;">Dívidas, manutenção, meta batida, odômetro e fechamento do mês, mesmo com o app fechado.</p>
+              <div class="cf-btns">
+                <button type="button" class="notif-btn sec" onclick="PrismoNotif.testar()"><span class="material-icons" style="font-size:15px;">send</span>Testar</button>
+                <button type="button" class="notif-btn pri" onclick="PrismoNotif.ativar()"><span class="material-icons" style="font-size:15px;">notifications_active</span>Ativar</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Backup (preenchido pela conta) -->
+          <section class="cf-sec">
+            <p class="cf-tit"><span class="material-icons">cloud</span>Backup</p>
+            <div id="cf-backup"></div>
+          </section>
+
+          <!-- Segurança (preenchido pela conta) -->
+          <section class="cf-sec">
+            <p class="cf-tit"><span class="material-icons">shield</span>Segurança</p>
+            <div id="cf-seg"></div>
+          </section>
+
         </div>
       </div>
 
@@ -1477,7 +1539,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
       <span id="kpi-gasto-comp-txt" style="font-size:0.6rem;font-weight:900;"></span>
       <span style="font-size:0.54rem;color:var(--muted);font-weight:600;">vs ontem</span>
     </div>
-    <p id="kpi-litros" class="pd-sub">Calculado por odômetro</p>
+    <p id="kpi-litros" class="pd-sub"></p>
   </div>
   <div onclick="abrirModalRelatorio()" class="pd-card bal pd-in pd-d3">
     <div class="pd-card-top">
@@ -1990,13 +2052,14 @@ function toggleAccordion(id){
   const icon=document.getElementById(id+'-icon');
   if(!panel)return;
   const isOpen=panel.style.display==='flex'||panel.style.display==='block';
-  ['acc-perfil','acc-manut','acc-rotas','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
+  ['acc-perfil','acc-manut','acc-plano','acc-rotas','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
     const p=document.getElementById(k),i=document.getElementById(k+'-icon');
     if(p)p.style.display='none';
     if(i)i.style.transform='rotate(0deg)';
   });
   if(!isOpen){
     panel.style.display=(id==='acc-manut')?'block':'flex';
+    if(id==='acc-plano'){try{PrismoConta.desenharPlano();}catch(e){}}
     if(icon)icon.style.transform='rotate(180deg)';
     // rola o cartão até ficar totalmente visível
     setTimeout(()=>{
@@ -2133,7 +2196,7 @@ function renderizarDashboard(dados){
   try{if(!dados.kpis._appComb){const ca=tlAppCombDia(hojeStrISO());dados.kpis.gastoHoje=(Number(dados.kpis.gastoHoje)||0)+ca.custo;dados.kpis.litrosHoje=(Number(dados.kpis.litrosHoje)||0)+ca.litros;dados.kpis._appComb=1;}}catch(e){}
   ultimoKpisCache=dados.kpis;
   const custo=Number(dados.kpis.gastoHoje)||0,litros=Number(dados.kpis.litrosHoje)||0;
-  $('kpi-gasto').innerText=moeda(custo);$('kpi-receber').innerText=moeda(dados.kpis.aReceber);$('kpi-pagamento').innerText=`${dados.kpis.diaPagamentoLabel||''}, ${dados.kpis.dataPagamento||'--/--'}`;$('kpi-litros').innerText=litros>0?`Consumo estimado: ${litros.toFixed(2)} L`:'Calculado por odômetro';
+  $('kpi-gasto').innerText=moeda(custo);$('kpi-receber').innerText=moeda(dados.kpis.aReceber);$('kpi-pagamento').innerText=`${dados.kpis.diaPagamentoLabel||''}, ${dados.kpis.dataPagamento||'--/--'}`;$('kpi-litros').innerText=litros>0?`Consumo estimado: ${litros.toFixed(2)} L`:'';
   atualizarComparativoCombustivel(dados.historico,custo);
   atualizarFaturamentoDia();
   const saldo=Number(dados.kpis.saldoCarteira)||0;
@@ -4837,7 +4900,7 @@ window.PrismoRotas=(function(){
     if(ic)ic.className='rt-ic '+cls;if(dot){dot.style.background=cor;dot.style.boxShadow='0 0 8px '+cor;}
     [$r('drawer-av-wrap'),document.querySelector('.pd-avatar-wrap')].forEach(function(av){if(av){av.classList.toggle('rt-off',cls==='off');av.classList.toggle('rt-warn',cls==='warn');}});
     txt('rt-st-t',t);txt('rt-st-s',s);
-    txt('acc-rotas-sub',e.ligado?('Ligado · '+(e.hoje||0)+' analisada'+((e.hoje||0)===1?'':'s')+' hoje'):'iFood e InDrive · avalia cada corrida');
+    txt('acc-rotas-sub',e.ligado?('Ligado · '+(e.hoje||0)+' analisada'+((e.hoje||0)===1?'':'s')+' hoje'):'Calcule suas rotas em tempo real');
     if(pw){pw.className='rt-btn'+(e.ligado?' desl':'');}
     txt('rt-power-t',e.ligado?'Desligar':'Ligar');
   }
@@ -5916,7 +5979,7 @@ window.PrismoConta=(function(){
       return topo('__fechar')+hero('workspace_premium','Planos',p==='pro'?'Seu Pro vale até <b>'+dataCurta(conta().proAte)+'</b> ('+diasPro()+' dias).':(p==='admin'?'Você é Administrador: tudo liberado.':'Conheça o que cada plano libera.'),true)
         +'<div class="pc-planos">'
         +card('usuario','Usuário','Sem conta. Os dados ficam só neste celular.',li('Lançar corridas, abastecer, resumo do dia e do mês')+li('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')+li('Dados guardados na conta',1)+li('Recursos Pro',1))
-        +card('free','Free','Conta grátis.',li('Tudo do usuário')+li('Dados guardados na sua conta e ID fixo')+li('Biometria, PIN e opções da conta')+li('Recursos Pro',1))
+        +card('free','Free','Conta grátis.',li('Tudo do usuário')+li('Dados guardados na sua conta e ID fixo')+li('Biometria, PIN e opções da conta')+li('Com anúncios',1)+li('Recursos Pro',1))
         +card('pro','Pro','30 dias, renovável. Quando vence, nada é apagado: só volta o cadeado.',li('Tudo do Free')+li('Carteira completa e plano de quitação')+li('Assistente de rotas (iFood e InDrive)')+li('Turno com GPS, Balanço semanal e Comparativo')+li('Widgets, manutenção sem limite e calendário completo'))
         +'</div>'
         +(logado()?'<button class="pc-btn pc-ouro" onclick="PrismoConta.abrir(\'resgatar\')"><span class="material-icons">redeem</span>Tenho um código Pro</button>'
@@ -5929,7 +5992,7 @@ window.PrismoConta=(function(){
         +'<label class="pc-campo"><span>Código</span><div class="pc-in"><input id="pc-codpro" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="14" placeholder="PD-XXXX-XXXX" style="text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.08em;text-align:center" onkeydown="if(event.key===\'Enter\')PrismoConta.resgatar()"></div></label>'
         +MSGS
         +'<button class="pc-btn pc-ouro" id="pc-bt" onclick="PrismoConta.resgatar()"><span class="material-icons">redeem</span>Resgatar</button>'
-        +'<button class="pc-link" onclick="PrismoConta.abrir(\'planos\')">Ver planos</button>';
+        +'<button class="pc-link" onclick="PrismoConta.planoMenu()">Ver planos</button>';
     }
   };
 
@@ -6110,7 +6173,7 @@ window.PrismoConta=(function(){
         try{var n=nat();if(n&&n.relogioSincronizar)n.relogioSincronizar(String(srv));}catch(e){}
         var c0=conta();c0.plano=p.plano;c0.proAte=p.pro_ate?Date.parse(p.pro_ate):0;c0.desvio=srv-Date.now();gravar(K_CONTA,c0);
         gravar(K_PLANO_ANT,plano());sincronizar();
-        abrir('planos');
+        abrirPlanoMenu();
         toast('Pronto! +'+(p.dias||'')+' dias de Pro. Vale até '+dataCurta(c0.proAte)+'.');
         return;
       }
@@ -6585,7 +6648,7 @@ window.PrismoConta=(function(){
   function desenharSeguranca(){
     var alvo=$c('acc-cfg');if(!alvo)return;
     var box=$c('pc-seg-box');
-    if(!box){box=document.createElement('div');box.id='pc-seg-box';box.className='pc-conta-box';box.style.marginTop='12px';alvo.appendChild(box);}
+    if(!box){box=document.createElement('div');box.id='pc-seg-box';box.className='pc-conta-box';var cs=$c('cf-seg');if(cs)cs.appendChild(box);else{box.style.marginTop='12px';alvo.appendChild(box);}}
     var l=logado(),e=seg(),m=l?metodoSeg():'',temNat=!!(nat()&&typeof (nat()||{}).segurancaEstado==='function');
     function op(id,ic,t,s,dis){return '<button type="button" class="pc-linha'+(m===id&&l?' sel':'')+'" '+(dis?'aria-disabled="true"':'')+' onclick="PrismoConta.segEscolher(\''+id+'\')"><span class="ic"><span class="material-icons">'+ic+'</span></span><span><b>'+t+'</b><small>'+s+'</small></span><span class="material-icons fim">'+(l?(m===id?'radio_button_checked':'radio_button_unchecked'):'lock')+'</span></button>';}
     box.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">shield</span>Segurança'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Conta</span>')+'</p>'
@@ -6702,7 +6765,7 @@ window.PrismoConta=(function(){
         +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Já tenho conta · Entrar</button>';
     }else{
       html+='<button class="pc-btn pc-ouro" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'resgatar\')"><span class="material-icons">redeem</span>Tenho um código Pro</button>'
-        +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'planos\')"><span class="material-icons">workspace_premium</span>Ver planos</button>';
+        +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.planoMenu()"><span class="material-icons">workspace_premium</span>Ver planos</button>';
     }
     html+='<button class="pc-link" onclick="PrismoConta.fecharTrava()">Agora não</button>';
     box.innerHTML=html;
@@ -6729,40 +6792,108 @@ window.PrismoConta=(function(){
     return 'min';
   }
 
-  /* ── menu › Perfil: conta + Opções ── */
+  /* ── menu › Perfil (Nome/Email + Opções), Configurações › Backup, Adquirir plano ── */
   function desenharMenu(){
-    var alvo=$c('acc-perfil');if(!alvo)return;
-    var box=$c('pc-conta-box');
-    if(!box){box=document.createElement('div');box.id='pc-conta-box';box.className='pc-conta-box';alvo.appendChild(box);}
-    var opc=$c('pc-opcoes-box');
-    if(!opc){opc=document.createElement('div');opc.id='pc-opcoes-box';opc.className='pc-conta-box';alvo.appendChild(opc);}
     var c=conta(),s=sessao(),l=logado(),p=plano();
-    if(!l){
-      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela, ter seu ID fixo e ganhar 7 dias de Pro.</p></div></div>'
-        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
-    }else{
-      var bk=ler(K_BKP),falta=!!ler(K_PEND),pend=!falta&&assinatura()!==ler(K_SYNC_SIG),cps=listarCopias();
-      box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av"><span class="material-icons">verified_user</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.nome||'Conta conectada')+'</p><p style="font-size:.66rem;color:#8b949e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||(s&&s.user&&s.user.email)||'')+'</p></div></div>'
-        +'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+chipPlano(p)+(p==='pro'?'<span style="font-size:.62rem;color:#8b949e">'+diasPro()+' dia'+(diasPro()===1?'':'s')+' restantes</span>':'')+'</div>'
-        +'<p style="font-size:.62rem;color:'+(falta?'#f0883e':'#6e7681')+';margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:'+(falta||pend?'#f0883e':'#3fb950')+'">'+(falta?'cloud_off':(pend?'cloud_sync':'cloud_done'))+'</span> '+(falta?'Os dados da conta ainda não foram carregados. Toque em Baixar da conta.':(pend?'Enviando as mudanças para a conta…':(bk?'Dados guardados na conta · '+dataBr(new Date(bk).toISOString()):'Dados ainda não enviados')))+'</p>'
-        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Enviar agora</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Baixar da conta</button></div>'
-        +(cps.length?'<p style="font-size:.56rem;font-weight:800;color:#8b949e;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 2px">Cópias de segurança</p>'+cps.map(function(c){var i=infoCopia(c);return '<button type="button" class="pc-linha" style="padding:9px 10px" onclick="PrismoConta.restaurarCopia(\''+c.id+'\')"><span class="ic" style="width:28px;height:28px"><span class="material-icons" style="font-size:15px">history</span></span><span><b style="font-size:12px">'+(i.em?dataBr(new Date(i.em).toISOString()):'Cópia')+'</b><small>'+esc(i.motivo||'Dados de antes')+'</small></span><span class="material-icons fim" style="font-size:16px">restore</span></button>';}).join(''):'');
+    var velho=$c('pc-conta-box');if(velho)velho.remove();
+    /* Perfil › Sua identidade: Nome e Email da conta */
+    var pf=$c('pf-conta');
+    if(pf){
+      if(l){
+        var lin=function(r,v){return '<div style="display:flex;gap:8px;font-size:13px;min-width:0"><span style="color:#8b949e;font-weight:700;width:52px;flex-shrink:0">'+r+'</span><span style="color:#e6edf3;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(v||'—')+'</span></div>';};
+        pf.innerHTML='<div style="display:flex;flex-direction:column;gap:9px">'+lin('Nome:',c.nome)+lin('Email:',c.email||(s&&s.user&&s.user.email))+'</div>';
+      }else{
+        pf.innerHTML='<div style="display:flex;align-items:center;gap:10px"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela e ganhar 7 dias de Pro.</p></div></div>'
+          +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
+      }
     }
-    var fim=l?'chevron_right':'lock';
-    opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
-      +'<button type="button" class="pc-linha" onclick="PrismoConta.abrir(\'planos\')"><span class="ic"><span class="material-icons" style="color:#facc15">workspace_premium</span></span><span><b>Planos</b><small>'+(p==='pro'?'Pro até '+dataCurta(c.proAte):(p==='admin'?'Administrador':'Conheça o Pro'))+'</small></span><span class="material-icons fim">chevron_right</span></button>'
-      +'<button type="button" class="pc-linha" onclick="PrismoConta.abrir(\'resgatar\')"><span class="ic"><span class="material-icons">redeem</span></span><span><b>Resgatar código Pro</b><small>Digite o código que você recebeu</small></span><span class="material-icons fim">'+fim+'</span></button>'
-      +'<button type="button" class="pc-linha" onclick="PrismoConta.mudarSenhaAbrir()"><span class="ic"><span class="material-icons">key</span></span><span><b>Mudar senha</b><small>Troque a senha de entrar com e-mail</small></span><span class="material-icons fim">'+fim+'</span></button>'
-      +(l?'<button type="button" class="pc-linha" onclick="PrismoConta.sair()"><span class="ic"><span class="material-icons">logout</span></span><span><b>Sair da conta</b><small>Os dados ficam na conta e o celular fica vazio</small></span><span class="material-icons fim">chevron_right</span></button>':'')
-      +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e os dados guardados na conta</small></span><span class="material-icons fim">'+fim+'</span></button>';
+    /* Perfil › Opções: trocar senha e excluir conta (só contas) */
+    var alvo=$c('acc-perfil');
+    if(alvo){
+      var opc=$c('pc-opcoes-box');
+      if(!opc){opc=document.createElement('div');opc.id='pc-opcoes-box';opc.className='pc-conta-box';alvo.appendChild(opc);}
+      var fim=l?'chevron_right':'lock';
+      opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
+        +'<button type="button" class="pc-linha" onclick="PrismoConta.mudarSenhaAbrir()"><span class="ic"><span class="material-icons">key</span></span><span><b>Trocar senha</b><small>Troque a senha de entrar com e-mail</small></span><span class="material-icons fim">'+fim+'</span></button>'
+        +'<button type="button" class="pc-linha verm" onclick="PrismoConta.excluir()"><span class="ic"><span class="material-icons">delete_forever</span></span><span><b>Excluir conta</b><small>Apaga o ID e os dados guardados na conta</small></span><span class="material-icons fim">'+fim+'</span></button>';
+    }
+    /* Configurações › Backup */
+    var cfg=$c('acc-cfg');
+    if(cfg){
+      var bx=$c('pc-bkp-box');
+      if(!bx){bx=document.createElement('div');bx.id='pc-bkp-box';bx.className='pc-conta-box';var cb=$c('cf-backup');if(cb)cb.appendChild(bx);else{bx.style.marginTop='12px';var sg=$c('pc-seg-box');if(sg)cfg.insertBefore(bx,sg);else cfg.appendChild(bx);}}
+      if(!l){
+        bx.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">cloud</span>Backup<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Conta</span></p><p style="font-size:.66rem;color:#8b949e;line-height:1.4">Com conta, seus dados vão para ela sozinhos a cada lançamento e voltam quando você troca de celular.</p><div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
+      }else{
+        var bk=ler(K_BKP),falta=!!ler(K_PEND),pend=!falta&&assinatura()!==ler(K_SYNC_SIG),cps=listarCopias();
+        bx.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#3fb950">cloud_done</span>Backup</p>'
+          +'<p style="font-size:.66rem;color:#8b949e;line-height:1.4">Seus dados vão para a conta sozinhos a cada lançamento.</p>'
+          +'<p style="font-size:.62rem;color:'+(falta?'#f0883e':'#6e7681')+';margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:'+(falta||pend?'#f0883e':'#3fb950')+'">'+(falta?'cloud_off':(pend?'cloud_sync':'cloud_done'))+'</span> '+(falta?'Os dados da conta ainda não foram carregados. Toque em Baixar da conta.':(pend?'Enviando as mudanças para a conta…':(bk?'Dados guardados na conta · '+dataBr(new Date(bk).toISOString()):'Dados ainda não enviados')))+'</p>'
+          +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Enviar agora</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Baixar da conta</button></div>'
+          +(cps.length?'<p style="font-size:.56rem;font-weight:800;color:#8b949e;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 2px">Cópias de segurança</p>'+cps.map(function(cp){var i=infoCopia(cp);return '<button type="button" class="pc-linha" style="padding:9px 10px" onclick="PrismoConta.restaurarCopia(\''+cp.id+'\')"><span class="ic" style="width:28px;height:28px"><span class="material-icons" style="font-size:15px">history</span></span><span><b style="font-size:12px">'+(i.em?dataBr(new Date(i.em).toISOString()):'Cópia')+'</b><small>'+esc(i.motivo||'Dados de antes')+'</small></span><span class="material-icons fim" style="font-size:16px">restore</span></button>';}).join(''):'');
+      }
+    }
+    /* topo do menu: ID + copiar · botão de sair */
+    var num=$c('dw-id-num'),cop=$c('dw-id-copiar'),sai=$c('dw-sair'),id=l?String(c.contaId||''):'';
+    if(num){
+      var rot=num.parentNode;
+      if(l){rot.firstChild.nodeValue='ID: ';num.textContent=/^\d{8}$/.test(id)?id.slice(0,4)+' '+id.slice(4):'…';}
+      else{rot.firstChild.nodeValue='Usuário · ';num.textContent='sem conta';}
+    }
+    if(cop)cop.style.display=l?'flex':'none';
+    if(sai)sai.style.display=l?'flex':'none';
+    /* subtítulo de Adquirir plano */
+    var sub=$c('acc-plano-sub');
+    if(sub)sub.textContent=p==='pro'?'Seu plano: Pro até '+dataCurta(c.proAte):(p==='admin'?'Seu plano: Administrador':(p==='free'?'Seu plano: Free · conheça o Pro':'Free e Pro · crie sua conta'));
+    var ap=$c('acc-plano');if(ap&&ap.style.display!=='none')desenharPlano();
+  }
+
+  /* Adquirir plano: vantagens do Free e do Pro, resgatar código e comprar */
+  function desenharPlano(){
+    var box=$c('acc-plano');if(!box)return;
+    var p=plano(),l=logado(),c=conta();
+    var li2=function(t,n){return '<li class="'+(n?'nao':'')+'"><span class="material-icons">'+(n?'block':'check_circle')+'</span><span>'+t+'</span></li>';};
+    var html='<div class="pc-pl'+(p==='free'||p==='usuario'?' atual':'')+'"><h4>'+chipPlano('free').replace(/ · até [^<]*/,'')+'<span style="font-size:11px;color:'+(p==='free'?'#3fb950':'#8b949e')+';font-weight:800">'+(p==='free'?'· seu plano':'Grátis')+'</span></h4><ul>'
+      +li2('Lançar corridas, abastecer, resumo do dia e do mês')+li2('Dados guardados na conta, ID, biometria e PIN')+li2('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')
+      +li2('Com anúncios',1)+li2('Sem Carteira, Assistente, Turno, Balanço, Comparativo e widgets',1)+'</ul></div>'
+      +'<div class="pc-pl pro'+(p==='pro'||p==='admin'?' atual':'')+'"><h4>'+chipPlano('pro').replace(/ · até [^<]*/,'')+'<span style="font-size:11px;color:#3fb950;font-weight:800">'+(p==='pro'?'· seu plano':(p==='admin'?'· liberado (admin)':''))+'</span></h4><p>30 dias, renovável. Quando vence, nada é apagado: só volta o cadeado.'+(p==='pro'?'<br><b style="color:#facc15">Vale até '+dataBr(new Date(c.proAte).toISOString())+'</b> ('+diasPro()+' dia'+(diasPro()===1?'':'s')+')':'')+'</p><ul>'
+      +li2('Tudo do Free, sem anúncios')+li2('Carteira completa e plano de quitação')+li2('Assistente de rotas (iFood e InDrive)')+li2('Turno com GPS, Balanço semanal e Comparativo')+li2('Widgets, manutenção sem limite e calendário completo')+'</ul></div>';
+    if(l){
+      html+='<div class="pc-conta-box" style="margin-top:0"><p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#facc15">redeem</span>Resgatar código Pro</p><div class="pa-lin"><input id="pl-cod" class="pa-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="PD-XXXX-XXXX" style="font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')PrismoConta.resgatarMenu()"><button id="pl-bt" class="pa-bt" style="border-color:rgba(250,204,21,.45);background:rgba(234,179,8,.14);color:#facc15" onclick="PrismoConta.resgatarMenu()">Resgatar</button></div><p id="pl-msg" style="display:none;font-size:.66rem;margin-top:8px;line-height:1.4"></p></div>'
+        +'<a class="pc-btn pc-ouro" style="margin-top:0;text-decoration:none" href="mailto:prismolabtec@gmail.com?subject='+encodeURIComponent('Quero o Prismo Drive Pro')+'&body='+encodeURIComponent('Olá! Quero o Prismo Drive Pro.\nMeu ID: '+(c.contaId||''))+'"><span class="material-icons">workspace_premium</span>'+(p==='pro'?'Renovar o Pro':'Quero o Pro')+'</a>'
+        +'<p style="text-align:center;font-size:11px;color:#6e7681">Para comprar, fale com a equipe Prismo informando o seu ID'+(c.contaId?' (<b style="color:#c9d1d9">'+esc(c.contaId)+'</b>)':'')+'.</p>';
+    }else{
+      html+='<button class="pc-btn pc-pri" style="margin-top:0" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>';
+    }
+    box.innerHTML=html;
+  }
+  function resgatarMenu(){
+    var i=$c('pl-cod'),m=$c('pl-msg'),b=$c('pl-bt'),cod=(i&&i.value||'').toUpperCase();
+    var msg=function(t,ok){if(m){m.style.display='block';m.style.color=ok?'#7ee2a0':'#ff9b95';m.textContent=t;}};
+    if(cod.replace(/[^A-Z0-9]/g,'').length<10)return msg('Digite o código completo (PD-XXXX-XXXX).');
+    if(b){b.disabled=true;b.textContent='…';}
+    rpc('resgatar_codigo',{codigo:cod}).then(function(r){
+      if(b){b.disabled=false;b.textContent='Resgatar';}
+      if(r.status===200&&r.json&&r.json.conta_id){
+        var pj=r.json,srv=Date.parse(pj.agora)||Date.now();
+        try{var n=nat();if(n&&n.relogioSincronizar)n.relogioSincronizar(String(srv));}catch(e){}
+        var c0=conta();c0.plano=pj.plano;c0.proAte=pj.pro_ate?Date.parse(pj.pro_ate):0;c0.desvio=srv-Date.now();gravar(K_CONTA,c0);
+        gravar(K_PLANO_ANT,plano());sincronizar();desenharPlano();
+        toast('Pronto! +'+(pj.dias||'')+' dias de Pro. Vale até '+dataCurta(c0.proAte)+'.');
+        return;
+      }
+      msg(msgErro(r));
+    });
+  }
+  /* abre o menu direto em Adquirir plano */
+  function abrirPlanoMenu(){
+    fechar();
+    try{abrirDrawer();}catch(e){}
+    setTimeout(function(){var ap=$c('acc-plano');if(ap&&ap.style.display==='none')toggleAccordion('acc-plano');else desenharPlano();},250);
   }
 
   window.contaId=function(){return logado()?String(conta().contaId||''):'';};
-  window.mostrarContaId=function(){
-    var el=$c('cfg-conta-id');if(!el)return;var id=window.contaId();
-    el.innerText=/^\d{8}$/.test(id)?id.slice(0,4)+' '+id.slice(4):(logado()?'…':'—');
-    var h=$c('cfg-conta-id-dica');if(h)h.innerText=logado()?'Código fixo da sua conta: foi criado no cadastro e nunca muda.':'Usuários não têm ID. Crie sua conta para ganhar o seu ID fixo.';
-  };
+  window.mostrarContaId=function(){try{desenharMenu();}catch(e){}};
   window.copiarContaId=function(){
     if(!exigeConta('conta'))return;
     var id=window.contaId();if(!id){carregarPerfil();return toast('Carregando o ID…');}
@@ -6830,7 +6961,7 @@ window.PrismoConta=(function(){
     var el=$c('drawer-perfil-tag');if(!el)return;
     var p=plano(),c=COR_PLANO[p],box=el.parentNode,dot=box&&box.querySelector('div');
     el.textContent=TXT_PLANO[p];el.title=p==='pro'?'Pro até '+dataBr(new Date(conta().proAte).toISOString())+' (horário de Brasília)':'';
-    el.style.color=c[0];if(box){box.style.background=c[1];box.style.borderColor=c[2];box.style.cursor='pointer';box.onclick=function(){abrir('planos');};}if(dot)dot.style.background=c[0];
+    el.style.color=c[0];if(box){box.style.background=c[1];box.style.borderColor=c[2];box.style.cursor='pointer';box.onclick=function(){abrirPlanoMenu();};}if(dot)dot.style.background=c[0];
   }
   window.atualizarTagVeiculoDrawer=tagPlano;
 
@@ -6870,6 +7001,7 @@ window.PrismoConta=(function(){
     sair:sair,excluir:excluir,olho:olho,copiar:copiar,copiarTodos:function(){copiar(ultimosCodigos.join('\n'));},
     tecla:tecla,cancelarPin:cancelarPin,criarPin:criarPin,pedirBio:pedirBio,escolherBio:escolherBio,segEscolher:segEscolher,
     esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
+    desenharPlano:desenharPlano,resgatarMenu:resgatarMenu,planoMenu:abrirPlanoMenu,
     adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,
     _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura,_syncMostrar:syncMostrar,_syncFim:syncFim};
 })();

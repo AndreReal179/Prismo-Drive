@@ -1,5 +1,26 @@
 [
  {
+  "versao": "1.9.6",
+  "data": "2026-11-11",
+  "itens": [
+   "🪪 Topo do menu lateral: agora mostra o seu ID com o botão de copiar, e ao lado do X o botão para sair da conta",
+   "👤 Perfil renovado: foto no centro, nome de exibição e o nome e o e-mail da conta. Em Opções: Trocar senha e Excluir conta",
+   "👑 Novo item Adquirir plano: compare o Free e o Pro, veja até quando vale o seu Pro, resgate um código e peça o Pro",
+   "☁️ O Backup foi para Configurações, junto com as cópias de segurança",
+   "📋 Nova ordem do menu: Perfil, Manutenção, Adquirir plano, Assistente de rotas, Guia do App, Atualizações e Configurações"
+  ]
+ },
+ {
+  "versao": "1.9.5",
+  "data": "2026-11-11",
+  "itens": [
+   "🎯 Barra da tela inicial mais simples: agora mostra só \"Meta: R$ X de R$ Y\"",
+   "🔴 Tem conta para pagar nesta semana? A barra vira vermelha e mostra \"Contas: R$ X de R$ Y\", somando o que você faz até juntar o valor das contas",
+   "✅ Juntou tudo? O celular avisa que as contas da semana estão pagas e a barra volta para a Meta",
+   "💰 A Meta conta só o que sobra: se a conta era R$ 100 e você fez R$ 150, a Meta mostra R$ 50"
+  ]
+ },
+ {
   "versao": "1.9.4",
   "data": "2026-11-11",
   "itens": [
