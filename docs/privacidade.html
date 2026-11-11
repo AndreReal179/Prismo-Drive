@@ -39,8 +39,8 @@ footer a{margin-right:14px}
 <h2>2. Dados do app e backup na nuvem</h2>
 <p>Rotas, ganhos, combustível, carteira, dívidas, metas, manutenção e configurações ficam salvos <b>no próprio aparelho</b>.</p>
 <p><b>Sem conta</b>, esses dados não saem do celular.</p>
-<p><b>Com conta</b>, esses dados ficam <b>guardados na sua conta</b>, nos servidores do Supabase (Estados Unidos): o app envia as mudanças alguns segundos depois de cada lançamento, para você recuperar tudo ao trocar de celular. Isso inclui também o relatório do Assistente de rotas, os turnos e as rotas do iFood ainda não lançadas. Só você tem acesso a esses dados. Ao <b>sair da conta</b>, eles são apagados deste celular e continuam na conta; ao entrar de novo, voltam. Junto guardamos a data do envio, a versão do app e o modelo do celular.</p>
-<p><b>Plano da conta:</b> guardamos o plano (Free, Pro ou Administrador), até quando vale o Pro e os códigos Pro resgatados. Ações da equipe sobre o plano ficam registradas.</p>
+<p><b>Com conta</b>, esses dados ficam <b>guardados na sua conta</b>, nos servidores do Supabase (Estados Unidos): o app envia as mudanças alguns segundos depois de cada lançamento, para você recuperar tudo ao trocar de celular. Isso inclui também o relatório do Assistente de rotas, os turnos e as rotas do iFood ainda não lançadas. Só você tem acesso a esses dados. Ao <b>sair da conta</b>, eles são apagados deste celular e continuam na conta; ao entrar de novo, voltam. Junto guardamos a data do envio, a versão do app, o modelo do celular e uma impressão digital (hash) dos dados, usada só para saber se o celular e a conta estão iguais. Antes de trocar os dados do celular pelos da conta, o app guarda uma cópia de segurança dos dados de antes <b>no próprio celular</b> (até 3 cópias), apagadas ao sair da conta.</p>
+<p><b>Plano da conta:</b> guardamos o plano (Free, Pro ou Administrador), até quando vale o Pro e os códigos Pro resgatados. A validade do Pro é conferida pela hora do servidor. Ações da equipe sobre o plano ficam registradas.</p>
 
 <h2>3. Localização</h2>
 <p>A localização é opcional e usada só para medir os quilômetros rodados:</p>

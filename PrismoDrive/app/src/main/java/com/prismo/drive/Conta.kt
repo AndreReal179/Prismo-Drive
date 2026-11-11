@@ -67,6 +67,9 @@ object Conta {
      */
     fun liberado(ctx: Context): Boolean {
         if (!logado(ctx)) return false
-        return cachePlano == "admin" || cacheProAte > System.currentTimeMillis()
+        if (cachePlano == "admin") return true
+        // hora do servidor + relógio interno (mudar a data do celular não estende o Pro)
+        if (Relogio.precisaConfirmar(ctx)) return false
+        return cacheProAte > Relogio.agora(ctx)
     }
 }

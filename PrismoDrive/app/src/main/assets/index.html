@@ -3345,6 +3345,7 @@ function removerPeca(id){
 }
 function abrirConfirmacao(msg,onOk,opts){
   const m=$('modal-confirmar');if(!m){if(onOk)onOk();return;}
+  try{$('conf-cancel').style.display='';m.style.zIndex='';}catch(e){}
   opts=opts||{};
   $('conf-msg').innerText=msg;m.style.display='flex';
   const ok=$('conf-ok'),cc=$('conf-cancel');
@@ -5462,7 +5463,7 @@ window.PrismoTurno=(function(){
   return {render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao};
 })();
 </script>
-<!-- ══ CONTA (login / código / usuário / segurança / planos / dados na conta) · v1.9.3 ══ -->
+<!-- ══ CONTA (login / código / usuário / segurança / planos / dados na conta) · v1.9.4 ══ -->
 <style>
 #conta-app{display:none;position:fixed;inset:0;z-index:100002;background:radial-gradient(120% 70% at 50% -10%,rgba(46,164,79,.22),transparent 60%),#070b0f;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#e6edf3;}
 #conta-app *,#conta-bloq *{box-sizing:border-box;}
@@ -5613,6 +5614,15 @@ body.pc-sem-conta .pc-cad{display:inline-flex;}
 .pa-cod span{font-family:inherit;}
 .pa-cod em{font-style:normal;font-size:.6rem;font-weight:800;color:#8b949e;font-family:inherit;}
 .pa-cod em.livre{color:#7ee2a0;}
+/* tela de carregamento que sincroniza de verdade */
+#pc-sync{display:none;position:fixed;inset:0;z-index:2147483001;background:#00100a;align-items:center;justify-content:center;overflow:hidden;touch-action:none;--splash-ring-track:#144b17;--splash-ring-light:#efffe6;--splash-ring-green:#55ff20;}
+#pc-sync .splash-art{position:absolute;flex-shrink:0;}
+#pc-sync img{width:100%;height:100%;display:block;user-select:none;}
+.pcs-msg{position:absolute;left:50%;transform:translateX(-50%);bottom:max(1.6%,env(safe-area-inset-bottom));max-width:90%;text-align:center;color:#d9ffe0;font-size:12.5px;font-weight:800;letter-spacing:.02em;padding:6px 14px;border-radius:99px;background:rgba(0,16,10,.72);border:1px solid rgba(85,255,32,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcs-erro{position:absolute;left:0;right:0;bottom:0;padding:16px 16px max(18px,env(safe-area-inset-bottom));}
+.pcs-card{max-width:440px;margin:0 auto;border-radius:24px;padding:20px;background:rgba(8,14,11,.96);border:1px solid rgba(240,136,62,.35);box-shadow:0 -10px 40px rgba(0,0,0,.6);text-align:center;color:#e6edf3;display:flex;flex-direction:column;align-items:center;}
+.pcs-card b{font-size:17px;font-weight:900;margin-top:8px;}
+.pcs-card small{font-size:13px;color:#f0b27a;margin-top:6px;line-height:1.45;}
 </style>
 
 <div id="conta-app" role="dialog" aria-modal="true">
@@ -5644,8 +5654,10 @@ window.PrismoConta=(function(){
   function gravar(k,v){try{if(v===null||v===undefined)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
   function toast(m,e){try{showToast(m,e);}catch(x){}}
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-  function dataCurta(ms){try{var d=new Date(ms);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}catch(e){return '';}}
-  function dataBr(iso){try{var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return '';}}
+  /* datas sempre no horário de Brasília */
+  var TZ={timeZone:'America/Sao_Paulo'};
+  function dataCurta(ms){try{return new Date(ms).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit'});}catch(e){var d=new Date(ms);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}}
+  function dataBr(iso){try{var d=new Date(iso);return d.toLocaleDateString('pt-BR',TZ)+' às '+d.toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
 
   /* ── estado da conta ── */
   function sessao(){return ler(K_SESSAO);}
@@ -5654,13 +5666,17 @@ window.PrismoConta=(function(){
   function logado(){var s=sessao();return !!(s&&s.refresh_token);}
   function uid(){return ((sessao()||{}).user||{}).id||'';}
   /* hora certa = relógio do celular corrigido pela hora do servidor */
-  function agora(){return Date.now()+(Number(conta().desvio)||0);}
+  function relogio(){try{var n=nat();if(n&&n.relogioEstado)return JSON.parse(n.relogioEstado()||'{}')||{};}catch(e){}return {};}
+  /* hora oficial: a do servidor (banco de dados), andando pelo relógio interno do Android.
+     Mudar a data/hora do celular não muda esta conta. No navegador (testes) usa o relógio + desvio do servidor. */
+  function agora(){var r=relogio();if(r.agora&&r.agora>0)return r.agora;return Date.now()+(Number(conta().desvio)||0);}
+  function precisaConfirmar(){var r=relogio();return !!(r&&r.confirmar&&r.agora!==undefined&&nat()&&nat().relogioEstado);}
   /* plano efetivo: usuario · free · pro · admin */
   function plano(){
     if(!logado())return 'usuario';
     var c=conta();
     if(c.plano==='admin')return 'admin';
-    if(c.proAte&&c.proAte>agora())return 'pro';
+    if(c.proAte&&c.proAte>agora()&&!precisaConfirmar())return 'pro';
     return 'free';
   }
   function liberado(){var p=plano();return p==='pro'||p==='admin';}
@@ -5678,6 +5694,7 @@ window.PrismoConta=(function(){
     try{desenharMenu();}catch(e){}
     try{desenharSeguranca();}catch(e){}
     try{desenharAdmin();}catch(e){}
+    try{tagPlano();}catch(e){}
   }
 
   /* ── HTTP: pelo Android quando existe (sem CORS), senão fetch ── */
@@ -5760,6 +5777,7 @@ window.PrismoConta=(function(){
       var p=r.status===200?r.json:null;
       if(p&&p.conta_id){
         var srv=Date.parse(p.agora)||Date.now();
+        try{var n=nat();if(n&&n.relogioSincronizar)n.relogioSincronizar(String(srv));}catch(e){}
         gravar(K_CONTA,{contaId:p.conta_id||'',nome:p.nome||'',email:p.email||'',plano:p.plano||'free',proAte:p.pro_ate?Date.parse(p.pro_ate):0,desvio:srv-Date.now(),lido:Date.now()});
         sincronizar();avisosPlano();
       }
@@ -6088,6 +6106,7 @@ window.PrismoConta=(function(){
       ocupado(false);
       if(r.status===200&&r.json&&r.json.conta_id){
         var p=r.json,srv=Date.parse(p.agora)||Date.now();
+        try{var n=nat();if(n&&n.relogioSincronizar)n.relogioSincronizar(String(srv));}catch(e){}
         var c0=conta();c0.plano=p.plano;c0.proAte=p.pro_ate?Date.parse(p.pro_ate):0;c0.desvio=srv-Date.now();gravar(K_CONTA,c0);
         gravar(K_PLANO_ANT,plano());sincronizar();
         abrir('planos');
@@ -6123,10 +6142,12 @@ window.PrismoConta=(function(){
   function depoisDeEntrar(novo){
     sincronizar();desbloqueadoEm=Date.now();
     mostrarOk('Conta conectada! Carregando seus dados…');
+    fechar();
+    syncMostrar('Carregando seus dados…');
     carregarPerfil().then(function(){
-      return dadosAoEntrar();
-    }).then(function(recarrega){
-      if(recarrega)return; /* a página vai recarregar com os dados da conta */
+      return sincronizarComTela(true);
+    }).then(function(ok){
+      if(ok===false||ler(K_SYNC_BASE))return; /* deu erro (a tela explica) ou vai recarregar com os dados da conta */
       var c=conta();
       toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome&&!novo?', '+c.nome.split(' ')[0]:'')+(plano()==='pro'&&novo?' · 7 dias de Pro grátis':'')+(c.contaId?' · ID '+c.contaId:''));
       if(nat()&&!metodoSeg()&&typeof (nat()||{}).segurancaEstado==='function')abrir('protecao');else fechar();
@@ -6151,137 +6172,258 @@ window.PrismoConta=(function(){
   }
 
   /* ══ Dados na conta ══
-     Com conta, tudo o que é lançado vai para a conta pouco depois de cada mudança.
-     Sair da conta limpa o celular (vira um app novo); entrar de novo traz os dados de volta.
-     Quem já usava sem conta: os dados ficam e viram o primeiro envio da conta nova. */
+     Com conta, cada lançamento vai para a conta poucos segundos depois (automático).
+     Cada envio leva uma "impressão digital" (hash) dos dados: ao abrir/entrar, o app compara a do celular com a
+     da conta e só baixa quando for diferente. Ao baixar, nada se perde: os dados que estavam no celular viram
+     uma cópia de segurança (Menu › Perfil). Sair da conta limpa o celular; entrar de novo traz tudo de volta. */
+  var K_HASH='prismo_sync_hash',K_PEND='prismo_sync_pendente',K_MUDOU='prismo_sync_mudou';
+  function ehDado(k){return /^(prismo_rows|desloc_|fin_|prismo_pecas|prismo_veiculo|prismo_cfg|prismo_consumo|prismo_preco)/.test(k||'');}
   function copiaLocal(){
     var o={};
-    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||naoCopiar(k)||k===K_MODO)continue;o[k]=localStorage.getItem(k);}}catch(e){}
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k||naoCopiar(k)||k===K_MODO||k==='prismo_conta_id')continue;o[k]=localStorage.getItem(k);}}catch(e){}
     return o;
   }
   function temDadosLocais(){
-    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';if(/^prismo_rows/.test(k)&&(localStorage.getItem(k)||'').length>4)return true;}}catch(e){}
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i)||'';if(ehDado(k)&&(localStorage.getItem(k)||'').length>4)return true;}}catch(e){}
+    try{var n=nat();if(n&&n.dadosExportar){var x=JSON.parse(n.dadosExportar()||'{}');if(x&&x.arquivos&&Object.keys(x.arquivos).length)return true;}}catch(e){}
     return false;
   }
+  /* mudança rápida (a cada 3 s): só para saber SE mudou algo */
   function assinatura(){
     var h=5381,ks=[];
-    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&!naoCopiar(k)&&k!==K_MODO)ks.push(k);}}catch(e){}
+    try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&!naoCopiar(k)&&k!==K_MODO&&k!=='prismo_conta_id')ks.push(k);}}catch(e){}
     ks.sort();
     ks.forEach(function(k){var v=k+'='+(localStorage.getItem(k)||'');for(var j=0;j<v.length;j++)h=((h<<5)+h+v.charCodeAt(j))|0;});
     var nat0='';try{var n=nat();if(n&&n.dadosAssinatura)nat0=n.dadosAssinatura()||'';}catch(e){}
     return (h>>>0).toString(36)+'.'+ks.length+'.'+nat0;
   }
+  /* impressão digital do conteúdo (igual em qualquer celular com os mesmos dados) */
+  function canon(o){
+    if(o===null||typeof o!=='object')return JSON.stringify(o);
+    if(Array.isArray(o))return '['+o.map(canon).join(',')+']';
+    return '{'+Object.keys(o).sort().map(function(k){return JSON.stringify(k)+':'+canon(o[k]);}).join(',')+'}';
+  }
+  function hashTxt(s){
+    var h1=0x811c9dc5,h2=5381,h3=0;
+    for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h1^=c;h1=Math.imul(h1,16777619);h2=((h2<<5)+h2+c)|0;h3=(Math.imul(h3,31)+c)|0;}
+    return (h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0')+(h3>>>0).toString(16).padStart(8,'0')+'.'+s.length;
+  }
+  function pacote(){
+    var nativo=null;try{var n=nat();if(n&&n.dadosExportar)nativo=JSON.parse(n.dadosExportar()||'null');}catch(e){}
+    return {v:2,local:copiaLocal(),nativo:nativo};
+  }
+  function hashPacote(p){
+    var nv=p&&p.nativo?{arquivos:p.nativo.arquivos||{},prefs:p.nativo.prefs||{}}:{arquivos:{},prefs:{}};
+    var local=(p&&p.v===2)?(p.local||{}):(p||{});
+    var l2={};Object.keys(local).forEach(function(k){if(!naoCopiar(k)&&k!==K_MODO&&k!=='prismo_conta_id')l2[k]=local[k];});
+    return hashTxt(canon({local:l2,nativo:nv}));
+  }
   function versao(){try{var n=nat();if(n&&n.versao)return n.versao()||'';}catch(e){}return '';}
   function turnoAtivo(){try{var n=nat();if(n&&n.turnoEstado)return !!JSON.parse(n.turnoEstado()||'{}').ativo;}catch(e){}return false;}
+  function marcarSincronizado(em,hash){gravar(K_SYNC_EM,em);gravar(K_HASH,hash);gravar(K_SYNC_SIG,assinatura());gravar(K_DONO,uid());gravar(K_BKP,Date.now());gravar(K_PEND,null);}
+
   var enviando=null;
-  /* envia os dados deste celular para a conta */
-  function subir(silencioso){
+  /* envia os dados deste celular para a conta. forcar=true ignora a trava de "falta baixar" */
+  function subir(silencioso,forcar){
+    if(ler(K_PEND)&&!forcar){if(!silencioso)toast('Primeiro carregue os dados da conta (Baixar da conta).',true);return Promise.resolve(false);}
     if(enviando)return enviando;
     enviando=token().then(function(t){
       var id=uid();if(!t||!id){if(!silencioso)toast('Entre na conta para guardar os dados',true);return false;}
-      var sig=assinatura(),nativo=null;
-      try{var n=nat();if(n&&n.dadosExportar)nativo=JSON.parse(n.dadosExportar()||'null');}catch(e){}
-      var em=new Date(agora()).toISOString();
-      return http('POST','/rest/v1/backups?on_conflict=user_id',{user_id:id,dados:{v:2,local:copiaLocal(),nativo:nativo},aparelho:(navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+)/)||[])[1]||'',versao:versao(),atualizado_em:em},t,{'Prefer':'resolution=merge-duplicates,return=minimal'}).then(function(r){
-        if(r.status>=200&&r.status<300){gravar(K_SYNC_EM,em);gravar(K_SYNC_SIG,sig);gravar(K_DONO,id);gravar(K_BKP,Date.now());desenharMenu();if(!silencioso)toast('Pronto! Seus dados estão na conta.');return true;}
-        if(!silencioso)toast(r.status===0?'Sem internet agora. Tentamos de novo sozinho.':'Não foi possível enviar agora',true);return false;
+      var sig=assinatura(),p=pacote(),hash=hashPacote(p),em=new Date(agora()).toISOString();
+      if(!forcar&&hash===ler(K_HASH)&&ler(K_DONO)===id){gravar(K_SYNC_SIG,sig);if(!silencioso)toast('Tudo certo: a conta já tem esses dados.');return true;}   /* nada mudou de verdade */
+      return http('POST','/rest/v1/backups?on_conflict=user_id',{user_id:id,dados:p,hash:hash,aparelho:(navigator.userAgent.match(/Android[^;)]*;\s*([^;)]+)/)||[])[1]||'',versao:versao(),atualizado_em:em},t,{'Prefer':'resolution=merge-duplicates,return=minimal'}).then(function(r){
+        if(r.status>=200&&r.status<300){gravar(K_SYNC_EM,em);gravar(K_HASH,hash);gravar(K_SYNC_SIG,sig);gravar(K_DONO,id);gravar(K_BKP,Date.now());gravar(K_PEND,null);desenharMenu();if(!silencioso)toast('Pronto! Seus dados estão na conta.');return true;}
+        if(!silencioso)toast(r.status===0?'Sem internet agora. Tentamos de novo sozinho.':'Não foi possível enviar agora ('+r.status+')',true);return false;
       });
     }).then(function(x){enviando=null;return x;},function(){enviando=null;return false;});
     return enviando;
   }
-  function buscarNuvem(soData){
+  /* {erro:motivo} | null (conta sem dados) | {atualizado_em,hash[,dados]} */
+  function buscarNuvem(comDados){
     return token().then(function(t){
-      var id=uid();if(!t||!id)return {erro:true};
-      return http('GET','/rest/v1/backups?select='+(soData?'atualizado_em':'atualizado_em,dados')+'&user_id=eq.'+encodeURIComponent(id),null,t).then(function(r){
-        if(r.status!==200||!Array.isArray(r.json))return {erro:true};
+      var id=uid();if(!t||!id)return {erro:'Sua sessão não foi confirmada (sem internet?).'};
+      return http('GET','/rest/v1/backups?select=atualizado_em,hash'+(comDados?',dados':'')+'&user_id=eq.'+encodeURIComponent(id),null,t).then(function(r){
+        if(r.status===0)return {erro:'Sem internet ou a conexão caiu.'};
+        if(r.status!==200||!Array.isArray(r.json))return {erro:'O servidor não respondeu (código '+r.status+').'};
         return r.json[0]||null;
       });
     });
   }
-  /* troca os dados deste celular pelos da conta e recarrega */
-  function aplicarNuvem(b){
-    if(!b||!b.dados)return false;
-    var d=b.dados,local=(d&&d.v===2)?(d.local||{}):d,nativo=(d&&d.v===2)?d.nativo:null;
+  /* guarda os dados atuais do celular como cópia de segurança (antes de trocar) */
+  function guardarCopia(motivo){
+    if(!temDadosLocais())return true;
+    try{var n=nat();if(n&&n.copiaSalvar){var p=pacote();return n.copiaSalvar(JSON.stringify({em:Date.now(),motivo:motivo,dados:p}));}}catch(e){}
+    return false;
+  }
+  /* troca os dados deste celular pelos da conta (sem recarregar) */
+  function aplicarPacote(d){
+    var local=(d&&d.v===2)?(d.local||{}):(d||{}),nativo=(d&&d.v===2)?d.nativo:null;
     var manter={};
     try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(naoCopiar(k)||k===K_MODO)manter[k]=localStorage.getItem(k);}}catch(e){}
     try{localStorage.clear();}catch(e){}
     Object.keys(manter).forEach(function(k){try{localStorage.setItem(k,manter[k]);}catch(e){}});
     Object.keys(local).forEach(function(k){if(!naoCopiar(k)&&k!==K_MODO){try{localStorage.setItem(k,String(local[k]));}catch(e){}}});
     if(nativo){try{var n=nat();if(n&&n.dadosImportar)n.dadosImportar(JSON.stringify(nativo));}catch(e){}}
-    gravar(K_SYNC_EM,b.atualizado_em);gravar(K_DONO,uid());gravar(K_SYNC_BASE,1);gravar(K_BKP,Date.now());
-    toast('Carregando os dados da sua conta…');
-    setTimeout(function(){try{location.reload();}catch(e){}},700);
-    return true;
   }
-  function baixarEaplicar(){return buscarNuvem(false).then(function(x){if(x&&!x.erro&&x.dados){aplicarNuvem(x);return true;}toast('Não foi possível baixar os dados agora',true);return false;});}
+  function recarregar(){gravar(K_SYNC_BASE,1);try{sessionStorage.setItem('prismo_sync_ok','1');}catch(e){}setTimeout(function(){try{location.reload();}catch(e){}},400);}
+  /* baixa da conta, guarda a cópia de segurança dos dados atuais e recarrega. Retorna true ou {erro} */
+  function baixarEaplicar(motivo){
+    syncTexto('Baixando os dados da sua conta…');
+    return buscarNuvem(true).then(function(x){
+      if(!x)return {erro:'A conta ainda não tem dados guardados.'};
+      if(x.erro)return x;
+      if(!x.dados)return {erro:'Os dados da conta vieram vazios.'};
+      syncTexto('Guardando os dados…');
+      guardarCopia(motivo||'Antes de carregar os dados da conta');
+      aplicarPacote(x.dados);
+      gravar(K_SYNC_EM,x.atualizado_em);gravar(K_HASH,x.hash||hashPacote(x.dados));gravar(K_DONO,uid());gravar(K_BKP,Date.now());gravar(K_PEND,null);
+      syncTexto('Pronto! Abrindo…');
+      recarregar();
+      return true;
+    });
+  }
+  function apagarDadosLocais(){
+    var n=nat();try{if(n&&n.dadosLimpar)n.dadosLimpar();}catch(e){}
+    var manter={};try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(naoCopiar(k)||k===K_MODO)manter[k]=localStorage.getItem(k);}}catch(e){}
+    try{localStorage.clear();}catch(e){}Object.keys(manter).forEach(function(k){try{localStorage.setItem(k,manter[k]);}catch(e){}});
+  }
   /* apaga TODOS os dados do motorista deste celular (ao sair/excluir a conta) */
   function limparCelular(){
     var n=nat();
     try{if(n&&n.contaEstado)n.contaEstado(JSON.stringify({logado:false}));}catch(e){}   /* desliga o assistente antes */
     limparSeguranca();
+    syncMostrar('Saindo da conta…');
     setTimeout(function(){
       try{if(n&&n.dadosLimpar)n.dadosLimpar();}catch(e){}
       try{localStorage.clear();}catch(e){}
       try{location.reload();}catch(e){}
     },2200);
   }
-  /* ao entrar: decide de onde vêm os dados. true = vai recarregar a página */
-  function dadosAoEntrar(){
+
+  /* ── decide de onde vêm os dados, SEM perguntar. Resolve true (ok) ou {erro} ── */
+  function sincronizarConta(entrando){
     var id=uid(),dono=ler(K_DONO);
-    return buscarNuvem(true).then(function(b){
-      if(b&&b.erro)return false;                                  /* sem internet: segue e sincroniza depois */
-      var temNuvem=!!(b&&b.atualizado_em);
-      if(dono&&dono===id){                                        /* mesma conta (entrou de novo) */
-        if(temNuvem&&b.atualizado_em!==ler(K_SYNC_EM)&&assinatura()===ler(K_SYNC_SIG))return baixarEaplicar();
-        subir(true);return false;
+    syncTexto('Conferindo seus dados…');
+    return buscarNuvem(false).then(function(b){
+      if(b&&b.erro)return b;
+      var p=pacote(),hLocal=hashPacote(p);
+      /* conta sem dados: os do celular viram o 1º envio (cliente antigo não perde nada) */
+      if(!b||!b.atualizado_em){
+        if(dono&&dono!==id)apagarDadosLocais();                 /* eram de outra conta (já estão na conta dela) */
+        syncTexto('Guardando seus dados na conta…');
+        return subir(true,true).then(function(ok){return ok?true:{erro:'Não foi possível enviar seus dados agora.'};});
       }
-      if(dono&&dono!==id){                                        /* dados de OUTRA conta neste celular */
-        if(temNuvem)return baixarEaplicar();
-        var n=nat();try{if(n&&n.dadosLimpar)n.dadosLimpar();}catch(e){}
-        var manter={};try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(naoCopiar(k)||k===K_MODO)manter[k]=localStorage.getItem(k);}}catch(e){}
-        try{localStorage.clear();}catch(e){}Object.keys(manter).forEach(function(k){localStorage.setItem(k,manter[k]);});
-        gravar(K_DONO,id);gravar(K_SYNC_BASE,1);setTimeout(function(){location.reload();},500);return true;
+      /* iguais: não precisa baixar nada */
+      if(b.hash&&b.hash===hLocal){marcarSincronizado(b.atualizado_em,b.hash);return true;}
+      var mudouAqui=assinatura()!==ler(K_SYNC_SIG)&&ler(K_HASH)!==hLocal;
+      if(dono===id){
+        if(!mudouAqui)return baixarEaplicar('Antes de atualizar com a conta');        /* outro celular mudou */
+        if(b.atualizado_em===ler(K_SYNC_EM)){syncTexto('Enviando suas mudanças…');return subir(true,true).then(function(ok){return ok||{erro:'Não foi possível enviar suas mudanças.'};});}
+        /* mudou aqui E na conta: fica o mais novo; o outro vira cópia de segurança */
+        var aqui=Number(ler(K_MUDOU))||0,la=Date.parse(b.atualizado_em)||0;
+        if(aqui>la){
+          return buscarNuvem(true).then(function(x){
+            if(x&&x.dados){try{var n=nat();if(n&&n.copiaSalvar)n.copiaSalvar(JSON.stringify({em:Date.now(),motivo:'Dados da conta trocados pelos deste celular (mais novos)',dados:x.dados}));}catch(e){}}
+            return subir(true,true).then(function(ok){return ok||{erro:'Não foi possível enviar suas mudanças.'};});
+          });
+        }
+        return baixarEaplicar('Mudanças deste celular (a conta tinha dados mais novos)');
       }
-      /* sem dono: dados de usuário (ou de quem já usava antes das contas) */
-      if(!temNuvem){subir(true);return false;}                    /* conta nova: os dados ficam e viram o 1º envio */
-      if(!temDadosLocais())return baixarEaplicar();
-      return new Promise(function(fim){
-        confirmar('Esta conta já tem dados salvos ('+dataBr(b.atualizado_em)+'). Usar os dados da conta? Os lançamentos de usuário deste celular serão trocados.',
-          function(){baixarEaplicar().then(fim);},'Usar os da conta',
-          function(){subir(true);fim(false);},'Usar os deste celular');
-      });
+      /* dados de usuário (sem conta) ou de outra conta neste celular: baixa os da conta (os daqui viram cópia) */
+      return baixarEaplicar(dono?'Dados de outra conta neste celular':'Dados de usuário (sem conta) deste celular');
     });
-  }
-  /* abriu o app com conta: confere se outro celular mudou os dados */
-  function conferirNuvem(){
-    if(!logado())return;
-    if(!ler(K_DONO)){subir(true);return;}   /* 1ª vez com dados na conta neste celular (veio da 1.9.2): os dados daqui valem */
-    buscarNuvem(true).then(function(b){
-      if(!b||b.erro)return;
-      var mudouNuvem=b.atualizado_em&&b.atualizado_em!==ler(K_SYNC_EM),mudouAqui=assinatura()!==ler(K_SYNC_SIG);
-      if(!b.atualizado_em){subir(true);return;}
-      if(!mudouNuvem){if(mudouAqui)subir(true);return;}
-      if(!mudouAqui){baixarEaplicar();return;}
-      confirmar('Seus dados mudaram em outro celular ('+dataBr(b.atualizado_em)+') e também neste. Qual você quer manter?',
-        function(){baixarEaplicar();},'Os da conta',function(){subir(true);},'Os deste celular');
-    });
-  }
-  /* envio automático: alguns segundos depois de cada mudança */
-  var sigVista='',mudouEm=0;
-  function cicloSync(){
-    if(!logado()||document.hidden)return;
-    var s=assinatura();
-    if(s===ler(K_SYNC_SIG)){sigVista=s;mudouEm=0;return;}
-    if(s!==sigVista){sigVista=s;mudouEm=Date.now();return;}   /* espera parar de mexer */
-    if(Date.now()-mudouEm>=15000)subir(true);
   }
 
-  function confirmar(msg,ok,txtOk,nao,txtNao,vermelho){
+  /* ── tela de carregamento de verdade ── */
+  var syncAtivo=false;
+  function syncEl(){
+    var el=$c('pc-sync');if(el)return el;
+    var sp=$c('prismo-splash');
+    el=document.createElement('div');el.id='pc-sync';
+    var arte=sp?sp.querySelector('.splash-art'):null;
+    el.innerHTML=(arte?arte.outerHTML:'<div class="pc-logo" style="margin:0"><span class="material-icons">directions_car</span></div>')
+      +'<div class="pcs-msg" id="pcs-msg">Carregando…</div>'
+      +'<div class="pcs-erro" id="pcs-erro" style="display:none"></div>';
+    document.body.appendChild(el);
+    return el;
+  }
+  function syncMostrar(txt){var el=syncEl();el.style.display='flex';syncAtivo=true;var e=$c('pcs-erro');if(e)e.style.display='none';var m=$c('pcs-msg');if(m){m.style.display='block';m.textContent=txt||'Sincronizando seus dados…';}}
+  function syncTexto(txt){if(!syncAtivo)return;var m=$c('pcs-msg');if(m)m.textContent=txt;}
+  function syncFim(){var el=$c('pc-sync');if(el)el.style.display='none';syncAtivo=false;}
+  /* não conseguiu: mostra o motivo; ao sair, explica como fazer à mão */
+  function syncErro(motivo,tentar){
+    var el=syncEl();el.style.display='flex';syncAtivo=true;
+    var m=$c('pcs-msg');if(m)m.style.display='none';
+    var e=$c('pcs-erro');
+    e.innerHTML='<div class="pcs-card"><span class="material-icons" style="font-size:30px;color:#f0883e">cloud_off</span><b>Não foi possível carregar seus dados</b><small>'+esc(motivo||'Erro desconhecido')+'</small>'
+      +'<button class="pc-btn pc-pri" id="pcs-tentar"><span class="material-icons">refresh</span>Tentar de novo</button>'
+      +'<button class="pc-btn pc-sec" id="pcs-sair">Sair</button></div>';
+    e.style.display='block';
+    $c('pcs-tentar').onclick=function(){syncMostrar('Tentando de novo…');tentar();};
+    $c('pcs-sair').onclick=function(){
+      syncFim();
+      confirmar('Seus dados não foram carregados: '+(motivo||'erro desconhecido')+'\n\nEles continuam seguros na sua conta. Quando tiver internet, vá em Menu › Perfil e toque em "Baixar da conta" para carregar à mão. Até lá o app não envia nada, para não apagar o que está na conta.',function(){},'Entendi',null,null,false,true);
+    };
+  }
+  /* roda a sincronização com a tela de carregamento até terminar */
+  function sincronizarComTela(entrando){
+    gravar(K_PEND,1);   /* até terminar, nada é enviado automaticamente (protege os dados da conta) */
+    syncMostrar(entrando?'Carregando seus dados…':'Sincronizando seus dados…');
+    var tentar=function(){
+      return sincronizarConta(entrando).then(function(r){
+        if(r===true){if(!(ler(K_SYNC_BASE)))syncFim();return true;}   /* se vai recarregar, a tela fica até abrir */
+        syncErro(r&&r.erro,tentar);return false;
+      },function(){syncErro('Erro inesperado ao sincronizar.',tentar);return false;});
+    };
+    return tentar();
+  }
+  /* abriu o app com conta: confere sozinho se a conta mudou (outro celular) */
+  function conferirNuvem(){
+    if(!logado())return;
+    if(ler(K_PEND)){sincronizarComTela(false);return;}           /* ficou pendente: tenta de novo com a tela */
+    if(!ler(K_DONO)){subir(true,true);return;}                    /* veio da 1.9.2/1.9.3: os dados daqui valem */
+    buscarNuvem(false).then(function(b){
+      if(!b||b.erro)return;
+      if(b.hash&&b.hash===ler(K_HASH)){if(assinatura()!==ler(K_SYNC_SIG))subir(true);return;}   /* conta = último envio daqui */
+      if(b.atualizado_em===ler(K_SYNC_EM)){if(assinatura()!==ler(K_SYNC_SIG))subir(true);return;}
+      sincronizarComTela(false);                                  /* mudou em outro celular */
+    });
+  }
+  /* envio automático: toda vez que algo é adicionado/alterado (confere a cada 3 s, envia 4 s depois) */
+  var sigVista='',mudouEm=0;
+  function cicloSync(){
+    if(!logado()||ler(K_PEND)||syncAtivo)return;
+    var s=assinatura();
+    if(s===ler(K_SYNC_SIG)){sigVista=s;mudouEm=0;return;}
+    if(s!==sigVista){sigVista=s;mudouEm=Date.now();gravar(K_MUDOU,agora());return;}
+    if(Date.now()-mudouEm>=4000)subir(true);
+  }
+  function listarCopias(){try{var n=nat();if(n&&n.copiaListar)return JSON.parse(n.copiaListar()||'[]')||[];}catch(e){}return [];}
+  function infoCopia(c){var em=0,mot='';try{var m=/"em":(\d+)/.exec(c.ini||'');if(m)em=Number(m[1]);var m2=/"motivo":"([^"]*)"/.exec(c.ini||'');if(m2)mot=m2[1];}catch(e){}return {em:em,motivo:mot};}
+  function restaurarCopia(id){
+    var n=nat();if(!n||!n.copiaLer)return;
+    var i=infoCopia((listarCopias().filter(function(c){return c.id===id;})[0])||{});
+    confirmar('Voltar para a cópia de segurança de '+dataBr(new Date(i.em||Date.now()).toISOString())+'? ('+(i.motivo||'')+')\n\nOs dados de agora viram outra cópia, nada se perde.',function(){
+      var txt='';try{txt=n.copiaLer(id)||'';}catch(e){}
+      var c=null;try{c=JSON.parse(txt);}catch(e){}
+      if(!c||!c.dados)return toast('Não foi possível ler a cópia',true);
+      syncMostrar('Restaurando a cópia de segurança…');
+      guardarCopia('Antes de restaurar uma cópia de segurança');
+      aplicarPacote(c.dados);
+      gravar(K_SYNC_SIG,'x');   /* força o envio para a conta depois de abrir */
+      try{sessionStorage.setItem('prismo_sync_ok','1');}catch(e){}
+      setTimeout(function(){location.reload();},500);
+    },'Restaurar');
+  }
+
+  function confirmar(msg,ok,txtOk,nao,txtNao,vermelho,soAviso){
     try{
       if(typeof abrirConfirmacao==='function'){
         abrirConfirmacao(msg,ok,{ok:txtOk||'Confirmar',cancel:txtNao||'Cancelar',verde:!vermelho});
-        var m=$c('modal-confirmar');if(m)m.style.zIndex='100007';
-        var cc=$c('conf-cancel');if(cc&&nao){var f=cc.onclick;cc.onclick=function(){if(f)f();nao();};}
+        var m=$c('modal-confirmar');if(m)m.style.zIndex='2147483002';
+        var cc=$c('conf-cancel');if(cc){cc.style.display=soAviso?'none':'';}
+        var cm=$c('conf-msg');if(cm)cm.style.whiteSpace='pre-line';
+        if(cc&&nao){var f=cc.onclick;cc.onclick=function(){if(f)f();nao();};}
         return;
       }
     }catch(e){}
@@ -6292,9 +6434,10 @@ window.PrismoConta=(function(){
   function sair(){
     if(turnoAtivo())return toast('Finalize o turno antes de sair da conta',true);
     confirmar('Sair da conta? Seus dados ficam guardados na conta e este celular volta a ficar vazio, como um app novo.',function(){
-      toast('Guardando seus dados na conta…');
+      if(ler(K_PEND)){toast('Saindo… (os dados da conta não tinham sido carregados neste celular)');var s0=sessao();var fim0=function(){try{fecharDrawer();}catch(e){}limparCelular();};if(s0&&s0.access_token)http('POST','/auth/v1/logout',null,s0.access_token).then(fim0);else fim0();return;}
+      syncMostrar('Guardando seus dados na conta…');
       subir(true).then(function(ok){
-        if(!ok)return toast('Sem internet: conecte para sair sem perder dados.',true);
+        if(!ok){syncFim();return confirmar('Não foi possível guardar seus dados na conta agora (sem internet ou o servidor não respondeu). Para não perder nada, conecte à internet e tente sair de novo, ou toque em "Enviar agora" em Menu › Perfil.',function(){},'Entendi',null,null,false,true);}
         var s=sessao();
         var fim=function(){try{fecharDrawer();}catch(e){}toast('Você saiu da conta.');limparCelular();};
         if(s&&s.access_token)http('POST','/auth/v1/logout',null,s.access_token).then(fim);else fim();
@@ -6551,6 +6694,7 @@ window.PrismoConta=(function(){
   var SO_CONTA={seguranca:1,opcoes:1,conta:1};
   function trava(r){
     var t=TRAVAS[r]||TRAVAS.conta,box=$c('pt-box'),l=logado(),pro=!SO_CONTA[r];
+    if(pro&&l&&precisaConfirmar()&&(conta().plano==='pro')&&conta().proAte>agora())t=[t[0],'Conecte à internet para confirmar o seu Pro (faz mais de 7 dias sem conferir com o servidor).'];
     var html='<div class="pt-ic'+(pro&&l?' pro':'')+'"><span class="material-icons">'+(pro&&l?'workspace_premium':'lock')+'</span></div><div class="pt-t">'+esc(t[0])+'</div><div class="pt-s">'+esc(t[1])+(pro&&!l?' Crie sua conta e ganhe 7 dias de Pro grátis.':'')+'</div>';
     if(!l){
       html+='<button class="pc-btn pc-pri" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
@@ -6596,11 +6740,12 @@ window.PrismoConta=(function(){
       box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela, ter seu ID fixo e ganhar 7 dias de Pro.</p></div></div>'
         +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
     }else{
-      var bk=ler(K_BKP),pend=assinatura()!==ler(K_SYNC_SIG);
+      var bk=ler(K_BKP),falta=!!ler(K_PEND),pend=!falta&&assinatura()!==ler(K_SYNC_SIG),cps=listarCopias();
       box.innerHTML='<div class="pc-conta-lin"><div class="pc-conta-av"><span class="material-icons">verified_user</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.nome||'Conta conectada')+'</p><p style="font-size:.66rem;color:#8b949e;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.email||(s&&s.user&&s.user.email)||'')+'</p></div></div>'
         +'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+chipPlano(p)+(p==='pro'?'<span style="font-size:.62rem;color:#8b949e">'+diasPro()+' dia'+(diasPro()===1?'':'s')+' restantes</span>':'')+'</div>'
-        +'<p style="font-size:.62rem;color:#6e7681;margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:'+(pend?'#f0883e':'#3fb950')+'">'+(pend?'cloud_sync':'cloud_done')+'</span> '+(pend?'Enviando as mudanças para a conta…':(bk?'Dados guardados na conta · '+dataBr(new Date(bk).toISOString()):'Dados ainda não enviados'))+'</p>'
-        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Enviar agora</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Baixar da conta</button></div>';
+        +'<p style="font-size:.62rem;color:'+(falta?'#f0883e':'#6e7681')+';margin-top:10px"><span class="material-icons" style="font-size:12px;vertical-align:-2px;color:'+(falta||pend?'#f0883e':'#3fb950')+'">'+(falta?'cloud_off':(pend?'cloud_sync':'cloud_done'))+'</span> '+(falta?'Os dados da conta ainda não foram carregados. Toque em Baixar da conta.':(pend?'Enviando as mudanças para a conta…':(bk?'Dados guardados na conta · '+dataBr(new Date(bk).toISOString()):'Dados ainda não enviados')))+'</p>'
+        +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.backup()"><span class="material-icons">cloud_upload</span>Enviar agora</button><button type="button" class="pc-mini" onclick="PrismoConta.restaurar()"><span class="material-icons">cloud_download</span>Baixar da conta</button></div>'
+        +(cps.length?'<p style="font-size:.56rem;font-weight:800;color:#8b949e;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 2px">Cópias de segurança</p>'+cps.map(function(c){var i=infoCopia(c);return '<button type="button" class="pc-linha" style="padding:9px 10px" onclick="PrismoConta.restaurarCopia(\''+c.id+'\')"><span class="ic" style="width:28px;height:28px"><span class="material-icons" style="font-size:15px">history</span></span><span><b style="font-size:12px">'+(i.em?dataBr(new Date(i.em).toISOString()):'Cópia')+'</b><small>'+esc(i.motivo||'Dados de antes')+'</small></span><span class="material-icons fim" style="font-size:16px">restore</span></button>';}).join(''):'');
     }
     var fim=l?'chevron_right':'lock';
     opc.innerHTML='<p class="pc-box-tit"><span class="material-icons" style="font-size:13px;color:#8b949e">tune</span>Opções'+(l?'':'<span class="pc-cad-tag" style="display:inline-flex"><span class="material-icons">lock</span>Só contas</span>')+'</p>'
@@ -6677,41 +6822,55 @@ window.PrismoConta=(function(){
     }catch(e){}
   }
 
+  /* menu lateral: no lugar da marca/modelo do carro mostra o plano */
+  var COR_PLANO={admin:['#d8b4fe','rgba(168,85,247,.14)','rgba(192,132,252,.4)'],pro:['#facc15','rgba(234,179,8,.13)','rgba(250,204,21,.45)'],free:['#c9d1d9','rgba(255,255,255,.06)','rgba(255,255,255,.16)'],usuario:['#f0883e','rgba(240,136,62,.10)','rgba(240,136,62,.35)']};
+  var TXT_PLANO={admin:'Administrador',pro:'Plano Pro',free:'Plano Free',usuario:'Usuário'};
+  function tagPlano(){
+    var el=$c('drawer-perfil-tag');if(!el)return;
+    var p=plano(),c=COR_PLANO[p],box=el.parentNode,dot=box&&box.querySelector('div');
+    el.textContent=TXT_PLANO[p];el.title=p==='pro'?'Pro até '+dataBr(new Date(conta().proAte).toISOString())+' (horário de Brasília)':'';
+    el.style.color=c[0];if(box){box.style.background=c[1];box.style.borderColor=c[2];box.style.cursor='pointer';box.onclick=function(){abrir('planos');};}if(dot)dot.style.background=c[0];
+  }
+  window.atualizarTagVeiculoDrawer=tagPlano;
+
   /* ── início ── */
   function iniciar(){
     instalarTravas();
     if(ler(K_SYNC_BASE)){gravar(K_SYNC_SIG,assinatura());gravar(K_SYNC_BASE,null);}   /* acabou de baixar da conta */
+    try{if(sessionStorage.getItem('prismo_sync_ok')){sessionStorage.removeItem('prismo_sync_ok');setTimeout(function(){toast('Seus dados foram carregados da conta.');},3300);}}catch(e){}
     sincronizar();
     if(precisaBloquear())bloquear();
     if(!modo())setTimeout(function(){if(!modo()&&!aberto())abrir('inicio');},1200);
     if(logado()){
       setTimeout(function(){carregarPerfil();conferirNuvem();},2500);
     }
-    setInterval(cicloSync,10000);
+    setInterval(cicloSync,3000);
     setInterval(function(){if(logado()&&!document.hidden&&Date.now()-(conta().lido||0)>30*60000)carregarPerfil();},60000);
     setTimeout(verLink,900);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
   document.addEventListener('visibilitychange',function(){
-    if(document.hidden){saiuEm=Date.now();if(logado()&&assinatura()!==ler(K_SYNC_SIG))subir(true);return;}
+    if(document.hidden){saiuEm=Date.now();if(logado()&&!ler(K_PEND)&&assinatura()!==ler(K_SYNC_SIG))subir(true);return;}
     if(precisaBloquear()&&!bloqueado&&saiuEm&&Date.now()-saiuEm>BLOQ_MIN*60000)bloquear();
     try{desenharSeguranca();desenharMenu();}catch(e){}
     if(logado()&&saiuEm&&Date.now()-saiuEm>60000){carregarPerfil();conferirNuvem();}
   });
   /* fechou a Carteira: envia logo */
-  try{var fc=window.fecharCarteira;if(typeof fc==='function'){window.fecharCarteira=function(){var r=fc.apply(this,arguments);if(logado())setTimeout(function(){if(assinatura()!==ler(K_SYNC_SIG))subir(true);},1500);return r;};}}catch(e){}
+  try{var fc=window.fecharCarteira;if(typeof fc==='function'){window.fecharCarteira=function(){var r=fc.apply(this,arguments);if(logado())setTimeout(function(){if(!ler(K_PEND)&&assinatura()!==ler(K_SYNC_SIG))subir(true);},1500);return r;};}}catch(e){}
 
   function olho(id,b){var e=$c(id);if(!e)return;var v=e.type==='password';e.type=v?'text':'password';var i=b&&b.querySelector('.material-icons');if(i)i.textContent=v?'visibility_off':'visibility';}
 
   return {logado:logado,plano:plano,liberado:liberado,exige:exige,exigeConta:exigeConta,trava:trava,fecharTrava:fecharTrava,abrir:abrir,fechar:fechar,voltar:voltar,
     entrar:entrar,criar:criar,verificar:verificar,reenviar:reenviar,recuperar:recuperar,trocarPorCodigo:trocarPorCodigo,salvarSenha:salvarSenha,
     mudarSenhaAbrir:abrirMudarSenha,mudarSenha:mudarSenha,esqueciLogado:esqueciLogado,google:google,semConta:semConta,resgatar:resgatar,
-    verLink:verLink,backup:function(){subir(false);},restaurar:function(){confirmar('Baixar os dados guardados na conta? Os deste celular serão trocados por eles.',function(){baixarEaplicar();},'Baixar');},
+    verLink:verLink,backup:function(){if(ler(K_PEND))return PrismoConta.backupForcado();subir(false);},restaurar:function(){confirmar('Baixar os dados guardados na conta? Os deste celular viram uma cópia de segurança.',function(){syncMostrar('Baixando os dados da sua conta…');baixarEaplicar('Antes de baixar da conta (manual)').then(function(r){if(r!==true)syncErro(r&&r.erro,function(){baixarEaplicar('Antes de baixar da conta (manual)');});});},'Baixar');},
+    backupForcado:function(){confirmar('Enviar os dados DESTE celular para a conta? Eles substituem os que estão na conta.',function(){subir(false,true);},'Enviar',null,null,true);},
+    restaurarCopia:restaurarCopia,
     sair:sair,excluir:excluir,olho:olho,copiar:copiar,copiarTodos:function(){copiar(ultimosCodigos.join('\n'));},
     tecla:tecla,cancelarPin:cancelarPin,criarPin:criarPin,pedirBio:pedirBio,escolherBio:escolherBio,segEscolher:segEscolher,
     esqueciBloqueio:esqueciBloqueio,pularProtecao:pularProtecao,bloquear:bloquear,
     adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,
-    _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura};
+    _conta:conta,_sessao:sessao,_subir:subir,_assinatura:assinatura,_syncMostrar:syncMostrar,_syncFim:syncFim};
 })();
 </script>
 

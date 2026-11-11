@@ -1,8 +1,7 @@
-• ☁️ Seus dados na sua conta: com conta, tudo o que você lança vai para a conta sozinho, segundos depois. Trocou de celular? Entre na conta e está tudo lá, inclusive o relatório do assistente e os turnos
-• 🚪 Sair da conta deixa o celular limpo, como um app novo. Ao entrar de novo, seus dados voltam
-• 📦 Já usava o app sem conta? Ao criar a conta, nada se perde: os seus lançamentos viram o primeiro envio da conta
-• 👑 Planos: Free (conta grátis), Pro (todos os recursos, 30 dias renováveis) e Administrador. Toda conta nova ganha 7 dias de Pro
-• 🔒 Recursos Pro: Carteira, Assistente de rotas, Turno, Balanço semanal, Comparativo, widgets, manutenção sem limite e calendário completo
-• 🎟️ Resgatar código Pro (Menu › Perfil › Opções): digite o código e os dias entram na hora, somados ao que você já tem
-• 🔔 Aviso quando faltam 3 dias para o Pro vencer. Quando vence, nada é apagado: só volta o cadeado
-• 🛠️ Painel da Administração (só para administradores): buscar cliente pelo ID, dar ou tirar dias de Pro e gerar códigos
+• ⏳ Tela de carregamento de verdade: ao entrar na conta (ou entrar em outro celular), ela fica até todos os seus dados carregarem, sem perguntar nada
+• 🛟 Nada se perde: antes de trocar os dados do celular pelos da conta, os de antes viram uma Cópia de segurança em Menu › Perfil, que dá para restaurar
+• ⚠️ Sem internet para carregar? A tela mostra o motivo e explica como baixar à mão depois. Até lá o app não envia nada, para não apagar o que está na conta
+• ☁️ Backup automático a cada lançamento: segundos depois de adicionar algo, já está na conta
+• 🔍 O app compara os dados do celular com os da conta e só baixa quando são diferentes
+• 🕒 O tempo do Pro é contado pela hora do servidor, não pela do celular: mudar a data/hora do celular não estende o plano. Sem internet por mais de 7 dias, o Pro pede para conectar e confirmar
+• 👑 Menu lateral: no lugar da marca do carro agora aparece o seu plano (Administrador, Plano Pro ou Plano Free). Toque para ver os planos

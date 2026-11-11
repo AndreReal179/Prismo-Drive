@@ -121,6 +121,29 @@ class PrismoBridge(private val activity: Activity) {
         try { DadosConta.limpar(activity) } catch (_: Throwable) {}
     }
 
+    @JavascriptInterface
+    fun copiaSalvar(json: String?): Boolean = try { DadosConta.salvarCopia(activity, json) } catch (_: Throwable) { false }
+
+    @JavascriptInterface
+    fun copiaListar(): String = try { DadosConta.listarCopias(activity) } catch (_: Throwable) { "[]" }
+
+    @JavascriptInterface
+    fun copiaLer(id: String?): String = try { DadosConta.lerCopia(activity, id) } catch (_: Throwable) { "" }
+
+    // ── Relógio do Pro: hora do servidor + relógio interno (ignora a data/hora do celular) ──
+
+    @JavascriptInterface
+    fun relogioSincronizar(servidorMs: String?) {
+        try { Relogio.sincronizar(activity, servidorMs?.toLongOrNull() ?: 0L) } catch (_: Throwable) {}
+    }
+
+    /** {"agora":ms|-1,"servidor":ms,"confirmar":bool} */
+    @JavascriptInterface
+    fun relogioEstado(): String = try {
+        JSONObject().put("agora", Relogio.agora(activity)).put("servidor", Relogio.ultimoServidor(activity))
+            .put("confirmar", Relogio.precisaConfirmar(activity)).toString()
+    } catch (_: Throwable) { "{}" }
+
     // ── Segurança: bloqueio do app por biometria ou PIN ──
 
     @JavascriptInterface
