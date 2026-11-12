@@ -158,10 +158,13 @@ class MainActivity : Activity() {
 
         setContentView(web)
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && Integridade.oficial(this)) {
             web.restoreState(savedInstanceState)
         }
-        if (web.url == null) {
+        if (!Integridade.oficial(this)) {
+            // APK modificado / reassinado: não abre o app
+            Integridade.mostrarBloqueio(this, web)
+        } else if (web.url == null) {
             web.loadUrl(PAGINA)
         }
 

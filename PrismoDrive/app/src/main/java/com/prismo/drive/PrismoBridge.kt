@@ -433,7 +433,11 @@ class PrismoBridge(private val activity: Activity) {
 
     /** Resumo anônimo do aparelho (SHA-256). */
     @JavascriptInterface
-    fun aparelhoId(): String = Push.aparelho(activity)
+    fun aparelhoId(): String = if (Integridade.oficial(activity)) Push.aparelho(activity) else ""
+
+    /** true só no APK oficial (assinatura da Prismo Lab). */
+    @JavascriptInterface
+    fun oficial(): Boolean = Integridade.oficial(activity)
 
     /** Erros do Android guardados quando o app fechou sozinho (lista JSON; apaga depois de ler). */
     @JavascriptInterface

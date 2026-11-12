@@ -7,7 +7,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
@@ -28,7 +27,7 @@ object Notificacoes {
     private const val CANAL_ANTIGO = "prismo_avisos_som_v2"
     private const val SEP_REG = '\u0002'
     private const val SEP_CAMPO = '\u0001'
-    private const val COR = 0xFF2EA44F.toInt()
+    private const val COR = 0xFF3FB950.toInt()   // verde do "Prismo Drive" da prévia
 
     private val PADRAO_VIBRACAO = longArrayOf(0, 600, 300, 600, 300, 600)
 
@@ -84,19 +83,24 @@ object Notificacoes {
         )
         if (acao != null) runCatching { b.addAction(Notification.Action.Builder(null, acao, pi).build()) }
 
-        b.setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle(titulo)
-            .setContentText(texto)
-            .setStyle(Notification.BigTextStyle().bigText(texto))
+        // visual igual à prévia do app: carro verde + "Prismo Drive", título em negrito e mensagem em itálico
+        val tituloF = android.text.SpannableString(titulo).apply {
+            setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        val textoF = android.text.SpannableString(texto).apply {
+            setSpan(android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), 0, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        b.setSmallIcon(R.drawable.ic_stat_carro)
+            .setContentTitle(tituloF)
+            .setContentText(textoF)
+            .setStyle(Notification.BigTextStyle().setBigContentTitle(tituloF).bigText(textoF))
+            .setShowWhen(true)
+            .setWhen(System.currentTimeMillis())
             .setAutoCancel(true)
             .setColor(COR)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setCategory(Notification.CATEGORY_REMINDER)
             .setContentIntent(pi)
-        try {
-            BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher)?.let { b.setLargeIcon(it) }
-        } catch (_: Throwable) {
-        }
 
         try {
             nm.notify(id, b.build())

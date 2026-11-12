@@ -66,6 +66,7 @@ object Conta {
      * Usado pelo assistente de rotas e pelos widgets.
      */
     fun liberado(ctx: Context): Boolean {
+        if (!Integridade.oficial(ctx)) return false   // APK modificado nunca libera o Pro
         if (!logado(ctx)) return false
         if (cachePlano == "admin") return true
         // hora do servidor + relógio interno (mudar a data do celular não estende o Pro)

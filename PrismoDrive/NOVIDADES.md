@@ -17,3 +17,6 @@
 • 🛡️ Indique e ganhe com novo visual e mais seguro: a indicação é confirmada quando o amigo usa o app por 3 dias, e cada amigo precisa do próprio celular
 • ⚡ Notificações na hora: respostas do suporte, pagamento aprovado e novidades chegam assim que acontecem
 • 🐞 Relatório automático de erros: se algo der errado, o app avisa a equipe sozinho para corrigirmos rápido (pode desligar em Configurações › Segurança)
+• 🎁 Teste grátis: conta nova ganha 3 dias de Pro ao confirmar o e-mail, uma vez por celular
+• 🔒 Proteção contra cópias modificadas: o app só abre na versão oficial da Prismo Lab
+• 🔔 Notificações com visual novo: carro verde do Prismo Drive, título em destaque e mensagem mais limpa
