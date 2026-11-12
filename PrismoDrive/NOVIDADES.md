@@ -13,3 +13,7 @@
 • 🎫 Meus chamados no Suporte: acompanhe cada mensagem (Aguardando responsável, Em andamento, Respondido e Finalizado) e receba aviso quando a equipe responder
 • 📊 Widget com a mesma barra da tela inicial: primeiro as contas da semana (em vermelho) e, quando junta o dinheiro, volta para a meta do lucro
 • 🎁 Indique e ganhe: compartilhe seu código e ganhe dias de Pro (10 amigos = 3 dias, 20 = 10, 30 = 15 e 50 = 30 dias)
+• ⏳ Aviso de vencimento do Pro: faixa na tela inicial e notificações 3 dias antes, na véspera e no dia, para você renovar sem perder nada
+• 🛡️ Indique e ganhe com novo visual e mais seguro: a indicação é confirmada quando o amigo usa o app por 3 dias, e cada amigo precisa do próprio celular
+• ⚡ Notificações na hora: respostas do suporte, pagamento aprovado e novidades chegam assim que acontecem
+• 🐞 Relatório automático de erros: se algo der errado, o app avisa a equipe sozinho para corrigirmos rápido (pode desligar em Configurações › Segurança)

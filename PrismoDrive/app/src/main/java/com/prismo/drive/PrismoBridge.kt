@@ -409,4 +409,33 @@ class PrismoBridge(private val activity: Activity) {
             }
         }
     }
+    // ───────────── Push, aparelho e erros (v1.9.8) ─────────────
+
+    /** Configuração pública do Firebase vinda do servidor; o token chega em window.__prismoPush. */
+    @JavascriptInterface
+    fun pushConfigurar(json: String?) {
+        val a = activity as? MainActivity ?: return
+        runCatching { Push.configurar(a, json) }
+    }
+
+    @JavascriptInterface
+    fun pushToken(): String = try { Push.token(activity) } catch (_: Throwable) { "" }
+
+    /** Tópicos dos anúncios: "todos,pro" etc. */
+    @JavascriptInterface
+    fun pushTopicos(lista: String?) {
+        runCatching { Push.topicos(activity, lista) }
+    }
+
+    /** true se o push já mostrou este aviso há pouco (o app não repete). */
+    @JavascriptInterface
+    fun notificadoRecente(id: Int, janelaMs: Long): Boolean = try { Push.vistaRecente(activity, id, janelaMs) } catch (_: Throwable) { false }
+
+    /** Resumo anônimo do aparelho (SHA-256). */
+    @JavascriptInterface
+    fun aparelhoId(): String = Push.aparelho(activity)
+
+    /** Erros do Android guardados quando o app fechou sozinho (lista JSON; apaga depois de ler). */
+    @JavascriptInterface
+    fun errosNativos(): String = try { ErrosNativos.pendentes(activity) } catch (_: Throwable) { "[]" }
 }

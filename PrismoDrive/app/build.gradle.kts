@@ -93,6 +93,9 @@ dependencies {
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // Notificações em tempo real (push). Configuração do Firebase vem do servidor (sem google-services.json)
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-messaging")
 }
 
 // Novidades do app: antes de cada build monta assets/novidades.js com a versão atual (NOVIDADES.md),

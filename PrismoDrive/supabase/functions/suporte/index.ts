@@ -61,6 +61,55 @@ Deno.serve(async (req) => {
     } catch { emailOk2 = false; }
     return resp(200, { ok: true, email: emailOk2 });
   }
+  // ── Relatório automático de erro: o app envia sozinho; o 1º de cada tipo vira chamado e e-mail ──
+  if (b.acao === "erro") {
+    const admE = createClient(Deno.env.get("SUPABASE_URL")!, chaveServico(), { auth: { persistSession: false } });
+    const ass = String(b.assinatura || "").replace(/[^a-z0-9]/gi, "").slice(0, 64);
+    const msgE = String(b.mensagem || "").trim().slice(0, 500);
+    if (ass.length < 6 || msgE.length < 3) return resp(400, { erro: "dados" });
+    const versaoE = String(b.versao || "?").slice(0, 20), origem = /^(js|android|promessa)$/.test(String(b.origem)) ? String(b.origem) : "js";
+    const pilha = String(b.pilha || "").slice(0, 4000), telaE = String(b.tela || "").slice(0, 60), aparE = String(b.aparelho || "").slice(0, 80);
+    let uidE: string | null = null, emailE = DESTINO, nomeE = "", contaE = "", planoE = "usuario";
+    const jwtE = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    if (jwtE && jwtE.split(".").length === 3) {
+      const { data: u } = await admE.auth.getUser(jwtE);
+      if (u?.user) {
+        uidE = u.user.id; emailE = u.user.email || DESTINO;
+        const { data: p } = await admE.from("perfis").select("conta_id,nome,plano,pro_ate").eq("id", uidE).maybeSingle();
+        if (p) { contaE = p.conta_id || ""; nomeE = p.nome || ""; planoE = p.plano === "admin" ? "admin" : (p.pro_ate && Date.parse(p.pro_ate) > Date.now() ? "pro" : "free"); }
+      }
+    }
+    const { data: reg, error: errE } = await admE.rpc("erro_registrar", {
+      p_assinatura: ass, p_versao: versaoE, p_origem: origem, p_mensagem: msgE, p_pilha: pilha, p_tela: telaE, p_aparelho: aparE, p_nova_pessoa: !!b.primeira_vez,
+    });
+    if (errE || !reg) return resp(500, { erro: "banco" });
+    // só o primeiro de cada erro (por versão) abre chamado; no máximo 30 erros novos por hora
+    if (!reg.novo || reg.chamado || Number(reg.recentes) > 30) return resp(200, { ok: true, novo: false, vezes: reg.ocorrencias });
+    const ORIG: Record<string, string> = { js: "Tela do app (JavaScript)", promessa: "Tela do app (tarefa em segundo plano)", android: "Android (o app fechou)" };
+    const assuntoE = "Erro automático: " + msgE.replace(/\s+/g, " ").slice(0, 90);
+    const mensagemE = `Relatório enviado automaticamente pelo app.\n\nOnde: ${ORIG[origem]}${telaE ? " · tela " + telaE : ""}\nVersão: ${versaoE}\nAparelho: ${aparE || "?"}\n\nErro: ${msgE}\n\n${pilha.slice(0, 2500)}`;
+    const { data: ch } = await admE.from("suporte").insert({
+      user_id: uidE, conta_id: contaE, nome: nomeE || "Relatório automático", email: emailE, categoria: "erro_auto",
+      assunto: assuntoE.slice(0, 120), mensagem: mensagemE.slice(0, 4000), anexos: [], app_versao: versaoE, aparelho: aparE, plano: planoE,
+    }).select("id").single();
+    if (ch?.id) await admE.from("erros_app").update({ chamado_id: ch.id }).eq("id", reg.id);
+    try {
+      const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: DESTINO, pass: senha } });
+      await t.sendMail({
+        from: `"Erros Prismo Drive" <${DESTINO}>`, to: DESTINO,
+        subject: `[Erro automático] ${msgE.replace(/\s+/g, " ").slice(0, 80)} · v${versaoE}${ch?.id ? " · nº " + ch.id : ""}`,
+        html: `<div style="font-family:Arial,sans-serif;font-size:14px;color:#111"><h2 style="margin:0 0 6px">⚠️ Erro automático no app</h2>
+          <p style="color:#555;margin:0 0 12px">${esc(ORIG[origem])}${telaE ? " · tela " + esc(telaE) : ""} · versão ${esc(versaoE)} · ${esc(aparE || "?")}<br>
+          Conta: ${esc(nomeE || "sem conta")}${contaE ? " · ID " + esc(contaE) : ""} · plano ${esc(planoE)}</p>
+          <div style="background:#fff4f4;border-left:4px solid #e5534b;padding:10px 12px;border-radius:6px;font-weight:bold">${esc(msgE)}</div>
+          <pre style="white-space:pre-wrap;font-size:12px;background:#f4f6f5;padding:10px;border-radius:6px">${esc(pilha.slice(0, 3000))}</pre>
+          <p style="color:#777;font-size:12px">Chamado aberto no app (Administração › Suporte). Os próximos iguais só somam no contador.</p></div>`,
+      });
+      if (ch?.id) await admE.from("suporte").update({ enviado: true }).eq("id", ch.id);
+    } catch { /* o chamado já ficou registrado */ }
+    return resp(200, { ok: true, novo: true, id: ch?.id || null });
+  }
+
   const cat = CATS[String(b.categoria || "")] ? String(b.categoria) : "outro";
   const assunto = String(b.assunto || "").trim().slice(0, 120);
   const mensagem = String(b.mensagem || "").trim().slice(0, 4000);
