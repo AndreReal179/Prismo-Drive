@@ -1455,56 +1455,6 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
         </div>
       </div>
 
-      <div class="dw-grupo dw-acc" id="dwg-ajuda">
-        <button type="button" class="dw-gh" onclick="dwGrupo('ajuda')"><span class="dw-gi" style="background:linear-gradient(135deg,#0e7490,#06b6d4)"><span class="material-icons">help</span></span><span class="dw-gt"><b>Ajuda</b><small>Suporte, guia do app e atualizações</small></span><span class="material-icons dw-gc">expand_more</span></button>
-        <div class="dw-gb">
-        <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-          <button type="button" onclick="toggleAccordion('acc-sup')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.1);border:1px solid rgba(63,185,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">support_agent</span></div>
-            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Suporte</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Fale com a equipe · relate BUGs e ganhe recompensa</p></div>
-            <span id="acc-sup-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-          </button>
-          <div id="acc-sup" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
-        </div>
-        <div class="acc-item pd-acc-guia" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
-          <button type="button" onclick="toggleAccordion('acc-guia')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#fbbf24;">menu_book</span></div>
-            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Guia do App</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Tutoriais com prints de cada aba</p></div>
-            <span id="acc-guia-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-          </button>
-          <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
-            <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
-            <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
-          </div>
-        </div>
-        <div class="acc-item pd-acc-upd" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
-          <button type="button" onclick="toggleAccordion('acc-upd')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">system_update</span></div>
-            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Atualizações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Versão e novidades do app</p></div>
-            <span id="acc-upd-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-          </button>
-          <div id="acc-upd" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
-            <div class="upd-row">
-              <div><p class="upd-l">Sua versão</p><p class="upd-v" id="upd-versao">v1.6</p></div>
-              <button type="button" class="upd-btn" onclick="abrirNovidades()">✨ Novidades<span class="nv-tag n">Novo</span></button>
-            </div>
-            <div id="upd-card" style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
-              <p id="upd-st-l" style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Atualização automática</p>
-              <p id="upd-st-t" style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Toque em verificar para procurar uma nova versão.</p>
-              <p id="upd-st-v" style="display:none;font-size:26px;font-weight:900;color:#fff;margin:4px 0 4px;letter-spacing:-0.5px;"></p>
-              <div id="upd-notas" style="display:none;margin:8px 0 4px;max-height:180px;overflow:auto;font-size:12px;line-height:1.5;color:#c9d1d9;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;white-space:pre-wrap;"></div>
-              <div id="upd-prog" style="display:none;margin:10px 0 2px;">
-                <div style="height:8px;border-radius:99px;background:#1b2026;overflow:hidden;"><div id="upd-prog-b" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#1a7a3a,#4ade80);transition:width .2s;"></div></div>
-                <p id="upd-prog-t" style="font-size:0.62rem;color:var(--muted);margin-top:6px;text-align:center;">Baixando…</p>
-              </div>
-              <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
-              <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
-            </div>
-          </div>
-        </div>
-        </div>
-      </div>
-
       <div class="dw-grupo dw-solo">
         <div class="dw-gb">
         <div class="acc-item pd-acc-cfg" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
@@ -1614,6 +1564,61 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
                   <p class="cf-nota">Se algo der errado, o app avisa a equipe sozinho (o erro, a tela, a versão e o modelo do celular) para corrigirmos rápido. Seus ganhos, rotas e dívidas nunca são enviados.</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="dw-grupo dw-acc" id="dwg-ajuda">
+        <button type="button" class="dw-gh" onclick="dwGrupo('ajuda')"><span class="dw-gi" style="background:linear-gradient(135deg,#0e7490,#06b6d4)"><span class="material-icons">help</span></span><span class="dw-gt"><b>Ajuda</b><small>Suporte e guia do app</small></span><span class="material-icons dw-gc">expand_more</span></button>
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-sup')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.1);border:1px solid rgba(63,185,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">support_agent</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Suporte</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Fale com a equipe · relate BUGs e ganhe recompensa</p></div>
+            <span id="acc-sup-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-sup" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div class="acc-item pd-acc-guia" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+          <button type="button" onclick="toggleAccordion('acc-guia')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#fbbf24;">menu_book</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Guia do App</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Tutoriais com prints de cada aba</p></div>
+            <span id="acc-guia-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
+            <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
+            <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="dw-grupo dw-solo">
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-upd" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+          <button type="button" onclick="toggleAccordion('acc-upd')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">system_update</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Atualizações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Versão e novidades do app</p></div>
+            <span id="acc-upd-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-upd" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
+            <div class="upd-row">
+              <div><p class="upd-l">Sua versão</p><p class="upd-v" id="upd-versao">v1.6</p></div>
+              <button type="button" class="upd-btn" onclick="abrirNovidades()">✨ Novidades<span class="nv-tag n">Novo</span></button>
+            </div>
+            <div id="upd-card" style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
+              <p id="upd-st-l" style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Atualização automática</p>
+              <p id="upd-st-t" style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Toque em verificar para procurar uma nova versão.</p>
+              <p id="upd-st-v" style="display:none;font-size:26px;font-weight:900;color:#fff;margin:4px 0 4px;letter-spacing:-0.5px;"></p>
+              <div id="upd-notas" style="display:none;margin:8px 0 4px;max-height:180px;overflow:auto;font-size:12px;line-height:1.5;color:#c9d1d9;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;white-space:pre-wrap;"></div>
+              <div id="upd-prog" style="display:none;margin:10px 0 2px;">
+                <div style="height:8px;border-radius:99px;background:#1b2026;overflow:hidden;"><div id="upd-prog-b" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#1a7a3a,#4ade80);transition:width .2s;"></div></div>
+                <p id="upd-prog-t" style="font-size:0.62rem;color:var(--muted);margin-top:6px;text-align:center;">Baixando…</p>
+              </div>
+              <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
+              <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
             </div>
           </div>
         </div>
@@ -2795,17 +2800,34 @@ window.mediaGanhoDiaPrismo=function(n){
   const dias=Object.keys(porDia).length,total=Object.values(porDia).reduce((a,b)=>a+b,0);
   return {media:dias?Math.round(total/dias*100)/100:0,dias:dias,total:Math.round(total*100)/100};
 };
+/* saídas registradas na Carteira nesta semana (dinheiro que você já usou: não está mais disponível).
+   Pagamentos de dívidas não entram aqui, porque as contas da semana já são descontadas à parte. */
+function usadoCarteiraSemana(){
+  const w=_semanaISO(),hojeIni=new Date();hojeIni.setHours(0,0,0,0);
+  let ext=[];try{ext=JSON.parse(localStorage.getItem('fin_extrato')||'[]');if(!Array.isArray(ext))ext=[];}catch(e){ext=[];}
+  let total=0,hoje=0;
+  ext.forEach(x=>{
+    if(!x||x.tipo!=='saida')return;
+    const ts=Number(x.ts)||0;if(ts<w.iniTs)return;
+    const v=Math.abs(Number(x.valor)||0);total+=v;if(ts>=hojeIni.getTime())hoje+=v;
+  });
+  return {total:Math.round(total*100)/100,hoje:Math.round(hoje*100)/100};
+}
 function metaDividasSemana(ganhoHoje){
   const itens=dividasDaSemana();if(!itens.length)return null;
   const r2=v=>Math.round(v*100)/100;
   const alvo=r2(itens.reduce((a,x)=>a+x.valor,0));
   const ganho=ganhosDaSemana();
+  const us=usadoCarteiraSemana();
+  /* o que você já usou da Carteira sai do disponível: não conta para as contas nem como "sobrou" */
+  const disp=r2(Math.max(0,ganho-us.total));
   const hoje=Math.min(ganho,Math.max(0,Number(ganhoHoje)||0));
-  const sobra=r2(Math.max(0,ganho-alvo));
+  const dispAntes=Math.max(0,(ganho-hoje)-(us.total-us.hoje));
+  const sobra=r2(Math.max(0,disp-alvo));
   /* parte do ganho de HOJE que é lucro livre (o que entrou antes de hoje já foi usado primeiro nas contas) */
-  const livreAntes=Math.max(0,(ganho-hoje)-alvo);
+  const livreAntes=Math.max(0,dispAntes-alvo);
   const livreHoje=r2(Math.max(0,sobra-livreAntes));
-  return {itens,alvo,ganho,sobra,livreHoje,falta:r2(Math.max(0,alvo-ganho)),pct:alvo>0?Math.min(100,Math.round(ganho/alvo*100)):100};
+  return {itens,alvo,ganho,usado:us.total,disp,sobra,livreHoje,falta:r2(Math.max(0,alvo-disp)),pct:alvo>0?Math.min(100,Math.round(disp/alvo*100)):100};
 }
 function abrirDividasSemana(){
   let ganhoHoje=0;try{ganhoHoje=(Number((ultimoKpisCache||{}).ganhoHoje)||0)+getTotalDiariaValor();}catch(e){}
@@ -2823,6 +2845,7 @@ function abrirDividasSemana(){
   <div class="cs-list">${linhas}</div>
   <div class="cs-sum">
     <div class="cs-l"><span>Entrou na semana</span><b>${moeda(m.ganho)}</b></div>
+    ${m.usado>0?`<div class="cs-l neg"><span>Já usado (saídas da Carteira)</span><b>− ${moeda(m.usado)}</b></div>`:''}
     <div class="cs-l neg"><span>Contas da semana</span><b>− ${moeda(m.alvo)}</b></div>
     <div class="cs-sep"></div>
     ${ok?`<div class="cs-l tot ok"><span>Sobrou (lucro livre)</span><b>${moeda(m.sobra)}</b></div>`:`<div class="cs-l tot falta"><span>Faltam para as contas</span><b>${moeda(m.falta)}</b></div>`}
@@ -2856,7 +2879,7 @@ function atualizarFaturamentoDia(){
     if(barra){barra.style.width=`${dv.pct}%`;barra.classList.remove('done');barra.classList.add('debt');}
     if(pctEl)pctEl.innerText=`${dv.pct}%`;
     const atr=dv.itens.some(x=>x.atrasada);
-    if(status)status.innerText=`${atr?'⚠️ ':''}Contas: ${moeda(Math.min(dv.ganho,dv.alvo))} de ${moeda(dv.alvo)}`;
+    if(status)status.innerText=`${atr?'⚠️ ':''}Contas: ${moeda(Math.min(dv.disp,dv.alvo))} de ${moeda(dv.alvo)}`;
     const ic=metaBox&&metaBox.querySelector('.pd-meta-txt .material-icons');if(ic)ic.textContent='receipt_long';
     try{atualizarMiniComparativo();}catch(e){}
     try{atualizarWidgetNativo();}catch(e){}
@@ -5306,7 +5329,7 @@ function atualizarWidgetNativo(){
     PrismoNative.widget(JSON.stringify({
       dia:hojeStrISO(),perfil:String(perfilAtivo||''),
       ganho:ganho,meta:meta,pct:pct,rotas:rotas,km:kmDia,comb:comb,lucro:ganho-comb,vs:vs,
-      modo:contas?'contas':'meta',contasAlvo:contas?dvw.alvo:0,contasJuntou:contas?Math.min(dvw.ganho,dvw.alvo):0,contasAtrasada:contas?dvw.itens.some(function(x){return x.atrasada;}):false,
+      modo:contas?'contas':'meta',contasAlvo:contas?dvw.alvo:0,contasJuntou:contas?Math.min(dvw.disp,dvw.alvo):0,contasAtrasada:contas?dvw.itens.some(function(x){return x.atrasada;}):false,
       fila:fila,rotasIds:rotasIds,cons:cons,preco:preco
     }));
   }catch(e){}

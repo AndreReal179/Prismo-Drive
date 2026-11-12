@@ -22,3 +22,4 @@
 • 🔔 Notificações com visual novo: carro verde do Prismo Drive, título em destaque e mensagem mais limpa
 • 🧭 Menu lateral reorganizado: Conta, Ferramentas, Ajuda e Configurações, cada grupo abre com suas funções
 • 💾 Menu lateral salva sozinho: mudou, está salvo (sem botão Salvar)
+• 🧮 Contas da semana mais justas: o que você já usou da Carteira sai do "sobrou", da meta e das contas
