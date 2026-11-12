@@ -2,6 +2,7 @@
 // Secrets: MP_ACCESS_TOKEN e MP_WEBHOOK_SECRET (assinatura secreta do webhook).
 // Nunca confia no conteúdo do aviso: busca o pagamento direto no Mercado Pago.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 function chaveServico(): string {
   const a = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -72,5 +73,25 @@ Deno.serve(async (req) => {
     p_valor: Number(pg.transaction_amount || 0), p_detalhe: detalhe,
   });
   if (error) return ok({ erro: "banco", msg: error.message }, 500);
+  // venda aprovada: avisa a empresa por e-mail na hora
+  if (data === "aplicado" || data === "revertido") {
+    const senha = Deno.env.get("SMTP_SENHA");
+    if (senha) {
+      try {
+        const { data: pd } = await adm.from("pagamentos").select("plano,dias,valor,conta_id,user_id").eq("id", pedido).maybeSingle();
+        const { data: pf } = pd?.user_id ? await adm.from("perfis").select("nome").eq("id", pd.user_id).maybeSingle() : { data: null };
+        const nomes: Record<string, string> = { mensal: "Mensal", trimestral: "Trimestral", semestral: "Semestral", anual: "Anual" };
+        const valor = "R$ " + Number(pd?.valor || pg.transaction_amount || 0).toFixed(2).replace(".", ",");
+        const venda = data === "aplicado";
+        const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: "prismolabtec@gmail.com", pass: senha } });
+        await t.sendMail({
+          from: `"Prismo Drive · Vendas" <prismolabtec@gmail.com>`, to: "prismolabtec@gmail.com",
+          subject: venda ? `💰 Nova venda: Pro ${nomes[pd?.plano || ""] || pd?.plano || ""} · ${valor}` : `↩️ Estorno: Pro ${nomes[pd?.plano || ""] || ""} · ${valor}`,
+          html: `<div style="font-family:Arial,sans-serif;font-size:14px"><h2 style="margin:0 0 8px">${venda ? "💰 Nova venda aprovada" : "↩️ Pagamento estornado"}</h2>
+            <p>Cliente: <b>${(pf?.nome || "(sem nome)").replace(/[<>&]/g, "")}</b> · ID ${pd?.conta_id || "?"}<br>Plano: Pro ${nomes[pd?.plano || ""] || ""} (${pd?.dias || "?"} dias)<br>Valor: <b>${valor}</b> · ${pg.payment_method_id === "pix" ? "Pix" : "Cartão"}${pg.installments > 1 ? " em " + pg.installments + "x" : ""}<br>Pagamento Mercado Pago nº ${pg.id}</p></div>`,
+        });
+      } catch { /* o aviso por e-mail não pode travar a liberação */ }
+    }
+  }
   return ok({ ok: true, resultado: data });
 });

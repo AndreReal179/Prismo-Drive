@@ -1271,6 +1271,16 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
         </div>
       </div>
 
+      <!-- ABA INDIQUE E GANHE -->
+      <div class="acc-item pd-acc-ind" style="background:#0d1117;border:1px solid rgba(250,204,21,0.22);border-radius:16px;">
+        <button type="button" onclick="toggleAccordion('acc-ind')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+          <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.13);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#facc15;">card_giftcard</span></div>
+          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Indique e ganhe</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Seu código · ganhe até 30 dias de Pro</p></div>
+          <span id="acc-ind-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+        </button>
+        <div id="acc-ind" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
+      </div>
+
       <!-- ABA MANUTENÇÃO -->
       <div class="acc-item pd-acc-manut" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
         <button type="button" onclick="toggleAccordion('acc-manut')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
@@ -1380,7 +1390,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
       </div>
 
       <!-- ABA SUPORTE -->
-      <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-bottom:10px;">
+      <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
         <button type="button" onclick="toggleAccordion('acc-sup')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
           <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.1);border:1px solid rgba(63,185,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">support_agent</span></div>
           <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Suporte</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Fale com a equipe · relate BUGs e ganhe recompensa</p></div>
@@ -2100,7 +2110,7 @@ function toggleAccordion(id){
   const icon=document.getElementById(id+'-icon');
   if(!panel)return;
   const isOpen=panel.style.display==='flex'||panel.style.display==='block';
-  ['acc-perfil','acc-manut','acc-plano','acc-rotas','acc-sup','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
+  ['acc-perfil','acc-ind','acc-manut','acc-plano','acc-rotas','acc-sup','acc-cfg','acc-guia','acc-upd'].forEach(k=>{
     const p=document.getElementById(k),i=document.getElementById(k+'-icon');
     if(p)p.style.display='none';
     if(i)i.style.transform='rotate(0deg)';
@@ -2110,6 +2120,7 @@ function toggleAccordion(id){
     if(id==='acc-plano'){try{PrismoConta.desenharPlano();}catch(e){}}
     if(id==='acc-cfg'){try{PrismoConta.cfResumos();}catch(e){}}
     if(id==='acc-sup'){try{PrismoConta.suporteDesenhar();}catch(e){}}
+    if(id==='acc-ind'){try{PrismoConta.indDesenhar();}catch(e){}}
     if(icon)icon.style.transform='rotate(180deg)';
     // rola o cartão até ficar totalmente visível
     setTimeout(()=>{
@@ -5605,9 +5616,9 @@ window.PrismoTurno=(function(){
 <p>Esses dados ficam no seu celular e, se você tem conta, também na sua conta (servidores do Supabase, nos Estados Unidos, com conexão criptografada). Assim você troca de celular sem perder nada. O backup é automático a cada lançamento.</p>
 <p><b>Não vendemos seus dados e não os usamos para publicidade de terceiros.</b> A equipe Prismo só consulta seus lançamentos quando você pede suporte ou por obrigação legal. O administrador vê nome, e-mail, ID, plano e pagamentos para atender você.</p>
 <h3>6. Localização (GPS)</h3>
-<p>O GPS é usado <b>somente</b> quando você liga o <b>Turno com GPS</b> ou recursos do Assistente de rotas, para medir a distância percorrida, os quilômetros com e sem passageiro e o custo de combustível.</p>
+<p>O GPS é usado <b>somente</b> durante um <b>Turno</b> que você mesmo inicia e durante uma <b>rota do iFood</b> acompanhada pelo Assistente de rotas, para medir os quilômetros rodados (com e sem passageiro) e o custo de combustível.</p>
 <p>Para medir o turno com a tela desligada, o Android pede a permissão de localização <b>“o tempo todo”</b>. Enquanto o turno está ligado, aparece uma <b>notificação fixa</b> avisando. Ao encerrar o turno, o GPS para.</p>
-<p>O trajeto e a quilometragem do turno ficam salvos no seu celular e no backup da sua conta. <b>Não compartilhamos sua localização com ninguém</b>, nem com as plataformas. Você pode negar ou retirar a permissão a qualquer momento nas configurações do Android: só o Turno com GPS deixa de funcionar.</p>
+<p>O app guarda <b>apenas a soma dos quilômetros</b>: o trajeto não é registrado e <b>nenhuma localização sai do seu celular</b> nem é compartilhada com as plataformas. Você pode negar ou retirar a permissão a qualquer momento nas configurações do Android: só a medição de km deixa de funcionar.</p>
 <h3>7. Assistente de rotas (serviço de acessibilidade)</h3>
 <p>O Assistente de rotas usa o <b>serviço de acessibilidade do Android</b>, que você liga manualmente nas configurações do celular. Ele <b>lê apenas as telas do iFood e do InDrive</b>: as ofertas (valor, distância, tempo e avaliação) para mostrar se a corrida vale a pena, e a tela de “rota concluída” do iFood para lançar o ganho no app.</p>
 <p>Telas de outros apps são ignoradas. O serviço <b>não lê senhas, mensagens nem dados bancários</b>. A leitura é processada no seu celular; só os ganhos que você lança ficam guardados nos seus dados.</p>
@@ -5625,6 +5636,9 @@ window.PrismoTurno=(function(){
 <p>Para pedir, envie um e-mail para <b>prismolabtec@gmail.com</b> com seu <b>ID</b> e a data da compra. Respondemos em até 5 dias úteis.</p>
 <p>Depois dos 7 dias, como não há cobrança recorrente, não há o que cancelar: o plano simplesmente vale até o fim. Não fazemos reembolso proporcional, exceto quando uma falha nossa impedir o uso do Pro (analisamos cada caso) ou quando a lei exigir.</p>
 <p>Cobrança em duplicidade é devolvida integralmente. Se o pagamento for estornado ou contestado no cartão, os dias correspondentes são retirados da conta.</p>
+<h3>10.1 Indique e ganhe</h3>
+<p>Cada conta tem um código de indicação. Quando outras pessoas criam a conta e usam o seu código, você ganha dias de Pro: <b>10 indicações = 3 dias</b>, <b>20 = 10 dias</b>, <b>30 = 15 dias</b> e <b>50 = 30 dias</b>. Cada prêmio é dado uma vez e os dias se somam ao seu Pro.</p>
+<p>Cada conta só pode usar um código, uma vez, e nos primeiros 30 dias depois de criada; não vale usar o próprio código. Contas falsas ou criadas só para ganhar prêmios são canceladas, junto com os dias ganhos.</p>
 <h3>11. Uso correto e segurança no trânsito</h3>
 <p><b>Não mexa no celular dirigindo.</b> Use o app com o veículo parado e respeite o Código de Trânsito Brasileiro.</p>
 <p>É proibido: tentar fraudar pagamentos ou códigos, modificar o app para liberar o Pro, revender códigos, invadir contas de outras pessoas ou usar o app para algo ilegal. Nesses casos a conta pode ser suspensa.</p>
@@ -5632,6 +5646,9 @@ window.PrismoTurno=(function(){
 <p>O app funciona offline na maior parte das funções. Conta, backup, pagamentos, comunicados e atualizações precisam de internet e dependem de serviços de terceiros (Supabase, Mercado Pago, Google e GitHub). Fazemos o possível para manter tudo funcionando, mas podem ocorrer falhas temporárias.</p>
 <p>As atualizações do app são baixadas pelo próprio app, direto do repositório oficial do Prismo Drive no GitHub.</p>
 <p>A Prismo não se responsabiliza por decisões tomadas com base nas estimativas do app, nem por bloqueios aplicados pelas plataformas de transporte e entrega.</p>
+<h3>12.1 Suporte e cópias de segurança</h3>
+<p>Mensagens enviadas pela aba Suporte (e os anexos) vão para o e-mail da empresa e ficam registradas como chamado, para podermos responder pelo app e pelo seu e-mail.</p>
+<p>Fazemos uma cópia de segurança semanal do banco de dados, guardada de forma privada. Ao excluir a conta, o registro dos seus pagamentos (sem nome nem e-mail) é guardado por até 5 anos por obrigação fiscal e para reembolsos.</p>
 <h3>13. Seus direitos (LGPD)</h3>
 <p>Pela Lei Geral de Proteção de Dados (Lei 13.709/2018), você pode pedir a qualquer momento: confirmação e acesso aos seus dados, correção, cópia (portabilidade), exclusão e informações sobre com quem compartilhamos. Muitos desses pedidos você mesmo faz no app (Perfil, Configurações › Backup e Excluir conta). Para os demais, escreva para <b>prismolabtec@gmail.com</b>; respondemos em até 15 dias.</p>
 <p>Veja também a nossa <a href="https://andrereal179.github.io/Prismo-Drive/privacidade.html">Política de Privacidade</a>.</p>
@@ -5771,6 +5788,24 @@ window.PrismoTurno=(function(){
 .ch-resp.col{flex-direction:column;align-items:stretch;}.ch-resp.col .pa-lin{gap:8px;}
 .ch-fim{display:flex;align-items:center;gap:6px;margin:0;padding:0 12px 12px;font-size:.66rem;color:#8b949e;font-weight:700;}.ch-fim .material-icons{font-size:15px;color:#3fb950;}
 .ch-info{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 8px;}.ch-info span{font-size:.6rem;color:#c9d1d9;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);padding:3px 8px;border-radius:99px;}
+.in-hero{padding:16px;border-radius:18px;background:radial-gradient(120% 120% at 0% 0%,rgba(234,179,8,.25),rgba(234,179,8,.05) 55%),#0f1a14;border:1px solid rgba(250,204,21,.4);box-shadow:0 14px 30px -18px rgba(234,179,8,.8);display:flex;flex-direction:column;gap:12px;}
+.in-hero > .material-icons{font-size:34px;color:#facc15;align-self:center;}.in-hero > b{text-align:center;font-size:16px;font-weight:900;color:#fde047;}.in-hero > p{text-align:center;font-size:.72rem;color:#f5e6c8;margin:0;}
+.in-top{display:flex;gap:12px;align-items:flex-start;}.in-top > .material-icons{width:44px;height:44px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b7791f,#eab308);color:#1a1300;font-size:24px;}
+.in-top b{display:block;font-size:15px;font-weight:900;color:#fde047;}.in-top p{font-size:.7rem;color:#f5e6c8;margin:3px 0 0;line-height:1.45;}
+.in-cod{border-radius:14px;background:rgba(0,0,0,.35);border:1.5px dashed rgba(250,204,21,.55);padding:12px;text-align:center;}
+.in-cod small{display:block;font-size:.58rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#c9a227;}
+.in-cod b{display:block;font-size:26px;font-weight:900;letter-spacing:.14em;color:#fff;margin:4px 0 10px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.in-bts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.in-bts button{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1px solid rgba(250,204,21,.45);background:rgba(234,179,8,.12);color:#facc15;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;}
+.in-bts button.zap{background:linear-gradient(135deg,#2ea44f,#4ade80);border:none;color:#04210d;}.in-bts .material-icons{font-size:17px;}
+.in-prog-t{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:13px;color:#c9d1d9;font-weight:700;}.in-prog-t b{font-size:22px;font-weight:900;color:#facc15;}.in-prog-t small{width:100%;font-size:.66rem;color:#8b949e;font-weight:700;}
+.in-barra{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0 12px;}.in-barra i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#b7791f,#facc15);}
+.in-marcos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.in-m{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);text-align:center;}
+.in-m .material-icons{font-size:18px;color:#6e7681;}.in-m b{font-size:11px;font-weight:900;color:#c9d1d9;}.in-m small{font-size:.56rem;font-weight:800;color:#8b949e;}
+.in-m.prox{border-color:rgba(250,204,21,.5);background:rgba(234,179,8,.08);}.in-m.prox .material-icons,.in-m.prox small{color:#facc15;}
+.in-m.ok{border-color:rgba(63,185,80,.5);background:rgba(46,164,79,.12);}.in-m.ok .material-icons,.in-m.ok small{color:#3fb950;}
+.bk-lin{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);}.bk-lin .material-icons{font-size:18px;}.bk-lin b{display:block;font-size:12px;color:#e6edf3;}.bk-lin small{font-size:.6rem;color:#8b949e;}
 .sp-ok{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 10px;border-radius:16px;background:rgba(46,164,79,.08);border:1px solid rgba(63,185,80,.3);}
 .sp-ok > .material-icons{font-size:40px;color:#3fb950;}.sp-ok b{font-size:16px;color:#e6edf3;font-weight:900;}.sp-ok p{font-size:.72rem;color:#c8f7d5;margin:0 0 6px;}
 </style>
@@ -7268,6 +7303,59 @@ window.PrismoConta=(function(){
       });
     })();
   }
+  /* ══ Indique e ganhe ══ */
+  var K_IND='prismo_sup_ind',IND_LINK='https://github.com/AndreReal179/Prismo-Drive/releases/latest';
+  var IND_MARCOS=[[10,3],[20,10],[30,15],[50,30]];
+  function indDesenhar(){
+    var box=$c('acc-ind');if(!box)return;
+    if(!logado()){box.innerHTML='<div class="in-hero"><span class="material-icons">card_giftcard</span><b>Ganhe até 30 dias de Pro</b><p>Crie sua conta para ter o seu código de indicação e começar a ganhar.</p><button type="button" class="an-pub" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button></div>';return;}
+    var d=ler(K_IND)||{};
+    var tot=Number(d.total)||0,marcos=d.marcos||IND_MARCOS.map(function(m){return {qtd:m[0],dias:m[1],ganho:false};});
+    var prox=marcos.filter(function(m){return !m.ganho&&tot<m.qtd;})[0],ant=0;
+    marcos.forEach(function(m){if(m.qtd<=tot)ant=m.qtd;});
+    var pct=prox?Math.round((tot-ant)/(prox.qtd-ant)*100):100;
+    box.innerHTML='<div class="in-hero"><div class="in-top"><span class="material-icons">redeem</span><div><b>Indique e ganhe dias de Pro</b><p>Quando seus amigos criam a conta e usam o seu código, você ganha:</p></div></div>'
+      +'<div class="in-cod"><small>Seu código</small><b id="in-cod">'+esc(d.codigo||'······')+'</b><div class="in-bts"><button type="button" onclick="PrismoConta.indCopiar()"><span class="material-icons">content_copy</span>Copiar</button><button type="button" class="zap" onclick="PrismoConta.indCompartilhar()"><span class="material-icons">share</span>Compartilhar</button></div></div></div>'
+      +'<div class="pa-box"><div class="in-prog-t"><b>'+tot+'</b> amigo'+(tot===1?'':'s')+' usaram seu código'+(prox?'<small>faltam '+(prox.qtd-tot)+' para ganhar '+prox.dias+' dias</small>':'<small>todos os prêmios conquistados! 🏆</small>')+'</div>'
+      +'<div class="in-barra"><i style="width:'+pct+'%"></i></div>'
+      +'<div class="in-marcos">'+marcos.map(function(m){var st=m.ganho?'ok':(prox&&prox.qtd===m.qtd?'prox':'');return '<div class="in-m '+st+'"><span class="material-icons">'+(m.ganho?'verified':(st==='prox'?'flag':'lock'))+'</span><b>'+m.qtd+' amigos</b><small>+'+m.dias+' dias Pro</small></div>';}).join('')+'</div>'
+      +'<p class="an-obs">Vale para contas novas que confirmarem o e-mail. Cada prêmio é dado uma vez e os dias se somam ao seu Pro. Contas falsas são canceladas.</p></div>'
+      +(d.pode_usar?'<div class="pa-box"><p class="pa-tit"><span class="material-icons" style="font-size:13px">group_add</span>Um amigo te indicou?</p><div class="pa-lin"><input id="in-usar" class="pa-in" maxlength="12" placeholder="Código do amigo" style="text-transform:uppercase;letter-spacing:.06em;font-weight:800" autocomplete="off" spellcheck="false"><button class="pa-bt ouro" id="in-usar-bt" onclick="PrismoConta.indUsar()">Usar</button></div><p class="an-obs">Você pode usar um código nos primeiros 30 dias da sua conta.</p></div>'
+        :(d.usou?'<p class="an-obs" style="text-align:center"><span class="material-icons" style="font-size:13px;vertical-align:-2px;color:#3fb950">check_circle</span> Você entrou com o código <b style="color:#c9d1d9">'+esc(d.usou)+'</b>.</p>':''));
+    indAtualizar(false);
+  }
+  function indAtualizar(forcar){
+    if(!logado())return;
+    var ult=Number(ler('prismo_sup_ind_em'))||0;if(!forcar&&Date.now()-ult<60000&&ler(K_IND))return;
+    rpc('minha_indicacao').then(function(r){
+      if(r.status!==200||!r.json)return;
+      var antes=ler(K_IND)||null,d=r.json;gravar(K_IND,d);gravar('prismo_sup_ind_em',Date.now());
+      if(antes&&antes.codigo){
+        if((Number(d.total)||0)>(Number(antes.total)||0))supNotificar(9450,'🎉 Mais um amigo usou seu código','Agora são '+d.total+' indicações. Continue compartilhando!');
+        (d.marcos||[]).forEach(function(m){var a=(antes.marcos||[]).filter(function(x){return x.qtd===m.qtd;})[0];if(m.ganho&&!(a&&a.ganho)){supNotificar(9451,'🏆 Você ganhou '+m.dias+' dias de Pro!',m.qtd+' amigos usaram seu código. Os dias já foram somados ao seu Pro.');carregarPerfil();}});
+      }
+      var box=$c('acc-ind');if(box&&box.style.display!=='none')indDesenharSem();
+    });
+  }
+  function indDesenharSem(){var f=indAtualizar;indAtualizar=function(){};try{indDesenhar();}finally{indAtualizar=f;}}
+  function indTexto(){var d=ler(K_IND)||{};return 'Eu uso o Prismo Drive para controlar meus ganhos de motorista e entregador 🚗💰. Baixe, crie sua conta e use meu código '+(d.codigo||'')+': '+IND_LINK;}
+  function indCopiar(){var d=ler(K_IND)||{};if(!d.codigo)return;try{navigator.clipboard.writeText(d.codigo);}catch(e){var t=document.createElement('textarea');t.value=d.codigo;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(x){}t.remove();}toast('Código '+d.codigo+' copiado!');}
+  function indCompartilhar(){
+    var txt=indTexto();
+    if(navigator.share){navigator.share({title:'Prismo Drive',text:txt}).catch(function(){});return;}
+    var a=document.createElement('a');a.href='https://wa.me/?text='+encodeURIComponent(txt);a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  }
+  function indUsar(){
+    var c=(($c('in-usar')||{}).value||'').trim().toUpperCase();if(c.length<4){toast('Digite o código do amigo.');return;}
+    var b=$c('in-usar-bt');if(b){b.disabled=true;b.textContent='…';}
+    rpc('usar_codigo_indicacao',{codigo:c}).then(function(r){
+      if(b){b.disabled=false;b.textContent='Usar';}
+      if(r.status===200&&r.json&&r.json.ok){toast('Pronto! Você entrou pela indicação de '+(r.json.indicador||'um amigo')+'.');indAtualizar(true);return;}
+      var t=(r.json&&(r.json.message||r.json.msg))||'';
+      toast(/ja_usou/.test(t)?'Você já usou um código antes.':/prazo/.test(t)?'O prazo para usar um código (30 dias da conta) já passou.':/proprio/.test(t)?'Você não pode usar o seu próprio código.':/invalido/.test(t)?'Código não encontrado. Confira e tente de novo.':msgErro(r));
+    });
+  }
+
   /* ══ Chamados do suporte: status, respostas e avisos ══ */
   var ST_CH={aguardando:['ouro','Aguardando responsável','hourglass_top'],andamento:['azul','Em andamento','visibility'],respondido:['verde','Respondido','mark_chat_read'],finalizado:['cinza','Finalizado','task_alt']};
   var K_SUP_MEUS='prismo_sup_meus',K_SUP_AVISADOS='prismo_sup_avisados',K_SUP_ADMIN='prismo_sup_admin',chAberto=null;
@@ -7327,12 +7415,14 @@ window.PrismoConta=(function(){
       if(r.status!==200||!r.json)return;
       var antes=ler(K_SUP_ADMIN)||{},ag=Number(r.json.aguardando)||0;
       if(ag>(Number(antes.aguardando)||0)||(ag>0&&r.json.ultimo&&r.json.ultimo!==antes.ultimo&&ag>=(Number(antes.aguardando)||0)))supNotificar(9290,'📩 Novo chamado de suporte',ag+' chamado'+(ag>1?'s':'')+' aguardando resposta. Toque para ler.');
-      gravar(K_SUP_ADMIN,{aguardando:ag,abertos:Number(r.json.abertos)||0,ultimo:r.json.ultimo||''});
+      var v=r.json.venda;
+      if(v&&v.aplicado_em&&antes.venda&&v.aplicado_em!==antes.venda)supNotificar(9295,'💰 Nova venda: Pro '+(NOME_PL[v.plano]||v.plano)+' '+apR(Number(v.valor)||0),(v.nome||'Um cliente')+' pagou por '+(v.metodo==='pix'?'Pix':'cartão')+'. Vendas hoje: '+(r.json.vendas_hoje||1)+'.');
+      gravar(K_SUP_ADMIN,{aguardando:ag,abertos:Number(r.json.abertos)||0,ultimo:r.json.ultimo||'',venda:v&&v.aplicado_em||antes.venda||''});
       var bd=$c('pa-sup-badge');if(bd){bd.textContent=ag;bd.style.display=ag?'':'none';}
       try{PrismoNotif.reagendar();}catch(e){}
     });
   }
-  function supSync(){if(!logado())return;supMeus(false);supAdmin();}
+  function supSync(){if(!logado())return;supMeus(false);supAdmin();indAtualizar(false);}
 
   /* ══ Administração: Suporte (chamados) ══ */
   var paCh={abertos:true,lista:[],aberto:null};
@@ -7534,7 +7624,25 @@ window.PrismoConta=(function(){
         +'<p class="pa-tit" style="margin:14px 0 8px"><span class="material-icons" style="font-size:13px">receipt_long</span>Últimas vendas (60 dias)</p>'
         +((j.lista||[]).length?(j.lista||[]).map(function(x){var st=stPag(x),met=x.metodo==='pix'?'Pix':(x.metodo?'Cartão':'—');
           return '<div class="mp-card"><div class="mp-l1"><span class="mp-ic"><span class="material-icons">person</span></span><div class="mp-t"><b>'+esc(x.nome||'(sem nome)')+'</b><small>ID '+esc(x.conta_id||'')+' · '+dataBr(x.criado_em)+'</small><small>Pro '+(NOME_PL[x.plano]||x.plano)+' · '+met+'</small></div><div class="mp-v"><b>'+apR(Number(x.valor)||0)+'</b><span class="mp-st '+st[0]+'">'+st[1]+'</span></div></div></div>';}).join('')
-          :'<div class="mp-vazio"><span class="material-icons">shopping_bag</span>Nenhuma venda nos últimos 60 dias.</div>');
+          :'<div class="mp-vazio"><span class="material-icons">shopping_bag</span>Nenhuma venda nos últimos 60 dias.</div>')
+        +'<div class="pa-box" style="margin-top:12px"><p class="pa-tit" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span class="material-icons" style="font-size:13px">backup</span>Cópia de segurança</span><button class="pa-bt" style="height:28px;font-size:10px" id="pa-bk-bt" onclick="PrismoConta.adminBackupAgora()"><span class="material-icons" style="font-size:13px">cloud_upload</span>Fazer agora</button></p><div id="pa-bk-lista"><small style="color:#8b949e">Carregando…</small></div><p class="an-obs">Automática todo domingo às 3h: vai para o seu e-mail e fica guardada no Supabase (últimas 8).</p></div>';
+      adminBackups();
+    });
+  }
+  function adminBackups(){
+    rpc('admin_backups').then(function(r){
+      var b=$c('pa-bk-lista');if(!b)return;
+      if(r.status!==200||!Array.isArray(r.json)){b.innerHTML='<small style="color:#ff9b95">'+esc(msgErro(r))+'</small>';return;}
+      if(!r.json.length){b.innerHTML='<small style="color:#8b949e">Nenhuma cópia ainda. A primeira sai no domingo, ou toque em Fazer agora.</small>';return;}
+      b.innerHTML=r.json.slice(0,4).map(function(x){return '<div class="bk-lin"><span class="material-icons" style="color:'+(x.erro?'#f0883e':'#3fb950')+'">'+(x.erro?'warning':'cloud_done')+'</span><div><b>'+dataBr(x.criado_em)+'</b><small>'+(x.bytes?(x.bytes/1048576).toFixed(2).replace('.',',')+' MB':'')+(x.email?' · enviado por e-mail':'')+' · '+esc(x.origem||'')+(x.erro?' · '+esc(x.erro):'')+'</small></div></div>';}).join('');
+    });
+  }
+  function adminBackupAgora(){
+    var b=$c('pa-bk-bt');if(b){b.disabled=true;b.innerHTML='<span class="material-icons ap-gira" style="font-size:13px">autorenew</span>Fazendo…';}
+    rpc('admin_backup_agora').then(function(r){
+      if(r.status!==200){if(b){b.disabled=false;b.innerHTML='<span class="material-icons" style="font-size:13px">cloud_upload</span>Fazer agora';}toast(msgErro(r));return;}
+      toast('Cópia iniciada. Em até 1 minuto ela chega no seu e-mail.');
+      setTimeout(function(){adminBackups();if(b){b.disabled=false;b.innerHTML='<span class="material-icons" style="font-size:13px">cloud_upload</span>Fazer agora';}},25000);
     });
   }
 
@@ -7823,7 +7931,7 @@ window.PrismoConta=(function(){
     assinar:assinar,voltouPagamento:voltouPagamento,
     termos:function(){termosAbrir('ler');},folhaFechar:function(){folhaFechar('tm-ov');},meusPagamentos:meusPagamentos,
     adminAba:adminAba,adminVendas:adminVendas,anuChip:anuChip,anuPrevia:anuPrevia,anuPublicar:anuPublicar,anuLista:anuLista,anuEncerrar:anuEncerrar,
-    termosAceitos:termosAceitos,suporteDesenhar:suporteDesenhar,supMeus:supMeus,chAbrir:chAbrir,chResponder:chResponder,
+    termosAceitos:termosAceitos,suporteDesenhar:suporteDesenhar,indDesenhar:indDesenhar,indCopiar:indCopiar,indCompartilhar:indCompartilhar,indUsar:indUsar,adminBackupAgora:adminBackupAgora,supMeus:supMeus,chAbrir:chAbrir,chResponder:chResponder,
     adminSuporte:adminSuporte,paChAbrir:paChAbrir,paChResponder:paChResponder,paChFinalizar:paChFinalizar,paChFiltro:function(v){paCh.abertos=v;paCh.aberto=null;adminSuporte();},supCat:supCat,supArquivos:supArquivos,supRemover:supRemover,supEnviar:supEnviar,
     apEscolher:apEscolher,
     adminAbrir:adminAbrir,adminBuscar:adminBuscar,adminPro:adminPro,adminFree:adminFree,adminGerar:adminGerar,adminCodigos:adminCodigos,

@@ -12,3 +12,4 @@
 • ⏳ Tela de carregamento mostra o que está acontecendo de verdade (baixando, guardando, sincronizando)
 • 🎫 Meus chamados no Suporte: acompanhe cada mensagem (Aguardando responsável, Em andamento, Respondido e Finalizado) e receba aviso quando a equipe responder
 • 📊 Widget com a mesma barra da tela inicial: primeiro as contas da semana (em vermelho) e, quando junta o dinheiro, volta para a meta do lucro
+• 🎁 Indique e ganhe: compartilhe seu código e ganhe dias de Pro (10 amigos = 3 dias, 20 = 10, 30 = 15 e 50 = 30 dias)
