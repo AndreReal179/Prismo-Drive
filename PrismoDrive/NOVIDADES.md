@@ -20,3 +20,5 @@
 • 🎁 Teste grátis: conta nova ganha 3 dias de Pro ao confirmar o e-mail, uma vez por celular
 • 🔒 Proteção contra cópias modificadas: o app só abre na versão oficial da Prismo Lab
 • 🔔 Notificações com visual novo: carro verde do Prismo Drive, título em destaque e mensagem mais limpa
+• 🧭 Menu lateral reorganizado: Conta, Ferramentas, Ajuda e Configurações, cada grupo abre com suas funções
+• 💾 Menu lateral salva sozinho: mudou, está salvo (sem botão Salvar)

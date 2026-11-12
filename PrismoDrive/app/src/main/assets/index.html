@@ -153,7 +153,7 @@
   function diasAposDomingo(dia){return DIAS_PAGAMENTO_MAPA[normDia(dia)]||4;}
   function labelDiaSemana(dia){var d=String(dia||'Quinta');var n=normDia(d);return (n==='sabado'||n==='domingo')?d:d+'-feira';}
   function renderDiasPagamento(){var sel=$('cfg-perfil-pagamento');if(!sel)return;var atual=sel.value||'Quinta';document.querySelectorAll('#cfg-pagamento-chips button').forEach(function(b){var on=b.getAttribute('data-valor')===atual;b.style.background=on?'rgba(74,222,128,0.16)':'transparent';b.style.borderColor=on?'rgba(74,222,128,0.5)':'rgba(255,255,255,0.08)';b.style.color=on?'#4ade80':'#8b949e';});}
-  function escolherDiaPagamento(valor){var sel=$('cfg-perfil-pagamento');if(!sel)return;sel.value=valor;renderDiasPagamento();}
+  function escolherDiaPagamento(valor){var sel=$('cfg-perfil-pagamento');if(!sel)return;sel.value=valor;renderDiasPagamento();try{autoSalvarCfg(true);}catch(e){}}
 
   /* ── 4. DASHBOARD PRINCIPAL ── */
   function montarRetornoVazio(cfg) {
@@ -1002,6 +1002,82 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
   background:linear-gradient(135deg,#17702f,#2ea44f 55%,#4ade80) !important;border:1px solid rgba(190,255,215,.4) !important;
   box-shadow:0 14px 30px -10px rgba(46,164,79,.85),inset 0 1px 0 rgba(255,255,255,.35) !important;text-shadow:0 1px 3px rgba(0,60,20,.5);}
 #btn-salvar-drawer:active{transform:scale(.98);}
+/* ══ Menu lateral v1.9.8: seções agrupadas, visual limpo ══ */
+#drawer-menu .drawer-content > div:nth-child(2){padding:14px 20px 6px !important;}
+#dw-id{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:99px;padding:5px 6px 5px 12px;}
+#dw-id > span{font-size:10.5px !important;letter-spacing:.12em !important;color:#7d8d84 !important;}
+#dw-id #dw-id-num{color:#e6edf3 !important;letter-spacing:.06em !important;}
+.dw-resumo{margin-top:16px;border-radius:22px;padding:14px 14px 12px;background:linear-gradient(150deg,rgba(46,164,79,.2),rgba(46,164,79,.04) 60%),rgba(255,255,255,.02);border:1px solid rgba(110,255,170,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);}
+.dw-res-top{display:flex;align-items:center;justify-content:space-between;}
+.dw-res-l{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7fae90;}
+#resumo-mes-ganho.dw-res-v{font-size:28px !important;font-weight:900;letter-spacing:-.04em !important;color:#f2fbf5 !important;text-shadow:none;margin-top:2px;line-height:1.1;}
+.dw-res-ic{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.3);}
+.dw-res-ic .material-icons{font-size:22px;color:#4ade80;}
+.dw-res-grid{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;border-top:1px solid rgba(255,255,255,.07);padding-top:10px;}
+.dw-res-grid > div{display:flex;flex-direction:column;align-items:flex-start;padding:0 10px;}
+.dw-res-grid > div + div{border-left:1px solid rgba(255,255,255,.07);}
+.dw-res-grid > div:first-child{padding-left:2px;}
+.dw-res-grid .material-icons{font-size:16px;}
+.dw-res-grid p{font-size:10px;font-weight:700;color:#7d8d84;margin-top:3px;text-transform:uppercase;letter-spacing:.06em;}
+.dw-res-grid b{font-size:14.5px;font-weight:900;color:#e6edf3;letter-spacing:-.02em;margin-top:1px;white-space:nowrap;}
+#drawer-menu .drawer-content > div:nth-child(3){gap:0 !important;padding:6px 20px 18px !important;}
+.dw-sec{display:flex;align-items:center;gap:6px;margin:16px 6px 8px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6f8578;}
+.dw-sec .material-icons{font-size:14px;color:#4f6b5a;}
+.dw-grupo{border-radius:22px;overflow:hidden;background:linear-gradient(170deg,rgba(18,30,23,.9),rgba(9,15,12,.95));border:1px solid rgba(255,255,255,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 18px 34px -26px rgba(0,0,0,.95);}
+#drawer-menu .dw-gb > .acc-item{border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;margin:0 !important;position:relative;}
+#drawer-menu .dw-gb > .acc-item + .acc-item::before{content:"";position:absolute;top:0;left:68px;right:0;height:1px;background:rgba(255,255,255,.07);}
+#drawer-menu .dw-gb > .acc-item > button{padding:13px 14px !important;gap:13px !important;min-height:64px;}
+#drawer-menu .dw-gb > .acc-item > button:active{background:rgba(255,255,255,.035) !important;}
+#drawer-menu .dw-gb > .acc-item > button > div:first-child{width:40px !important;height:40px !important;border-radius:12px !important;border:0 !important;box-shadow:none !important;}
+#drawer-menu .dw-gb > .acc-item > button > div:first-child .material-icons{font-size:21px !important;}
+#drawer-menu .dw-gb > .acc-item > button > div:nth-child(2) > p:first-child{font-size:15px !important;font-weight:700 !important;color:#eef6f1 !important;}
+#drawer-menu .dw-gb > .acc-item > button > div:nth-child(2) > p:last-child{font-size:11.5px !important;font-weight:500 !important;color:#7a8a81 !important;margin-top:3px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#drawer-menu .dw-gb > .acc-item > button > .material-icons:last-child{font-size:22px !important;color:#56645c !important;}
+#drawer-menu .dw-gb > .acc-item > div[id^="acc-"],#drawer-menu .dw-gb > .acc-item > #pa-corpo{padding:2px 14px 16px !important;}
+/* cor de cada ícone */
+#drawer-menu .dw-grupo .pd-acc-perfil > button > div:first-child{background:linear-gradient(135deg,#1f8f43,#3fb950) !important;}
+#drawer-menu .dw-grupo #pa-acc > button > div:first-child{background:linear-gradient(135deg,#0f6b5c,#20b39a) !important;}
+#drawer-menu .dw-grupo .pd-acc-plano > button > div:first-child{background:linear-gradient(135deg,#b7791f,#eab308) !important;}
+#drawer-menu .dw-grupo .pd-acc-ind > button > div:first-child{background:linear-gradient(135deg,#c2410c,#f59e0b) !important;}
+#drawer-menu .dw-grupo .acc-item.pd-acc-rotas > button > div:first-child{background:linear-gradient(135deg,#1d4ed8,#3b82f6) !important;}
+#drawer-menu .dw-grupo .pd-acc-manut > button > div:first-child{background:linear-gradient(135deg,#c2410c,#f97316) !important;}
+#drawer-menu .dw-grupo .pd-acc-sup > button > div:first-child{background:linear-gradient(135deg,#0e7490,#06b6d4) !important;}
+#drawer-menu .dw-grupo .pd-acc-guia > button > div:first-child{background:linear-gradient(135deg,#6d28d9,#8b5cf6) !important;}
+#drawer-menu .dw-grupo .pd-acc-upd > button > div:first-child{background:linear-gradient(135deg,#15803d,#22c55e) !important;}
+#drawer-menu .dw-grupo .pd-acc-cfg > button > div:first-child{background:linear-gradient(135deg,#374151,#6b7280) !important;}
+#drawer-menu .dw-gb > .acc-item > button > div:first-child .material-icons,#drawer-menu .dw-gb > .acc-item.pd-acc-rotas > button > div:first-child .material-icons,#drawer-menu .dw-gb > .acc-item.pd-acc-manut > button > div:first-child .material-icons{color:#fff !important;}
+#drawer-menu .drawer-content > div:last-child{padding:12px 20px calc(20px + env(safe-area-inset-bottom,0px)) !important;}
+#drawer-menu #dw-rodape{padding:0 !important;border:0 !important;height:0;background:none !important;}
+#drawer-menu .drawer-content > div:nth-child(3){padding-bottom:calc(28px + env(safe-area-inset-bottom,0px)) !important;}
+.dw-salvo{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;pointer-events:none;z-index:5;
+  display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:99px;background:rgba(10,30,18,.94);border:1px solid rgba(110,255,170,.32);
+  box-shadow:0 12px 30px -8px rgba(0,0,0,.85);color:#c9f7d8;font-size:12.5px;font-weight:800;white-space:nowrap;transition:opacity .25s,transform .25s;}
+.dw-salvo .material-icons{font-size:17px;color:#4ade80;}
+.dw-salvo.on{opacity:1;transform:translate(-50%,0);}
+.dw-salvo.ind .material-icons{animation:dwGira 1s linear infinite;color:#8b949e;}
+.dw-salvo.erro{border-color:rgba(248,81,73,.45);color:#ffb3ad;}.dw-salvo.erro .material-icons{color:#f85149;}
+@keyframes dwGira{to{transform:rotate(360deg);}}
+.dw-grupo{flex-shrink:0;}
+.dw-grupo + .dw-grupo{margin-top:12px;}
+.dw-grupo:first-child{margin-top:14px;}
+.dw-gh{width:100%;display:flex;align-items:center;gap:14px;padding:15px 14px;background:transparent;border:0;color:inherit;text-align:left;cursor:pointer;min-height:72px;}
+.dw-gh:active{background:rgba(255,255,255,.035);}
+.dw-gi{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 18px -10px rgba(0,0,0,.8);}
+.dw-gi .material-icons{font-size:24px;color:#fff;}
+.dw-gt{flex:1;min-width:0;display:flex;flex-direction:column;}
+.dw-gt b{font-size:17px;font-weight:800;color:#f2fbf5;letter-spacing:-.015em;line-height:1.15;}
+.dw-gt small{font-size:12px;font-weight:500;color:#7a8a81;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dw-gc{font-size:24px;color:#6b7a72;transition:transform .2s;}
+.dw-acc .dw-gb{display:none;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.07);}
+.dw-acc.aberto .dw-gb{display:block;}
+.dw-acc.aberto .dw-gc{transform:rotate(180deg);}
+.dw-acc.aberto{border-color:rgba(110,255,170,.2);}
+.dw-acc .dw-gb > .acc-item > button{padding-left:22px !important;}
+#drawer-menu .dw-acc .dw-gb > .acc-item + .acc-item::before{left:76px;}
+.dw-solo .dw-gb > .acc-item > button{min-height:72px;}
+#drawer-menu .dw-solo .dw-gb > .acc-item > button > div:first-child{width:46px !important;height:46px !important;border-radius:14px !important;}
+#drawer-menu .dw-solo .dw-gb > .acc-item > button > div:first-child .material-icons{font-size:24px !important;}
+#drawer-menu .dw-solo .dw-gb > .acc-item > button > div:nth-child(2) > p:first-child{font-size:17px !important;font-weight:800 !important;}
 </style>
 
 <style>
@@ -1262,6 +1338,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
           <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(46,164,79,0.1);border:1px solid rgba(46,164,79,0.2);"><div style="width:5px;height:5px;border-radius:50%;background:#3fb950;"></div><span id="drawer-perfil-tag" style="font-size:0.58rem;font-weight:700;color:#3fb950;text-transform:uppercase;letter-spacing:0.08em;">Perfil ativo</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0;"><p style="font-size:0.58rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Este mês</p><p id="resumo-mes-ganho" style="font-size:17px;font-weight:900;color:#3fb950;line-height:1;">R$ 0,00</p></div>
+        
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">
         <div class="pd-stat fuel" style="border-radius:14px;padding:9px 10px;background:rgba(240,136,62,0.06);border:1px solid rgba(240,136,62,0.13);text-align:center;"><p style="font-size:0.56rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Combustível</p><p id="resumo-mes-custo" style="font-size:13px;font-weight:900;color:var(--orange);">R$ 0,00</p></div>
@@ -1269,284 +1346,284 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
         <div class="pd-stat" style="border-radius:14px;padding:9px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center;"><p style="font-size:0.56rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Litros</p><p id="resumo-mes-litros" style="font-size:13px;font-weight:900;color:#e6edf3;">0 L</p></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;padding:0 22px;flex-shrink:0;"><div style="flex:1;height:1px;background:rgba(240,246,252,0.06);"></div><span style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;">Menu</span><div style="flex:1;height:1px;background:rgba(240,246,252,0.06);"></div></div>
+    
     <div style="flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:10px;">
 
-      <!-- ABA PERFIL -->
-      <div class="acc-item pd-acc-perfil" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-perfil')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--green-lt);">person</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Foto, nome e opções da conta</p></div>
-          <span id="acc-perfil-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-perfil" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
-          <div style="background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;">
-            <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Sua identidade</p>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-              <div onclick="escolherFotoPerfil()" style="position:relative;cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform=''">
-                <div id="cfg-foto-prev" style="width:96px;height:96px;border-radius:50%;background:#0d1117;border:2px solid rgba(46,164,79,0.4);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 22px rgba(46,164,79,0.16);">👤</div>
-                <div style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#165c2b,#2ea44f);border:2px solid #0d1117;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);"><span class="material-icons" style="font-size:15px;color:#fff;">photo_camera</span></div>
-              </div>
-              <div style="display:flex;gap:16px;">
-                <button type="button" onclick="escolherFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#3fb950;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">photo_library</span>Trocar foto</button>
-                <button type="button" onclick="removerFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#8b949e;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">delete_outline</span>Remover</button>
-              </div>
-            </div>
-            <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
-            <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome de exibição</p>
-            <input type="text" id="cfg-perfil-nome" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;outline:none;color:#e6edf3;font-size:14px;font-weight:800;padding:11px 12px;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(46,164,79,0.45)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'" placeholder="Seu nome...">
-            <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
-            <div id="pf-conta"></div>
-            <input type="hidden" id="cfg-perfil-foto">
-          </div>
-        </div>
-      </div>
-
-      <!-- ABA INDIQUE E GANHE -->
-      <div class="acc-item pd-acc-ind" style="background:#0d1117;border:1px solid rgba(250,204,21,0.22);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-ind')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.13);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#facc15;">card_giftcard</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Indique e ganhe</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Seu código · ganhe até 30 dias de Pro</p></div>
-          <span id="acc-ind-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-ind" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
-      </div>
-
-      <!-- ABA MANUTENÇÃO -->
-      <div class="acc-item pd-acc-manut" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-manut')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--orange);">build</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Manutenção</p><p id="acc-manut-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Peças e alertas</p></div>
-          <span id="acc-manut-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-manut" style="display:none;padding:0 16px 14px;">
-          <div style="background:#161b22;border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <div>
-                <p style="font-size:0.56rem;font-weight:800;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;">Status geral</p>
-                <p id="acc-manut-status" style="font-size:13px;font-weight:900;color:#e6edf3;margin-top:3px;">Nenhuma peça cadastrada</p>
-              </div>
-              <div id="acc-manut-badge" style="display:none;padding:4px 9px;border-radius:99px;background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.35);color:#f85149;font-size:0.58rem;font-weight:900;">0 alertas</div>
-            </div>
-            <button onclick="abrirModalManutencao()" class="btn-manut-primary" style="width:100%;">
-              <span class="material-icons" style="font-size:16px;">tune</span>Gerenciar peças
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- ABA ADQUIRIR PLANO -->
-      <div class="acc-item pd-acc-plano" style="background:#0d1117;border:1px solid rgba(250,204,21,0.18);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-plano')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.12);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:16px;color:#facc15;">workspace_premium</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Adquirir plano</p><p id="acc-plano-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Free e Pro</p></div>
-          <span id="acc-plano-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span>
-        </button>
-        <div id="acc-plano" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;"></div>
-      </div>
-
-
-      <!-- ABA ASSISTENTE DE ROTAS -->
-      <div class="acc-item pd-acc-rotas" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
-        <button type="button" onclick="toggleAccordion('acc-rotas')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#58a6ff;">navigation</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Assistente de rotas</p><p id="acc-rotas-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Calcule suas rotas em tempo real</p></div>
-          <span id="acc-rotas-dot" style="width:9px;height:9px;border-radius:50%;background:#6e7681;flex-shrink:0;"></span>
-          <span id="acc-rotas-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-rotas" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
-          <div class="rt-box">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div id="rt-st-ic" class="rt-ic"><span class="material-icons" style="font-size:20px;">power_settings_new</span></div>
-              <div style="flex:1;min-width:0;">
-                <p id="rt-st-t" style="font-size:14px;font-weight:900;color:#e6edf3;">Verificando…</p>
-                <p id="rt-st-s" style="font-size:0.66rem;color:var(--muted);margin-top:2px;line-height:1.35;"></p>
-              </div>
-            </div>
-            <button type="button" id="rt-abrir" onclick="PrismoRotas.abrir()" class="rt-btn pri"><span class="material-icons" style="font-size:18px;">open_in_new</span>Abrir assistente</button>
-            <button type="button" id="rt-power" onclick="PrismoRotas.power()" class="rt-btn"><span class="material-icons" id="rt-power-i" style="font-size:18px;">power_settings_new</span><span id="rt-power-t">Ligar</span></button>
-            <p class="rt-note"><span class="material-icons" style="font-size:13px;vertical-align:-2px;">account_balance</span> Vai abrir o app do banco? Desligue antes — com o assistente ligado alguns bancos não abrem.</p>
-          </div>
-          <details class="rt-como"><summary>Como funciona</summary>
-            <p>1. Toque em <b>Ligar</b> e ative <b>Assistente de Rotas (Prismo Drive)</b> na acessibilidade do Android.</p>
-            <p>2. Abra o iFood (Rotas disponíveis) ou o InDrive: cada oferta ganha um selo <b style="color:#3fb950">ÓTIMO</b>, <b style="color:#f0883e">MÉDIO</b> ou <b style="color:#f85149">RUIM</b> com o R$/km real, gasolina e lucro.</p>
-            <p>3. Ajuste seus limites, alerta de som e aceite automático em <b>Abrir assistente</b>. Tudo que foi analisado fica no Relatório.</p>
-            <p>Android 13+: se aparecer "configuração restrita", abra o assistente → Ajuda → "Não consigo ativar".</p>
-            <p>Pode fechar o Prismo Drive: o assistente continua rodando sozinho. Para não ser encerrado pelo celular, deixe a bateria do Prismo Drive em <b>Sem restrições</b> (assistente → Ajuda → "Ajustes de bateria").</p>
-          </details>
-        </div>
-      </div>
-
-      <!-- ABA CONFIGURAÇÕES -->
-      
-
-
-            <!-- ABA GUIA DO APP -->
-      <div class="acc-item pd-acc-guia" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
-        <button type="button" onclick="toggleAccordion('acc-guia')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#fbbf24;">menu_book</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Guia do App</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Tutoriais com prints de cada aba</p></div>
-          <span id="acc-guia-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
-          <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
-          <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
-        </div>
-      </div>
-
-      <!-- ABA ATUALIZAÇÕES -->
-      <div class="acc-item pd-acc-upd" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
-        <button type="button" onclick="toggleAccordion('acc-upd')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">system_update</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Atualizações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Versão e novidades do app</p></div>
-          <span id="acc-upd-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-upd" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
-          <div class="upd-row">
-            <div><p class="upd-l">Sua versão</p><p class="upd-v" id="upd-versao">v1.6</p></div>
-            <button type="button" class="upd-btn" onclick="abrirNovidades()">✨ Novidades<span class="nv-tag n">Novo</span></button>
-          </div>
-          <div id="upd-card" style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
-            <p id="upd-st-l" style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Atualização automática</p>
-            <p id="upd-st-t" style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Toque em verificar para procurar uma nova versão.</p>
-            <p id="upd-st-v" style="display:none;font-size:26px;font-weight:900;color:#fff;margin:4px 0 4px;letter-spacing:-0.5px;"></p>
-            <div id="upd-notas" style="display:none;margin:8px 0 4px;max-height:180px;overflow:auto;font-size:12px;line-height:1.5;color:#c9d1d9;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;white-space:pre-wrap;"></div>
-            <div id="upd-prog" style="display:none;margin:10px 0 2px;">
-              <div style="height:8px;border-radius:99px;background:#1b2026;overflow:hidden;"><div id="upd-prog-b" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#1a7a3a,#4ade80);transition:width .2s;"></div></div>
-              <p id="upd-prog-t" style="font-size:0.62rem;color:var(--muted);margin-top:6px;text-align:center;">Baixando…</p>
-            </div>
-            <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
-            <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ABA SUPORTE -->
-      <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-sup')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.1);border:1px solid rgba(63,185,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">support_agent</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Suporte</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Fale com a equipe · relate BUGs e ganhe recompensa</p></div>
-          <span id="acc-sup-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-sup" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
-      </div>
-
-      <div class="acc-item pd-acc-cfg" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <button type="button" onclick="toggleAccordion('acc-cfg')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
-          <div style="width:32px;height:32px;border-radius:10px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--blue);">settings</span></div>
-          <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Configurações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Meta, veículo, avisos, backup e segurança</p></div>
-          <span id="acc-cfg-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
-        </button>
-        <div id="acc-cfg" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;">
-
-          <div class="cf-sec" id="cfs-ganhos">
-            <button type="button" class="cf-head" onclick="cfToggle('ganhos')">
-              <span class="cf-ic"><span class="material-icons">payments</span></span>
-              <span class="cf-txt"><b>Ganhos e meta</b><small id="cf-res-ganhos">Meta diária e dia de recebimento</small></span>
-              <span class="material-icons cf-chev">expand_more</span>
-            </button>
-            <div class="cf-body">
-<div class="cf-card">
-              <label class="cf-row" for="cfg-perfil-meta">
-                <span class="cf-ic"><span class="material-icons">flag</span></span>
-                <span class="cf-txt"><b>Meta diária</b><small>Quanto você quer faturar por dia (bruto)</small></span>
-                <span class="cf-val"><span>R$</span><input type="number" id="cfg-perfil-meta" step="1" inputmode="decimal" placeholder="250"></span>
-              </label>
-              <div class="cf-row" style="padding-bottom:10px;">
-                <span class="cf-ic"><span class="material-icons">event</span></span>
-                <span class="cf-txt"><b>Dia de recebimento</b><small>O dia em que os apps pagam você</small></span>
-              </div>
-              <select id="cfg-perfil-pagamento" style="display:none;"><option value="Segunda">Segunda-feira</option><option value="Terça">Terça-feira</option><option value="Quarta">Quarta-feira</option><option value="Quinta">Quinta-feira</option><option value="Sexta">Sexta-feira</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option></select>
-              <div id="cfg-pagamento-chips" class="cf-chips"><button type="button" data-valor="Segunda" onclick="escolherDiaPagamento('Segunda')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEG</button><button type="button" data-valor="Terça" onclick="escolherDiaPagamento('Terça')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">TER</button><button type="button" data-valor="Quarta" onclick="escolherDiaPagamento('Quarta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUA</button><button type="button" data-valor="Quinta" onclick="escolherDiaPagamento('Quinta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUI</button><button type="button" data-valor="Sexta" onclick="escolherDiaPagamento('Sexta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEX</button><button type="button" data-valor="Sábado" onclick="escolherDiaPagamento('Sábado')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SÁB</button><button type="button" data-valor="Domingo" onclick="escolherDiaPagamento('Domingo')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">DOM</button></div>
-            </div>
-          
-            </div>
-          </div>
-
-          <div class="cf-sec" id="cfs-veiculo">
-            <button type="button" class="cf-head" onclick="cfToggle('veiculo')">
-              <span class="cf-ic"><span class="material-icons">directions_car</span></span>
-              <span class="cf-txt"><b>Veículo</b><small id="cf-res-veiculo">Consumo e odômetro do dia</small></span>
-              <span class="material-icons cf-chev">expand_more</span>
-            </button>
-            <div class="cf-body">
-<div class="cf-card">
-              <label class="cf-row" for="cfg-consumo">
-                <span class="cf-ic"><span class="material-icons">local_gas_station</span></span>
-                <span class="cf-txt"><b>Consumo</b><small>Usado no custo de combustível de todas as rotas</small></span>
-                <span class="cf-val"><input type="number" id="cfg-consumo" step="0.1" min="0.1" inputmode="decimal" placeholder="10,0" onchange="salvarConsumoCfg()" onblur="salvarConsumoCfg()"><span>km/l</span></span>
-              </label>
-              <div class="cf-row" style="cursor:pointer;" onclick="odoPedirSet(!odoPedirAtivo())">
-                <span class="cf-ic"><span class="material-icons">speed</span></span>
-                <span class="cf-txt"><b>Pedir odômetro do dia</b><small id="cfg-odo-status">Desligado</small></span>
-                <span id="cfg-odo-toggle" class="cfg-tg"><i></i></span>
-              </div>
-              <p class="cf-nota">Ligado, o app pede o odômetro uma vez por dia: melhora o cálculo do combustível (inclusive os km fora de rota) e do desgaste das peças na Manutenção.</p>
-            </div>
-          
-            </div>
-          </div>
-
-          <div class="cf-sec" id="cfs-notif">
-            <button type="button" class="cf-head" onclick="cfToggle('notif')">
-              <span class="cf-ic"><span class="material-icons">notifications</span></span>
-              <span class="cf-txt"><b>Notificações</b><small id="cf-res-notif">Avisos no celular</small></span>
-              <span class="material-icons cf-chev">expand_more</span>
-            </button>
-            <div class="cf-body">
-<div id="cfg-notif-card" class="cf-card">
-              <div class="cf-row">
-                <span id="upd-notif-ico" class="cf-ic"><span class="material-icons">notifications</span></span>
-                <span class="cf-txt"><b>Avisos no celular</b><small id="upd-notif-status">Verificando...</small></span>
-                <span id="upd-notif-pill" class="notif-pill">—</span>
-              </div>
-              <p class="cf-nota" style="margin-top:-6px;">Dívidas, manutenção, meta batida, odômetro e fechamento do mês, mesmo com o app fechado. Respostas do suporte, pagamentos e novidades chegam na hora.</p>
-              <div class="cf-btns">
-                <button type="button" class="notif-btn sec" onclick="PrismoNotif.testar()"><span class="material-icons" style="font-size:15px;">send</span>Testar</button>
-                <button type="button" class="notif-btn pri" onclick="PrismoNotif.ativar()"><span class="material-icons" style="font-size:15px;">notifications_active</span>Ativar</button>
-              </div>
-            </div>
-          
-            </div>
-          </div>
-
-          <div class="cf-sec" id="cfs-backup">
-            <button type="button" class="cf-head" onclick="cfToggle('backup')">
-              <span class="cf-ic"><span class="material-icons">cloud</span></span>
-              <span class="cf-txt"><b>Backup</b><small id="cf-res-backup">Seus dados na conta</small></span>
-              <span class="material-icons cf-chev">expand_more</span>
-            </button>
-            <div class="cf-body">
-              <div id="cf-backup"></div>
-            </div>
-          </div>
-
-          <div class="cf-sec" id="cfs-seg">
-            <button type="button" class="cf-head" onclick="cfToggle('seg')">
-              <span class="cf-ic"><span class="material-icons">shield</span></span>
-              <span class="cf-txt"><b>Segurança</b><small id="cf-res-seg">Biometria ou PIN</small></span>
-              <span class="material-icons cf-chev">expand_more</span>
-            </button>
-            <div class="cf-body">
-              <div id="cf-seg"></div>
-              <div class="cf-card" style="margin-top:10px">
-                <div class="cf-row" style="cursor:pointer;" onclick="PrismoConta.errosToggle()">
-                  <span class="cf-ic"><span class="material-icons">bug_report</span></span>
-                  <span class="cf-txt"><b>Relatório automático de erros</b><small id="cfg-err-status">Ligado</small></span>
-                  <span id="cfg-err-toggle" class="cfg-tg on"><i></i></span>
+            <div class="dw-grupo dw-acc" id="dwg-conta">
+        <button type="button" class="dw-gh" onclick="dwGrupo('conta')"><span class="dw-gi" style="background:linear-gradient(135deg,#1f8f43,#3fb950)"><span class="material-icons">manage_accounts</span></span><span class="dw-gt"><b>Conta</b><small>Perfil, plano e indicações</small></span><span class="material-icons dw-gc">expand_more</span></button>
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-perfil" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-perfil')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--green-lt);">person</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Perfil</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Foto, nome e opções da conta</p></div>
+            <span id="acc-perfil-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-perfil" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
+            <div style="background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;">
+              <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Sua identidade</p>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+                <div onclick="escolherFotoPerfil()" style="position:relative;cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform=''">
+                  <div id="cfg-foto-prev" style="width:96px;height:96px;border-radius:50%;background:#0d1117;border:2px solid rgba(46,164,79,0.4);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 22px rgba(46,164,79,0.16);">👤</div>
+                  <div style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#165c2b,#2ea44f);border:2px solid #0d1117;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);"><span class="material-icons" style="font-size:15px;color:#fff;">photo_camera</span></div>
                 </div>
-                <p class="cf-nota">Se algo der errado, o app avisa a equipe sozinho (o erro, a tela, a versão e o modelo do celular) para corrigirmos rápido. Seus ganhos, rotas e dívidas nunca são enviados.</p>
+                <div style="display:flex;gap:16px;">
+                  <button type="button" onclick="escolherFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#3fb950;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">photo_library</span>Trocar foto</button>
+                  <button type="button" onclick="removerFotoPerfil()" style="cursor:pointer;background:none;border:none;color:#8b949e;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:4px;"><span class="material-icons" style="font-size:14px;">delete_outline</span>Remover</button>
+                </div>
+              </div>
+              <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+              <p style="font-size:0.56rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Nome de exibição</p>
+              <input type="text" id="cfg-perfil-nome" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;outline:none;color:#e6edf3;font-size:14px;font-weight:800;padding:11px 12px;transition:border-color .15s;" onfocus="this.style.borderColor='rgba(46,164,79,0.45)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'" placeholder="Seu nome...">
+              <div style="height:1px;background:rgba(255,255,255,0.06);margin:14px 0;"></div>
+              <div id="pf-conta"></div>
+              <input type="hidden" id="cfg-perfil-foto">
+            </div>
+          </div>
+        </div>
+        <div class="acc-item pd-acc-plano" style="background:#0d1117;border:1px solid rgba(250,204,21,0.18);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-plano')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.12);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:16px;color:#facc15;">workspace_premium</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Adquirir plano</p><p id="acc-plano-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Free e Pro</p></div>
+            <span id="acc-plano-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform .2s;">expand_more</span>
+          </button>
+          <div id="acc-plano" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div class="acc-item pd-acc-ind" style="background:#0d1117;border:1px solid rgba(250,204,21,0.22);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-ind')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(234,179,8,0.13);border:1px solid rgba(250,204,21,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#facc15;">card_giftcard</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Indique e ganhe</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Seu código · ganhe até 30 dias de Pro</p></div>
+            <span id="acc-ind-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-ind" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="dw-grupo dw-acc" id="dwg-ferr">
+        <button type="button" class="dw-gh" onclick="dwGrupo('ferr')"><span class="dw-gi" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6)"><span class="material-icons">handyman</span></span><span class="dw-gt"><b>Ferramentas</b><small>Assistente de rotas e manutenção</small></span><span class="material-icons dw-gc">expand_more</span></button>
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-rotas" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+          <button type="button" onclick="toggleAccordion('acc-rotas')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#58a6ff;">navigation</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Assistente de rotas</p><p id="acc-rotas-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Calcule suas rotas em tempo real</p></div>
+            <span id="acc-rotas-dot" style="width:9px;height:9px;border-radius:50%;background:#6e7681;flex-shrink:0;"></span>
+            <span id="acc-rotas-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-rotas" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
+            <div class="rt-box">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div id="rt-st-ic" class="rt-ic"><span class="material-icons" style="font-size:20px;">power_settings_new</span></div>
+                <div style="flex:1;min-width:0;">
+                  <p id="rt-st-t" style="font-size:14px;font-weight:900;color:#e6edf3;">Verificando…</p>
+                  <p id="rt-st-s" style="font-size:0.66rem;color:var(--muted);margin-top:2px;line-height:1.35;"></p>
+                </div>
+              </div>
+              <button type="button" id="rt-abrir" onclick="PrismoRotas.abrir()" class="rt-btn pri"><span class="material-icons" style="font-size:18px;">open_in_new</span>Abrir assistente</button>
+              <button type="button" id="rt-power" onclick="PrismoRotas.power()" class="rt-btn"><span class="material-icons" id="rt-power-i" style="font-size:18px;">power_settings_new</span><span id="rt-power-t">Ligar</span></button>
+              <p class="rt-note"><span class="material-icons" style="font-size:13px;vertical-align:-2px;">account_balance</span> Vai abrir o app do banco? Desligue antes — com o assistente ligado alguns bancos não abrem.</p>
+            </div>
+            <details class="rt-como"><summary>Como funciona</summary>
+              <p>1. Toque em <b>Ligar</b> e ative <b>Assistente de Rotas (Prismo Drive)</b> na acessibilidade do Android.</p>
+              <p>2. Abra o iFood (Rotas disponíveis) ou o InDrive: cada oferta ganha um selo <b style="color:#3fb950">ÓTIMO</b>, <b style="color:#f0883e">MÉDIO</b> ou <b style="color:#f85149">RUIM</b> com o R$/km real, gasolina e lucro.</p>
+              <p>3. Ajuste seus limites, alerta de som e aceite automático em <b>Abrir assistente</b>. Tudo que foi analisado fica no Relatório.</p>
+              <p>Android 13+: se aparecer "configuração restrita", abra o assistente → Ajuda → "Não consigo ativar".</p>
+              <p>Pode fechar o Prismo Drive: o assistente continua rodando sozinho. Para não ser encerrado pelo celular, deixe a bateria do Prismo Drive em <b>Sem restrições</b> (assistente → Ajuda → "Ajustes de bateria").</p>
+            </details>
+          </div>
+        </div>
+        <div class="acc-item pd-acc-manut" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-manut')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(240,136,62,0.08);border:1px solid rgba(240,136,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--orange);">build</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Manutenção</p><p id="acc-manut-sub" style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Peças e alertas</p></div>
+            <span id="acc-manut-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-manut" style="display:none;padding:0 16px 14px;">
+            <div style="background:#161b22;border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <div>
+                  <p style="font-size:0.56rem;font-weight:800;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;">Status geral</p>
+                  <p id="acc-manut-status" style="font-size:13px;font-weight:900;color:#e6edf3;margin-top:3px;">Nenhuma peça cadastrada</p>
+                </div>
+                <div id="acc-manut-badge" style="display:none;padding:4px 9px;border-radius:99px;background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.35);color:#f85149;font-size:0.58rem;font-weight:900;">0 alertas</div>
+              </div>
+              <button onclick="abrirModalManutencao()" class="btn-manut-primary" style="width:100%;">
+                <span class="material-icons" style="font-size:16px;">tune</span>Gerenciar peças
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="dw-grupo dw-acc" id="dwg-ajuda">
+        <button type="button" class="dw-gh" onclick="dwGrupo('ajuda')"><span class="dw-gi" style="background:linear-gradient(135deg,#0e7490,#06b6d4)"><span class="material-icons">help</span></span><span class="dw-gt"><b>Ajuda</b><small>Suporte, guia do app e atualizações</small></span><span class="material-icons dw-gc">expand_more</span></button>
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-sup" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-sup')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.1);border:1px solid rgba(63,185,80,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">support_agent</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Suporte</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Fale com a equipe · relate BUGs e ganhe recompensa</p></div>
+            <span id="acc-sup-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-sup" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;"></div>
+        </div>
+        <div class="acc-item pd-acc-guia" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+          <button type="button" onclick="toggleAccordion('acc-guia')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#fbbf24;">menu_book</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Guia do App</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Tutoriais com prints de cada aba</p></div>
+            <span id="acc-guia-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
+            <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
+            <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
+          </div>
+        </div>
+        <div class="acc-item pd-acc-upd" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-top:10px;">
+          <button type="button" onclick="toggleAccordion('acc-upd')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(46,164,79,0.08);border:1px solid rgba(46,164,79,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:#3fb950;">system_update</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Atualizações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Versão e novidades do app</p></div>
+            <span id="acc-upd-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-upd" style="display:none;padding:0 16px 14px;flex-direction:column;gap:10px;">
+            <div class="upd-row">
+              <div><p class="upd-l">Sua versão</p><p class="upd-v" id="upd-versao">v1.6</p></div>
+              <button type="button" class="upd-btn" onclick="abrirNovidades()">✨ Novidades<span class="nv-tag n">Novo</span></button>
+            </div>
+            <div id="upd-card" style="background:linear-gradient(135deg,#071a0e,#161b22);border:1px solid rgba(46,164,79,0.22);border-radius:12px;padding:14px;">
+              <p id="upd-st-l" style="font-size:0.56rem;font-weight:700;color:#3fb950;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Atualização automática</p>
+              <p id="upd-st-t" style="font-size:13px;font-weight:600;color:#e6edf3;line-height:1.45;">Toque em verificar para procurar uma nova versão.</p>
+              <p id="upd-st-v" style="display:none;font-size:26px;font-weight:900;color:#fff;margin:4px 0 4px;letter-spacing:-0.5px;"></p>
+              <div id="upd-notas" style="display:none;margin:8px 0 4px;max-height:180px;overflow:auto;font-size:12px;line-height:1.5;color:#c9d1d9;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;white-space:pre-wrap;"></div>
+              <div id="upd-prog" style="display:none;margin:10px 0 2px;">
+                <div style="height:8px;border-radius:99px;background:#1b2026;overflow:hidden;"><div id="upd-prog-b" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#1a7a3a,#4ade80);transition:width .2s;"></div></div>
+                <p id="upd-prog-t" style="font-size:0.62rem;color:var(--muted);margin-top:6px;text-align:center;">Baixando…</p>
+              </div>
+              <button type="button" id="upd-acao" onclick="PrismoUpdate.acao()" style="margin-top:12px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:12px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" id="upd-acao-i" style="font-size:18px;">refresh</span><span id="upd-acao-t">Verificar atualização</span></button>
+              <p id="upd-rodape" style="font-size:0.6rem;color:var(--muted);margin-top:8px;text-align:center;">O app procura novas versões sozinho ao abrir. É só tocar em atualizar quando aparecer.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="dw-grupo dw-solo">
+        <div class="dw-gb">
+        <div class="acc-item pd-acc-cfg" style="background:#0d1117;border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+          <button type="button" onclick="toggleAccordion('acc-cfg')" style="width:100%;background:transparent;border:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;color:inherit;text-align:left;">
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons" style="font-size:15px;color:var(--blue);">settings</span></div>
+            <div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:800;color:#e6edf3;line-height:1.1;">Configurações</p><p style="font-size:0.6rem;color:var(--muted);font-weight:500;margin-top:2px;">Meta, veículo, avisos, backup e segurança</p></div>
+            <span id="acc-cfg-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
+          </button>
+          <div id="acc-cfg" style="display:none;padding:2px 16px 16px;flex-direction:column;gap:10px;">
+  
+            <div class="cf-sec" id="cfs-ganhos">
+              <button type="button" class="cf-head" onclick="cfToggle('ganhos')">
+                <span class="cf-ic"><span class="material-icons">payments</span></span>
+                <span class="cf-txt"><b>Ganhos e meta</b><small id="cf-res-ganhos">Meta diária e dia de recebimento</small></span>
+                <span class="material-icons cf-chev">expand_more</span>
+              </button>
+              <div class="cf-body">
+  <div class="cf-card">
+                <label class="cf-row" for="cfg-perfil-meta">
+                  <span class="cf-ic"><span class="material-icons">flag</span></span>
+                  <span class="cf-txt"><b>Meta diária</b><small>Quanto você quer faturar por dia (bruto)</small></span>
+                  <span class="cf-val"><span>R$</span><input type="number" id="cfg-perfil-meta" step="1" inputmode="decimal" placeholder="250"></span>
+                </label>
+                <div class="cf-row" style="padding-bottom:10px;">
+                  <span class="cf-ic"><span class="material-icons">event</span></span>
+                  <span class="cf-txt"><b>Dia de recebimento</b><small>O dia em que os apps pagam você</small></span>
+                </div>
+                <select id="cfg-perfil-pagamento" style="display:none;"><option value="Segunda">Segunda-feira</option><option value="Terça">Terça-feira</option><option value="Quarta">Quarta-feira</option><option value="Quinta">Quinta-feira</option><option value="Sexta">Sexta-feira</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option></select>
+                <div id="cfg-pagamento-chips" class="cf-chips"><button type="button" data-valor="Segunda" onclick="escolherDiaPagamento('Segunda')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEG</button><button type="button" data-valor="Terça" onclick="escolherDiaPagamento('Terça')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">TER</button><button type="button" data-valor="Quarta" onclick="escolherDiaPagamento('Quarta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUA</button><button type="button" data-valor="Quinta" onclick="escolherDiaPagamento('Quinta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">QUI</button><button type="button" data-valor="Sexta" onclick="escolherDiaPagamento('Sexta')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SEX</button><button type="button" data-valor="Sábado" onclick="escolherDiaPagamento('Sábado')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">SÁB</button><button type="button" data-valor="Domingo" onclick="escolherDiaPagamento('Domingo')" style="padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#8b949e;font-size:0.58rem;font-weight:900;letter-spacing:0.04em;cursor:pointer;transition:all .15s;">DOM</button></div>
+              </div>
+            
+              </div>
+            </div>
+  
+            <div class="cf-sec" id="cfs-veiculo">
+              <button type="button" class="cf-head" onclick="cfToggle('veiculo')">
+                <span class="cf-ic"><span class="material-icons">directions_car</span></span>
+                <span class="cf-txt"><b>Veículo</b><small id="cf-res-veiculo">Consumo e odômetro do dia</small></span>
+                <span class="material-icons cf-chev">expand_more</span>
+              </button>
+              <div class="cf-body">
+  <div class="cf-card">
+                <label class="cf-row" for="cfg-consumo">
+                  <span class="cf-ic"><span class="material-icons">local_gas_station</span></span>
+                  <span class="cf-txt"><b>Consumo</b><small>Usado no custo de combustível de todas as rotas</small></span>
+                  <span class="cf-val"><input type="number" id="cfg-consumo" step="0.1" min="0.1" inputmode="decimal" placeholder="10,0" onchange="salvarConsumoCfg()" onblur="salvarConsumoCfg()"><span>km/l</span></span>
+                </label>
+                <div class="cf-row" style="cursor:pointer;" onclick="odoPedirSet(!odoPedirAtivo())">
+                  <span class="cf-ic"><span class="material-icons">speed</span></span>
+                  <span class="cf-txt"><b>Pedir odômetro do dia</b><small id="cfg-odo-status">Desligado</small></span>
+                  <span id="cfg-odo-toggle" class="cfg-tg"><i></i></span>
+                </div>
+                <p class="cf-nota">Ligado, o app pede o odômetro uma vez por dia: melhora o cálculo do combustível (inclusive os km fora de rota) e do desgaste das peças na Manutenção.</p>
+              </div>
+            
+              </div>
+            </div>
+  
+            <div class="cf-sec" id="cfs-notif">
+              <button type="button" class="cf-head" onclick="cfToggle('notif')">
+                <span class="cf-ic"><span class="material-icons">notifications</span></span>
+                <span class="cf-txt"><b>Notificações</b><small id="cf-res-notif">Avisos no celular</small></span>
+                <span class="material-icons cf-chev">expand_more</span>
+              </button>
+              <div class="cf-body">
+  <div id="cfg-notif-card" class="cf-card">
+                <div class="cf-row">
+                  <span id="upd-notif-ico" class="cf-ic"><span class="material-icons">notifications</span></span>
+                  <span class="cf-txt"><b>Avisos no celular</b><small id="upd-notif-status">Verificando...</small></span>
+                  <span id="upd-notif-pill" class="notif-pill">—</span>
+                </div>
+                <p class="cf-nota" style="margin-top:-6px;">Dívidas, manutenção, meta batida, odômetro e fechamento do mês, mesmo com o app fechado. Respostas do suporte, pagamentos e novidades chegam na hora.</p>
+                <div class="cf-btns">
+                  <button type="button" class="notif-btn sec" onclick="PrismoNotif.testar()"><span class="material-icons" style="font-size:15px;">send</span>Testar</button>
+                  <button type="button" class="notif-btn pri" onclick="PrismoNotif.ativar()"><span class="material-icons" style="font-size:15px;">notifications_active</span>Ativar</button>
+                </div>
+              </div>
+            
+              </div>
+            </div>
+  
+            <div class="cf-sec" id="cfs-backup">
+              <button type="button" class="cf-head" onclick="cfToggle('backup')">
+                <span class="cf-ic"><span class="material-icons">cloud</span></span>
+                <span class="cf-txt"><b>Backup</b><small id="cf-res-backup">Seus dados na conta</small></span>
+                <span class="material-icons cf-chev">expand_more</span>
+              </button>
+              <div class="cf-body">
+                <div id="cf-backup"></div>
+              </div>
+            </div>
+  
+            <div class="cf-sec" id="cfs-seg">
+              <button type="button" class="cf-head" onclick="cfToggle('seg')">
+                <span class="cf-ic"><span class="material-icons">shield</span></span>
+                <span class="cf-txt"><b>Segurança</b><small id="cf-res-seg">Biometria ou PIN</small></span>
+                <span class="material-icons cf-chev">expand_more</span>
+              </button>
+              <div class="cf-body">
+                <div id="cf-seg"></div>
+                <div class="cf-card" style="margin-top:10px">
+                  <div class="cf-row" style="cursor:pointer;" onclick="PrismoConta.errosToggle()">
+                    <span class="cf-ic"><span class="material-icons">bug_report</span></span>
+                    <span class="cf-txt"><b>Relatório automático de erros</b><small id="cfg-err-status">Ligado</small></span>
+                    <span id="cfg-err-toggle" class="cfg-tg on"><i></i></span>
+                  </div>
+                  <p class="cf-nota">Se algo der errado, o app avisa a equipe sozinho (o erro, a tela, a versão e o modelo do celular) para corrigirmos rápido. Seus ganhos, rotas e dívidas nunca são enviados.</p>
+                </div>
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
       <input type="hidden" id="cfg-preco">
     </div>
-    <div style="padding:14px 22px 32px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;border-top:1px solid rgba(240,246,252,0.05);">
-      <button onclick="salvarConfiguracoesLaterais()" id="btn-salvar-drawer" style="width:100%;padding:15px;border-radius:18px;background:linear-gradient(135deg,#1a7a3a,#2ea44f);border:1px solid rgba(46,164,79,0.4);color:white;font-size:13px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span class="material-icons" style="font-size:18px;">check_circle</span>Salvar Alterações</button>
-      
-    </div>
+    <div id="dw-salvo" class="dw-salvo" aria-live="polite"><span class="material-icons">check_circle</span><span id="dw-salvo-t">Alterações salvas</span></div>
+    <div id="dw-rodape"></div>
   </div>
 </div>
 
@@ -2139,14 +2216,22 @@ function abrirDrawer(){
   setTimeout(()=>{const c=el.querySelector('.drawer-content');if(c)c.style.transform='translateY(0)';ov.style.opacity='1';},10);
 }
 function fecharDrawer(){
+  try{cfgAoFecharDrawer();}catch(e){}
   const el=$('drawer-menu'),ov=$('drawer-overlay-bg');if(!el||!ov)return;
   const c=el.querySelector('.drawer-content');if(c)c.style.transform='translateY(100%)';
   ov.style.opacity='0';ov.style.pointerEvents='none';
   setTimeout(()=>{el.classList.add('hidden');el.style.pointerEvents='none';},380);
 }
 
+function dwGrupo(g){
+  const el=document.getElementById('dwg-'+g);if(!el)return;
+  const abrir=!el.classList.contains('aberto');
+  document.querySelectorAll('#drawer-menu .dw-acc').forEach(x=>x.classList.remove('aberto'));
+  if(abrir)el.classList.add('aberto');
+}
 function toggleAccordion(id){
   const panel=document.getElementById(id);
+  try{const gr=panel&&panel.closest('.dw-acc');if(gr&&!gr.classList.contains('aberto')){document.querySelectorAll('#drawer-menu .dw-acc').forEach(x=>x.classList.remove('aberto'));gr.classList.add('aberto');}}catch(e){}
   const icon=document.getElementById(id+'-icon');
   if(!panel)return;
   const isOpen=panel.style.display==='flex'||panel.style.display==='block';
@@ -2466,12 +2551,50 @@ function renderizarHistorico(historico){
   }).join('');
 }
 
+/* ── Salvamento automático do menu lateral (sem botão "Salvar") ── */
+let _cfgT=null,_cfgUlt=null,_cfgMudou=false,_cfgSalvoT=null;
+function dwSalvoAviso(estado,txt){
+  const el=$('dw-salvo'),t=$('dw-salvo-t');if(!el)return;
+  clearTimeout(_cfgSalvoT);
+  el.className='dw-salvo on'+(estado==='ind'?' ind':estado==='erro'?' erro':'');
+  const ic=el.querySelector('.material-icons');if(ic)ic.textContent=estado==='ind'?'sync':estado==='erro'?'error':'check_circle';
+  if(t)t.textContent=txt;
+  if(estado!=='ind')_cfgSalvoT=setTimeout(()=>{el.className='dw-salvo';},estado==='erro'?3200:1600);
+}
+function autoSalvarCfg(ja){clearTimeout(_cfgT);_cfgT=setTimeout(salvarCfgAuto,ja?150:800);}
+function salvarCfgAuto(){
+  _cfgT=null;
+  const ni=$('cfg-perfil-nome');if(!ni)return;
+  const nome=ni.value.trim();
+  if(!nome){dwSalvoAviso('erro','Digite um nome para salvar');return;}
+  const foto=($('cfg-perfil-foto')||{}).value||'',pag=($('cfg-perfil-pagamento')||{}).value||'Quinta',meta=parseFloat(($('cfg-perfil-meta')||{}).value)||250;
+  const cr=($('cfg-consumo')||{}).value||'',cv=consumoValido(cr);if(cv)localStorage.setItem(STORAGE_CONSUMO,String(cv));
+  const pr=($('cfg-preco')||{}).value;if(pr)localStorage.setItem(STORAGE_PRECO,pr);
+  const assin=JSON.stringify([nome,pag,meta]);
+  if(assin===_cfgUlt)return;
+  if(!temGoogleRun())return;
+  dwSalvoAviso('ind','Salvando…');
+  google.script.run.withSuccessHandler(()=>{_cfgUlt=assin;_cfgMudou=true;try{metaDiariaAtiva=meta;}catch(e){}try{PrismoConta.cfResumos();}catch(e){}dwSalvoAviso('ok','Alterações salvas');})
+    .withFailureHandler(err=>{console.error(err);dwSalvoAviso('erro','Não foi possível salvar');})
+    .salvarDadosPerfil(perfilAtivo,nome,foto,pag,meta);
+}
+/* ao fechar o menu: salva o que estiver pendente e atualiza a tela inicial */
+function cfgAoFecharDrawer(){
+  if(_cfgT){clearTimeout(_cfgT);salvarCfgAuto();}
+  if(_cfgMudou){_cfgMudou=false;setTimeout(()=>{try{carregarDados();}catch(e){}},350);}
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const dw=$('drawer-menu');if(!dw)return;
+  const campos=['cfg-perfil-nome','cfg-perfil-meta','cfg-perfil-pagamento','cfg-consumo'];
+  const ouvir=e=>{if(e.target&&campos.indexOf(e.target.id)>=0)autoSalvarCfg(e.type==='change');};
+  dw.addEventListener('input',ouvir);dw.addEventListener('change',ouvir);
+});
 function salvarConfiguracoesLaterais(){
   const nome=$('cfg-perfil-nome').value.trim(),foto=$('cfg-perfil-foto').value.trim(),pag=$('cfg-perfil-pagamento').value,meta=parseFloat($('cfg-perfil-meta').value)||250;
   if(!nome)return showToast('Nome não pode ser vazio!',true);
   const cv=consumoValido($('cfg-consumo').value);if($('cfg-consumo').value.trim()!==''&&!cv)return showToast('Informe um consumo válido (km/l)!',true);
   const c=cv?String(cv):'',p=$('cfg-preco').value;if(c)localStorage.setItem(STORAGE_CONSUMO,c);if(p)localStorage.setItem(STORAGE_PRECO,p);
-  const btn=$('btn-salvar-drawer'),html=btn.innerHTML;btn.disabled=true;btn.innerText='SALVANDO...';
+  const btn=$('btn-salvar-drawer')||document.createElement('button'),html=btn.innerHTML;btn.disabled=true;btn.innerText='SALVANDO...';
   if(!temGoogleRun()){btn.disabled=false;btn.innerHTML=html;return showToast('Abra pelo Apps Script para salvar.',true);}
   google.script.run.withSuccessHandler(()=>{showToast('Configurações salvas!');fecharDrawer();carregarDados();btn.disabled=false;btn.innerHTML=html;}).withFailureHandler(err=>{console.error(err);showToast('Erro ao salvar',true);btn.disabled=false;btn.innerHTML=html;}).salvarDadosPerfil(perfilAtivo,nome,foto,pag,meta);
 }
@@ -7089,7 +7212,7 @@ window.PrismoConta=(function(){
         +'<div class="pa-pane" id="pa-p-anu" style="display:none"></div>'
         +'<div class="pa-pane" id="pa-p-sup" style="display:none"></div>'
         +'</div>';
-      perfil.parentNode.insertBefore(box,perfil);
+      perfil.parentNode.insertBefore(box,perfil.nextSibling);
     }
     box.style.display='';
   }
