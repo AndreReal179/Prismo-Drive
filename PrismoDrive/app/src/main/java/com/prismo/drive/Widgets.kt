@@ -47,6 +47,7 @@ object WidgetUtil {
     private const val VERDE = 0xFF3FB950.toInt()
     private const val VERMELHO = 0xFFF85149.toInt()
     private const val NEUTRO = 0xFFE6EDF3.toInt()
+    private const val CINZA = 0xFF8B949E.toInt()
     private const val CHIP_OK = 0xFF58D68D.toInt()
     private const val CHIP_RUIM = 0xFFFF7B72.toInt()
     private val BR = Locale("pt", "BR")
@@ -191,7 +192,23 @@ object WidgetUtil {
         }
         val hojeOuFila = hoje || ultimaRota > 0
 
+        // Contas da semana primeiro (barra vermelha); quando juntou o valor das contas, volta para a meta do lucro
+        var contas = tem && d!!.optString("modo") == "contas"
+        val contasAlvo = if (tem) d!!.optDouble("contasAlvo", 0.0) else 0.0
+        var contasJuntou = if (tem) d!!.optDouble("contasJuntou", 0.0) else 0.0
+        if (contas) {
+            val extra = (ganho - (if (hoje) d!!.optDouble("ganho", 0.0) else 0.0)).coerceAtLeast(0.0)
+            contasJuntou += extra
+            if (contasAlvo > 0 && contasJuntou >= contasAlvo) {
+                contas = false
+                if (meta > 0) pct = (Math.round((contasJuntou - contasAlvo) / meta * 100).toInt()).coerceIn(0, 100)
+            }
+        }
+        val pctContas = if (contasAlvo > 0) (Math.round(contasJuntou / contasAlvo * 100).toInt()).coerceIn(0, 100) else 0
+        v.setViewVisibility(R.id.wdg_barra, if (contas) View.GONE else View.VISIBLE)
+        v.setViewVisibility(R.id.wdg_barra_div, if (contas) View.VISIBLE else View.GONE)
         v.setProgressBar(R.id.wdg_barra, 100, pct, false)
+        v.setProgressBar(R.id.wdg_barra_div, 100, pctContas, false)
 
         if (!grande) {
             v.setTextViewText(R.id.wdg_ganho, "R$ " + inteiro(ganho))
@@ -224,11 +241,21 @@ object WidgetUtil {
                 v.setViewVisibility(R.id.wdg_chip, View.GONE)
             }
 
-            v.setTextViewText(
-                R.id.wdg_meta,
-                if (tem) "Meta diária R$ " + metaTxt(meta) else "Abra o app para sincronizar"
-            )
-            v.setTextViewText(R.id.wdg_pct, "$pct%")
+            if (contas) {
+                val atr = d!!.optBoolean("contasAtrasada", false)
+                v.setTextViewText(R.id.wdg_meta, (if (atr) "⚠ " else "") + "Contas R$ " + metaTxt(Math.min(contasJuntou, contasAlvo)) + " de R$ " + metaTxt(contasAlvo))
+                v.setTextColor(R.id.wdg_meta, VERMELHO)
+                v.setTextViewText(R.id.wdg_pct, "$pctContas%")
+                v.setTextColor(R.id.wdg_pct, VERMELHO)
+            } else {
+                v.setTextViewText(
+                    R.id.wdg_meta,
+                    if (tem) "Meta diária R$ " + metaTxt(meta) else "Abra o app para sincronizar"
+                )
+                v.setTextColor(R.id.wdg_meta, CINZA)
+                v.setTextViewText(R.id.wdg_pct, "$pct%")
+                v.setTextColor(R.id.wdg_pct, CINZA)
+            }
             v.setTextViewText(R.id.wdg_rotas, rotas.toString())
             v.setTextViewText(R.id.wdg_km, kmTxt(km))
             if (comb > 0) {

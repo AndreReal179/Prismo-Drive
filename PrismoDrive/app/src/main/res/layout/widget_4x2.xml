@@ -112,6 +112,18 @@
         android:progress="0"
         android:progressDrawable="@drawable/wdg_progress" />
 
+    <ProgressBar
+        android:id="@+id/wdg_barra_div"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:layout_marginTop="4dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/wdg_progress_div"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
