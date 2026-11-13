@@ -23,3 +23,4 @@
 • 🧭 Menu lateral reorganizado: Conta, Ferramentas, Ajuda e Configurações, cada grupo abre com suas funções
 • 💾 Menu lateral salva sozinho: mudou, está salvo (sem botão Salvar)
 • 🧮 Contas da semana mais justas: o que você já usou da Carteira sai do "sobrou", da meta e das contas
+• 🎯 Analisador de rotas com visual novo: medidor de R$/km, selo colorido, etiquetas de km, tempo e gasolina e lucro em destaque (iFood e InDrive)

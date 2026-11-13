@@ -2805,29 +2805,33 @@ window.mediaGanhoDiaPrismo=function(n){
 function usadoCarteiraSemana(){
   const w=_semanaISO(),hojeIni=new Date();hojeIni.setHours(0,0,0,0);
   let ext=[];try{ext=JSON.parse(localStorage.getItem('fin_extrato')||'[]');if(!Array.isArray(ext))ext=[];}catch(e){ext=[];}
-  let total=0,hoje=0;
+  let total=0,hoje=0,pago=0,pagoHoje=0;
   ext.forEach(x=>{
-    if(!x||x.tipo!=='saida')return;
+    if(!x)return;
     const ts=Number(x.ts)||0;if(ts<w.iniTs)return;
-    const v=Math.abs(Number(x.valor)||0);total+=v;if(ts>=hojeIni.getTime())hoje+=v;
+    const v=Math.abs(Number(x.valor)||0),h=ts>=hojeIni.getTime();
+    if(x.tipo==='saida'){total+=v;if(h)hoje+=v;}
+    else if(x.debtId&&x.tipo!=='entrada'){pago+=v;if(h)pagoHoje+=v;}   /* pagamento de dívida feito na Carteira */
   });
-  return {total:Math.round(total*100)/100,hoje:Math.round(hoje*100)/100};
+  const r=v=>Math.round(v*100)/100;
+  return {total:r(total),hoje:r(hoje),pago:r(pago),pagoHoje:r(pagoHoje)};
 }
 function metaDividasSemana(ganhoHoje){
   const itens=dividasDaSemana();if(!itens.length)return null;
   const r2=v=>Math.round(v*100)/100;
-  const alvo=r2(itens.reduce((a,x)=>a+x.valor,0));
+  /* só as contas EM ABERTO são cobradas; as já pagas aparecem na lista, mas não somam */
+  const alvo=r2(itens.filter(x=>!x.paga).reduce((a,x)=>a+x.valor,0));
   const ganho=ganhosDaSemana();
   const us=usadoCarteiraSemana();
-  /* o que você já usou da Carteira sai do disponível: não conta para as contas nem como "sobrou" */
-  const disp=r2(Math.max(0,ganho-us.total));
+  /* o que você já usou da Carteira (saídas e pagamentos de contas) sai do disponível */
+  const disp=r2(Math.max(0,ganho-us.total-us.pago));
   const hoje=Math.min(ganho,Math.max(0,Number(ganhoHoje)||0));
-  const dispAntes=Math.max(0,(ganho-hoje)-(us.total-us.hoje));
+  const dispAntes=Math.max(0,(ganho-hoje)-(us.total-us.hoje)-(us.pago-us.pagoHoje));
   const sobra=r2(Math.max(0,disp-alvo));
   /* parte do ganho de HOJE que é lucro livre (o que entrou antes de hoje já foi usado primeiro nas contas) */
   const livreAntes=Math.max(0,dispAntes-alvo);
   const livreHoje=r2(Math.max(0,sobra-livreAntes));
-  return {itens,alvo,ganho,usado:us.total,disp,sobra,livreHoje,falta:r2(Math.max(0,alvo-disp)),pct:alvo>0?Math.min(100,Math.round(disp/alvo*100)):100};
+  return {itens,alvo,ganho,usado:us.total,pago:us.pago,disp,sobra,livreHoje,falta:r2(Math.max(0,alvo-disp)),pct:alvo>0?Math.min(100,Math.round(disp/alvo*100)):100};
 }
 function abrirDividasSemana(){
   let ganhoHoje=0;try{ganhoHoje=(Number((ultimoKpisCache||{}).ganhoHoje)||0)+getTotalDiariaValor();}catch(e){}
@@ -2846,7 +2850,8 @@ function abrirDividasSemana(){
   <div class="cs-sum">
     <div class="cs-l"><span>Entrou na semana</span><b>${moeda(m.ganho)}</b></div>
     ${m.usado>0?`<div class="cs-l neg"><span>Já usado (saídas da Carteira)</span><b>− ${moeda(m.usado)}</b></div>`:''}
-    <div class="cs-l neg"><span>Contas da semana</span><b>− ${moeda(m.alvo)}</b></div>
+    ${m.pago>0?`<div class="cs-l neg"><span>Contas já pagas na Carteira</span><b>− ${moeda(m.pago)}</b></div>`:''}
+    <div class="cs-l neg"><span>Contas em aberto</span><b>− ${moeda(m.alvo)}</b></div>
     <div class="cs-sep"></div>
     ${ok?`<div class="cs-l tot ok"><span>Sobrou (lucro livre)</span><b>${moeda(m.sobra)}</b></div>`:`<div class="cs-l tot falta"><span>Faltam para as contas</span><b>${moeda(m.falta)}</b></div>`}
     <div class="cs-bar"><i style="width:${m.pct}%" class="${ok?'ok':''}"></i></div>
@@ -2888,8 +2893,8 @@ function atualizarFaturamentoDia(){
   if(metaBox){metaBox.classList.remove('debt');metaBox.onclick=dv?abrirDividasSemana:null;const ic=metaBox.querySelector('.pd-meta-txt .material-icons');if(ic)ic.textContent='flag';}
   if(barra)barra.classList.remove('debt');
   if(dv){try{const k='prismo_dividas_ok_'+_semanaISO().ini;if(!localStorage.getItem(k)){localStorage.setItem(k,'1');
-    showToast('✅ Contas da semana pagas! Você juntou '+moeda(dv.alvo)+'. A barra voltou para a meta.');
-    try{const n=window.PrismoNative;if(n&&typeof n.notificar==='function')n.notificar(9500,'✅ Contas da semana pagas',(dv.itens.length===1?dv.itens[0].desc+': ':'')+'você juntou '+moeda(dv.alvo)+'. Daqui pra frente a meta conta o que sobra.');}catch(x){}
+    showToast('✅ Contas da semana pagas! Você juntou '+moeda(dv.itens.reduce((a,x)=>a+x.valor,0))+'. A barra voltou para a meta.');
+    try{const n=window.PrismoNative;if(n&&typeof n.notificar==='function')n.notificar(9500,'✅ Contas da semana pagas',(dv.itens.length===1?dv.itens[0].desc+': ':'')+'você juntou '+moeda(dv.itens.reduce((a,x)=>a+x.valor,0))+'. Daqui pra frente a meta conta o que sobra.');}catch(x){}
   }}catch(e){}}
   /* com contas na semana, a meta diária conta só o lucro livre (o que sobrou depois das contas) */
   const totalMeta=dv?dv.livreHoje+saldo:total;

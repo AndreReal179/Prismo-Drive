@@ -51,6 +51,8 @@ class Overlay(private val svc: AccessibilityService) {
     val isShowing: Boolean get() = bar != null || layer != null
 
     private val GOLD = 0xFF22C55E.toInt()      // destaque no roxo da marca
+    private val GOLD_BG = 0xFFEAB308.toInt()   // "PEÇA" e borda da melhor oferta
+    private val GOLD_TXT = 0xFFFACC15.toInt()
     private val MUTED = 0xFFA9AEB8.toInt()
     private val BASE = 0xFF080C10.toInt()
 
@@ -131,7 +133,7 @@ class Overlay(private val svc: AccessibilityService) {
         val f = ensureLayer()
         f.removeAllViews()
         val multi = last.size > 1
-        val width = svc.resources.displayMetrics.widthPixels - dp(66) - dp(40)
+        val width = svc.resources.displayMetrics.widthPixels - dp(24)
         for (r in last) {
             val route = r.offer.route
             val p = if (route) routePanel(r, r === best && multi) else panel(r, r === best && multi)
@@ -139,11 +141,11 @@ class Overlay(private val svc: AccessibilityService) {
             val above = r.offer.placeAbove
             val lp = FrameLayout.LayoutParams(w, FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.START).apply {
-                leftMargin = if (route) dp(20) else dp(66)
+                leftMargin = if (route) dp(20) else dp(12)
                 topMargin = when {
                     above != null -> above                                // ajustado depois de medir (abaixo)
                     r.offer.placeTop != null -> r.offer.placeTop - dp(2)  // em cima do endereço da coleta
-                    else -> (r.offer.headTop ?: 0) - dp(3)
+                    else -> (r.offer.headTop ?: 0) - (if (route) dp(3) else dp(13))
                 }
             }
             // detalhe/popup: o painel termina logo acima do valor (no vão acima do card do valor)
@@ -230,165 +232,167 @@ class Overlay(private val svc: AccessibilityService) {
         background = GradientDrawable().apply { setColor(bg); cornerRadius = dpf(6f) }
     }
 
-    /**
-     *  ┌──────────────────────────────────────────────────┐
-     *  │ (anel)   [ÓTIMO] ★ MELHOR                 R$ 42  │
-     *  │ (R$/km)  R$ 28,16 líquido                 gas. R$ 10 │
-     *  │          42 km · busca 1,2 · ★4,97       [PEÇA R$ 78] │
-     *  └──────────────────────────────────────────────────┘
-     */
-    private fun panel(r: Result, isBest: Boolean): View {
-        val color = r.level?.color ?: 0xFF6B7280.toInt()
-        val frac = ((r.effRpk ?: 0.0) / prefs.otimo.toDouble()).coerceIn(0.0, 1.0).toFloat()
-        val ring = Ring(
-            svc, color, frac,
-            r.effRpk?.let { String.format(BR, "%.2f", it) } ?: "—",
-            svc.resources.displayMetrics.density
-        )
+    // ---------------------------------------------------------------- visual v1.9.8
+    /** Cor viva do selo (anel, faixa e selo). */
+    private fun vivid(r: Result): Int = when {
+        Evaluator.badRating(r) -> 0xFFF97316.toInt()
+        r.level == Level.OTIMO -> 0xFF22C55E.toInt()
+        r.level == Level.MEDIO -> 0xFFF59E0B.toInt()
+        r.level == Level.RUIM -> 0xFFEF4444.toInt()
+        else -> 0xFF6B7280.toInt()
+    }
 
-        // ---- coluna do meio
-        val rowA = LinearLayout(svc).apply {
+    /** Cor do lucro (um tom mais claro do selo). */
+    private fun soft(r: Result): Int = when {
+        Evaluator.badRating(r) -> 0xFFFDBA74.toInt()
+        r.level == Level.OTIMO -> 0xFF4ADE80.toInt()
+        r.level == Level.MEDIO -> 0xFFFBBF24.toInt()
+        r.level == Level.RUIM -> 0xFFFF8A80.toInt()
+        else -> 0xFFD1D5DB.toInt()
+    }
+
+    private fun pill(t: CharSequence, bg: Int, fg: Int, sp: Float = 10.5f, stroke: Int? = null) = tv(t, sp, fg, true).apply {
+        setPadding(dp(8), dp(3), dp(8), dp(3))
+        letterSpacing = 0.04f
+        background = GradientDrawable().apply {
+            setColor(bg); cornerRadius = dpf(99f)
+            stroke?.let { setStroke(dp(1), it) }
+        }
+    }
+
+    /** Etiqueta com ícone: km, tempo, gasolina, busca. */
+    private fun tag(icon: Int, t: String, iconColor: Int = 0xFFB9C4BE.toInt()) = tv(t, 10.5f, 0xFFC7D0CB.toInt(), true).apply {
+        setPadding(dp(6), dp(3), dp(7), dp(3))
+        val d = svc.getDrawable(icon)?.mutate()
+        d?.setTint(iconColor)
+        setCompoundDrawablesRelativeWithIntrinsicBounds(d, null, null, null)
+        compoundDrawablePadding = dp(4)
+        background = GradientDrawable().apply {
+            setColor(0x0DFFFFFF); cornerRadius = dpf(8f); setStroke(dp(1), 0x12FFFFFF)
+        }
+    }
+
+    private fun km1(v: Double) = String.format(BR, "%.1f km", v)
+
+    /**
+     * Painel v1.9.8 (InDrive e iFood):
+     *  ┌──────────────────────────────────────────────────────┐
+     *  │ (1,08)  [RUIM] ★4,34            LUCRO                │
+     *  │ R$/KM   [18,6 km] [R$ 11,50] [2,7 km]   R$ 8,50      │
+     *  │                                      [PEÇA R$ 37]    │
+     *  └──────────────────────────────────────────────────────┘
+     */
+    private fun card(r: Result, isBest: Boolean, top: List<View>, tags: List<View>, compacto: Boolean = false): View {
+        val c = vivid(r)
+        val frac = ((r.effRpk ?: 0.0) / prefs.otimo.toDouble()).coerceIn(0.0, 1.0).toFloat()
+        val ring = Ring(svc, c, frac, r.effRpk?.let { String.format(BR, "%.2f", it) } ?: "—",
+            svc.resources.displayMetrics.density)
+
+        val row1 = LinearLayout(svc).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            addView(chip(Evaluator.labelOf(r), Evaluator.labelColor(r), 0xFFFFFFFF.toInt()))
-            // nota do passageiro junto da classificação (cor pela nota: verde / laranja / vermelho)
-            r.offer.rating?.let {
-                addView(tv("  ★" + String.format(BR, "%.2f", it), 11f, Evaluator.ratingColor(it), true))
+            val escuro = r.level == Level.OTIMO || r.level == Level.MEDIO
+            addView(pill(Evaluator.labelOf(r), c, if (escuro && !Evaluator.badRating(r)) 0xFF07120B.toInt() else 0xFFFFFFFF.toInt(), 10.5f))
+            for (v in top) addView(v, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT).apply { leftMargin = dp(5) })
+            if (isBest) addView(tv("★ MELHOR", 9.5f, GOLD_TXT, true).apply { letterSpacing = 0.08f },
+                LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT).apply { leftMargin = dp(6) })
+        }
+        val row2 = LinearLayout(svc).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            tags.forEachIndexed { i, v ->
+                addView(v, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT).apply { if (i > 0) leftMargin = dp(4) })
             }
-            if (isBest) addView(tv("  ★ MELHOR", 9.5f, GOLD, true))
         }
-        val net = SpannableStringBuilder()
-        if (r.net != null) {
-            net.append(Evaluator.money(r.net))
-            net.setSpan(ForegroundColorSpan(Evaluator.netColor(r)), 0, net.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        } else net.append("—")
-        val rowB = tv(net, 20f, 0xFFFFFFFF.toInt(), true)
-
-        val sb = SpannableStringBuilder()
-        fun add(t: String, c: Int) {
-            if (sb.isNotEmpty()) sb.append("  ·  ")
-            val st = sb.length
-            sb.append(t)
-            sb.setSpan(ForegroundColorSpan(c), st, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        Evaluator.totalKmText(r)?.let { add(it, MUTED) }
-        // onde era "busca": tempo total (busca + viagem) e tempo até o destino final.
-        // Na lista o app não mostra tempos, então mantém a distância de busca.
-        val timeTxt = Evaluator.timeText(r)
-        if (timeTxt != null) add(timeTxt, 0xFFFFFFFF.toInt())
-        else r.offer.pickupKm?.let { add("busca " + String.format(BR, "%.1f", it), Evaluator.pickupColor(it, prefs)) }
-        val rowC = tv(sb, 11f, MUTED).apply {
-            ellipsize = TextUtils.TruncateAt.END
-            setAutoSizeTextTypeUniformWithConfiguration(8, 11, 1, TypedValue.COMPLEX_UNIT_SP)
-        }
-
         val mid = LinearLayout(svc).apply {
             orientation = LinearLayout.VERTICAL
-            addView(rowA)
-            addView(rowB, lpTop(2))
-            addView(rowC, lpTop(2))
+            addView(row1)
+            addView(row2, lpTop(if (compacto) 4 else 6))
         }
 
-        // ---- coluna da direita
         val right = LinearLayout(svc).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.END
-            addView(tv(Evaluator.money(r.offer.price), 16f, 0xFFFFFFFF.toInt(), true))
-            r.fuel?.let { addView(tv("gasolina " + Evaluator.money(it), 10f, MUTED), lpTop(2)) }
+            if (!compacto) addView(tv("LUCRO", 8.5f, 0xFF7D8A83.toInt(), true).apply { letterSpacing = 0.14f })
+            addView(tv(r.net?.let { (if (compacto) "lucro " else "") + Evaluator.money(it) } ?: "—",
+                if (compacto) 15f else 18f, soft(r), true), lpTop(1))
             if (r.suggest != null) {
-                addView(chip("PEÇA " + Evaluator.money(r.suggest), GOLD, 0xFFFFFFFF.toInt()), lpTop(3))
+                addView(pill("PEÇA " + Evaluator.money(r.suggest), GOLD_BG, 0xFF1A1300.toInt(), if (compacto) 9.5f else 10f), lpTop(if (compacto) 3 else 4))
             } else if (r.effRpk != null) {
-                addView(tv("✓ no mínimo", 10f, Evaluator.GREEN, true), lpTop(3))
+                addView(tv("✓ no mínimo", if (compacto) 9.5f else 10f, 0xFF4ADE80.toInt(), true), lpTop(if (compacto) 3 else 4))
             }
         }
 
         return LinearLayout(svc).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(6), dp(10), dp(6))
+            minimumHeight = if (compacto) dp(48) else dp(66)
+            if (compacto) setPadding(dp(7), dp(4), dp(10), dp(4)) else setPadding(dp(9), dp(7), dp(11), dp(7))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(blend(BASE, color, 0.30f), BASE, BASE)
+                intArrayOf(blend(BASE, c, 0.26f), BASE, BASE)
             ).apply {
-                cornerRadius = dpf(14f)
-                if (isBest) setStroke(dp(2), GOLD) else setStroke(dp(1), blend(BASE, color, 0.65f))
+                cornerRadius = dpf(if (compacto) 14f else 18f)
+                if (isBest) setStroke(dp(2), GOLD_BG) else setStroke(dp(1), blend(BASE, c, 0.5f))
             }
-            addView(ring, LinearLayout.LayoutParams(dp(50), dp(50)))
+            val rs = if (compacto) dp(40) else dp(52)
+            addView(ring, LinearLayout.LayoutParams(rs, rs))
             addView(mid, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                .apply { leftMargin = dp(8); rightMargin = dp(8) })
+                .apply { leftMargin = if (compacto) dp(8) else dp(10); rightMargin = dp(6) })
             addView(right, LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         }
     }
 
-    /**
-     * Painel compacto p/ cards de "Rotas disponíveis": só cobre a linha de preço/km do card
-     * (a camada não recebe toques, então "Gerar Rota" continua funcionando normalmente).
-     */
+    /** InDrive (lista e detalhe): nota do passageiro, km total, tempo ou busca, gasolina. */
+    private fun panel(r: Result, isBest: Boolean): View {
+        val top = mutableListOf<View>()
+        r.offer.rating?.let {
+            val sb = SpannableStringBuilder("★ ")
+            sb.setSpan(ForegroundColorSpan(Evaluator.ratingColor(it)), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            sb.append(String.format(BR, "%.2f", it))
+            top.add(pill(sb, 0x12FFFFFF, 0xFFE6EDF3.toInt(), 11f))
+        }
+        // iFood (oferta que toca): vários pedidos na mesma rota
+        if (r.offer.entregas >= 2) {
+            val each = r.perOrder ?: (r.offer.price / r.offer.entregas)
+            top.add(pill(String.format(BR, "%d pedidos · %s cada", r.offer.entregas, Evaluator.money(each)),
+                if (r.belowMinOrder) 0x33EF4444 else 0x12FFFFFF,
+                if (r.belowMinOrder) 0xFFFF8A80.toInt() else 0xFFFBBF24.toInt(), 10.5f))
+        }
+        val tags = mutableListOf<View>()
+        r.totalKm?.let { tags.add(tag(R.drawable.ic_tag_estrada, (if (r.estimated) "~" else "") + km1(it))) }
+        val tempo = Evaluator.timeText(r)
+        if (tempo != null) tags.add(tag(R.drawable.ic_tag_relogio, tempo))
+        else r.offer.pickupKm?.let { tags.add(tag(R.drawable.ic_tag_local, km1(it), Evaluator.pickupColor(it, prefs))) }
+        r.fuel?.let { tags.add(tag(R.drawable.ic_tag_gasolina, Evaluator.money(it))) }
+        return card(r, isBest, top, tags)
+    }
+
+    /** iFood "Rotas disponíveis": valor da rota (ou pedidos), km, tempo e gasolina. */
     private fun routePanel(r: Result, isBest: Boolean): View {
-        val color = r.level?.color ?: 0xFF6B7280.toInt()
-        val bright = when (r.level) {
-            Level.OTIMO -> 0xFF4CD27C.toInt()
-            Level.MEDIO -> 0xFFFFB300.toInt()
-            else -> 0xFFEF5350.toInt()
-        }
-        val row1 = LinearLayout(svc).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            addView(chip(Evaluator.labelOf(r), Evaluator.labelColor(r), 0xFFFFFFFF.toInt()))
-            if (isBest) addView(tv(" ★", 12f, GOLD, true))
-            addView(tv("  " + Evaluator.perKm(r), 17f, bright, true))
-            addView(View(svc), LinearLayout.LayoutParams(0, 1, 1f))
-            if (r.net != null) {
-                addView(tv(Evaluator.money(r.net), 14f, Evaluator.netColor(r), true))
-            }
-        }
-        val sb = SpannableStringBuilder()
-        fun add(t: String) {
-            if (sb.isNotEmpty()) sb.append("  ·  ")
-            sb.append(t)
-        }
-        add(Evaluator.money(r.offer.price))
-        r.totalKm?.let { add(String.format(BR, "%.2f km", it)) }
-        r.totalMin?.let { add(Evaluator.minText(it)) }
-        r.fuel?.let { add("gas. " + Evaluator.money(it)) }
+        val top = mutableListOf<View>()
         val pedidos = r.offer.entregas
-        if (pedidos < 2) r.offer.stops?.let { add(it) }
-        val left = tv(sb, 10.5f, MUTED).apply {
-            ellipsize = TextUtils.TruncateAt.END
-            setAutoSizeTextTypeUniformWithConfiguration(7, 11, 1, TypedValue.COMPLEX_UNIT_SP)
+        if (pedidos >= 2 || r.belowMinOrder) {
+            val each = r.perOrder ?: (r.offer.price / pedidos.coerceAtLeast(1))
+            var txt = if (pedidos >= 2) String.format(BR, "%d pedidos · %s cada", pedidos, Evaluator.money(each))
+            else "1 pedido · " + Evaluator.money(each)
+            if (r.belowMinOrder) txt += " · mín. " + Evaluator.money(prefs.ifoodMinPerOrder.toDouble())
+            top.add(
+                if (r.belowMinOrder) pill(txt, 0x33EF4444, 0xFFFF8A80.toInt(), 10.5f)
+                else pill(txt, 0x12FFFFFF, 0xFFFBBF24.toInt(), 10.5f)
+            )
+        } else {
+            top.add(pill(Evaluator.money(r.offer.price), 0x12FFFFFF, 0xFFE6EDF3.toInt(), 11f))
         }
-        // vários pedidos: divide o valor bruto entre as entregas
-        val row2 = LinearLayout(svc).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            if (pedidos >= 2 || r.belowMinOrder) {
-                val each = r.perOrder ?: (r.offer.price / pedidos.coerceAtLeast(1))
-                var txt = if (pedidos >= 2) String.format(BR, "%d pedidos · %s cada", pedidos, Evaluator.money(each))
-                else "1 pedido · " + Evaluator.money(each)
-                if (r.belowMinOrder) txt += " · mín. " + Evaluator.money(prefs.ifoodMinPerOrder.toDouble())
-                addView(
-                    if (r.belowMinOrder) chip(txt, 0xFFC62828.toInt(), 0xFFFFFFFF.toInt())
-                    else chip(txt, GOLD, 0xFFFFFFFF.toInt()),
-                    LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                        .apply { leftMargin = dp(6) }
-                )
-            }
-        }
-        return LinearLayout(svc).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(10), dp(4), dp(10), dp(4))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(blend(BASE, color, 0.30f), BASE, BASE)
-            ).apply {
-                cornerRadius = dpf(12f)
-                if (isBest) setStroke(dp(2), GOLD) else setStroke(dp(1), blend(BASE, color, 0.65f))
-            }
-            addView(row1)
-            addView(row2, lpTop(1))
-        }
+        val tags = mutableListOf<View>()
+        r.totalKm?.let { tags.add(tag(R.drawable.ic_tag_estrada, String.format(BR, "%.1f km", it))) }
+        r.totalMin?.let { tags.add(tag(R.drawable.ic_tag_relogio, Evaluator.minText(it))) }
+        r.fuel?.let { tags.add(tag(R.drawable.ic_tag_gasolina, Evaluator.money(it))) }
+        return card(r, isBest, top, tags, compacto = true)
     }
 
     private fun lpTop(v: Int) = LinearLayout.LayoutParams(
@@ -401,7 +405,7 @@ class Overlay(private val svc: AccessibilityService) {
         private val big: String, private val density: Float
     ) : View(ctx) {
         private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; color = 0x33FFFFFF
+            style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; color = 0x17FFFFFF
         }
         private val prog = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; color = ringColor
@@ -418,16 +422,18 @@ class Overlay(private val svc: AccessibilityService) {
         override fun onDraw(canvas: Canvas) {
             val w = width.toFloat()
             val h = height.toFloat()
-            val sw = 4.5f * density
+            val sw = 5f * density
             track.strokeWidth = sw
             prog.strokeWidth = sw
             rect.set(sw / 2, sw / 2, w - sw / 2, h - sw / 2)
-            canvas.drawArc(rect, 135f, 270f, false, track)
-            if (frac > 0f) canvas.drawArc(rect, 135f, 270f * frac, false, prog)
-            bigP.textSize = 13f * density
-            smallP.textSize = 7.5f * density
-            canvas.drawText(big, w / 2, h / 2 + 2f * density, bigP)
-            canvas.drawText("R$/km", w / 2, h / 2 + 12f * density, smallP)
+            canvas.drawArc(rect, 0f, 360f, false, track)
+            if (frac > 0f) canvas.drawArc(rect, -90f, 360f * frac, false, prog)
+            val k = (w / (52f * density)).coerceIn(0.7f, 1.2f)
+            bigP.textSize = 14f * density * k
+            smallP.textSize = 7.5f * density * k
+            smallP.isFakeBoldText = true
+            canvas.drawText(big, w / 2, h / 2 + 2.5f * density * k, bigP)
+            canvas.drawText("R$/KM", w / 2, h / 2 + 12f * density * k, smallP)
         }
     }
 }
