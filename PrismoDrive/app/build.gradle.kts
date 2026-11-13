@@ -31,7 +31,7 @@ android {
         targetSdk = 34
         // versionName é a versão BASE (mínima). O GitHub completa sozinho: 1.9.2, 1.9.3…
         // Para começar uma versão nova (1.8.1, 1.8.2…), troque só o número aqui.
-        versionName = "1.9.8"
+        versionName = "2.1"
         // versionCode é automático (sempre maior que o da v1.6 = 29)
         versionCode = codigoVersao
         System.getenv("VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { versionName = it }

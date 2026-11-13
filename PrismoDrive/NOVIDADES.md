@@ -25,3 +25,7 @@
 • 🧮 Contas da semana mais justas: o que você já usou da Carteira sai do "sobrou", da meta e das contas
 • 🎯 Analisador de rotas com visual novo: medidor de R$/km, selo colorido, etiquetas de km, tempo e gasolina e lucro em destaque (iFood e InDrive)
 • 🔊 Alerta de rota bem mais alto, com som de BOM (ótimo) e de RUIM, repetindo a cada 2 s até você tocar na tela
+• 🚀 Avisos de atualização com visual novo: mostra sua versão e a nova, o tamanho e o que há de novo. No download, anel em volta do ícone, porcentagem grande, velocidade e tempo restante
+• 💰 Contas da semana: o saldo que você tem na Carteira agora também conta para pagar as contas
+• 🎯 Meta diária mostra só o que você ganhou hoje (o saldo da Carteira não entra mais nela)
+• ⛽ Abastecer pela Carteira (Pro): toque na bomba do card Custo combustível, digite quanto abasteceu e o valor sai direto da Carteira, mostrando o saldo disponível (sem saldo, avisa saldo insuficiente)

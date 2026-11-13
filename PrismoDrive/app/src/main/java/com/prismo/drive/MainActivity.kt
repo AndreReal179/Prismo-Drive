@@ -36,9 +36,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private val handler = Handler(Looper.getMainLooper())
-    private var dlgProgresso: android.app.Dialog? = null
-    private var barraProgresso: ProgressBar? = null
-    private var textoProgresso: TextView? = null
+    private var progresso: JanelaAtualizacao.Progresso? = null
 
     /** Recebimento novo do iFood lido pelo assistente (outro processo): lança na hora. */
     private val receptorIfood = object : android.content.BroadcastReceiver() {
@@ -213,7 +211,7 @@ class MainActivity : Activity() {
         } catch (_: Throwable) {
         }
         try {
-            dlgProgresso?.dismiss()
+            progresso?.dlg?.dismiss()
         } catch (_: Throwable) {
         }
         try {
@@ -305,21 +303,15 @@ class MainActivity : Activity() {
                 }
             }
             "progresso" -> {
-                val pct = ev.optInt("pct", -1)
-                barraProgresso?.isIndeterminate = pct < 0
-                if (pct >= 0) barraProgresso?.progress = pct
-                val mb = ev.optLong("baixado") / 1048576.0
-                val totalMb = ev.optLong("total") / 1048576.0
-                textoProgresso?.text = if (ev.has("msg")) ev.optString("msg") else if (totalMb > 0)
-                    String.format("Baixando… %.1f de %.1f MB", mb, totalMb)
-                else String.format("Baixando… %.1f MB", mb)
+                progresso?.atualizar(ev.optInt("pct", -1), ev.optLong("baixado"), ev.optLong("total"),
+                    if (ev.has("msg")) ev.optString("msg") else null)
             }
             "baixado" -> {
                 fecharProgresso()
                 instalarAtualizacao()
             }
             "erro" -> {
-                if (dlgProgresso != null) {
+                if (progresso != null) {
                     fecharProgresso()
                     AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                         .setTitle("Não foi possível atualizar")
@@ -331,117 +323,25 @@ class MainActivity : Activity() {
         }
     }
 
-    // ───────────── janelas de atualização no visual do Prismo Drive ─────────────
+    // ───────────── janelas de atualização no visual do Prismo Drive (JanelaAtualizacao.kt) ─────────────
 
-    private fun dpx(v: Float) = (v * resources.displayMetrics.density).toInt()
-
-    /** Cartão escuro com borda verde, ícone do app no topo. Devolve o diálogo e a coluna para o conteúdo. */
-    private fun cartaoPrismo(cancelavel: Boolean): Pair<android.app.Dialog, LinearLayout> {
-        val dlg = android.app.Dialog(this)
-        dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
-        val col = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dpx(24f), dpx(26f), dpx(24f), dpx(18f))
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(0xFF12301E.toInt(), 0xFF0D1117.toInt(), 0xFF0D1117.toInt())
-            ).apply {
-                cornerRadius = dpx(26f).toFloat()
-                setStroke(dpx(1f), 0x664ADE80)
-            }
-        }
-        val ico = android.widget.ImageView(this).apply {
-            setImageResource(R.mipmap.ic_launcher)
-            clipToOutline = true
-            outlineProvider = object : android.view.ViewOutlineProvider() {
-                override fun getOutline(v: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, v.width, v.height, dpx(18f).toFloat()) }
-            }
-            elevation = dpx(6f).toFloat()
-        }
-        col.addView(ico, LinearLayout.LayoutParams(dpx(68f), dpx(68f)))
-        dlg.setContentView(col)
-        dlg.setCancelable(cancelavel)
-        dlg.window?.let { w ->
-            w.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-            w.setLayout((resources.displayMetrics.widthPixels * 0.86f).toInt(), android.view.WindowManager.LayoutParams.WRAP_CONTENT)
-            w.setDimAmount(0.7f)
-        }
-        return Pair(dlg, col)
-    }
-
-    private fun textoCartao(t: String, sp: Float, cor: Int, negrito: Boolean, topo: Float) = TextView(this).apply {
-        text = t
-        textSize = sp
-        setTextColor(cor)
-        gravity = Gravity.CENTER
-        if (negrito) typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
-        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpx(topo) }
-    }
-
-    private fun botaoCartao(t: String, primario: Boolean, onClick: () -> Unit) = TextView(this).apply {
-        text = t
-        textSize = if (primario) 16f else 14f
-        gravity = Gravity.CENTER
-        typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
-        setTextColor(if (primario) 0xFFFFFFFF.toInt() else 0xFF8B949E.toInt())
-        if (primario) {
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(0xFF1A7A3A.toInt(), 0xFF2EA44F.toInt())
-            ).apply { cornerRadius = dpx(16f).toFloat() }
-            elevation = dpx(4f).toFloat()
-        }
-        isClickable = true
-        setOnClickListener { onClick() }
-        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpx(if (primario) 54f else 46f)).apply {
-            topMargin = dpx(if (primario) 22f else 6f)
-        }
-    }
-
-    /** "Nova atualização disponível" + botão para baixar (as novidades ficam na aba Novidades do app). */
     private fun perguntarAtualizar(ev: JSONObject) {
-        val (dlg, col) = cartaoPrismo(true)
-        col.addView(textoCartao("Nova atualização disponível", 20f, 0xFFFFFFFF.toInt(), true, 16f))
-        val mb = ev.optLong("tamanho") / 1048576.0
-        col.addView(textoCartao(
-            "Versão " + ev.optString("versao") + (if (mb > 0) String.format(java.util.Locale("pt", "BR"), "  ·  %.1f MB", mb) else ""),
-            13.5f, 0xFF4ADE80.toInt(), true, 6f))
-        col.addView(botaoCartao("⬇  Baixar atualização", true) { dlg.dismiss(); baixarAtualizacao() })
-        col.addView(botaoCartao("Depois", false) { dlg.dismiss(); Atualizador.adiar(this, ev.optLong("codigo")) })
-        dlg.setOnCancelListener { Atualizador.adiar(this, ev.optLong("codigo")) }
-        dlg.show()
+        JanelaAtualizacao.perguntar(this, ev,
+            baixar = { baixarAtualizacao() },
+            depois = { Atualizador.adiar(this, ev.optLong("codigo")) })
     }
 
     private fun mostrarProgresso() {
-        if (dlgProgresso?.isShowing == true) return
-        val (dlg, col) = cartaoPrismo(false)
-        col.addView(textoCartao("Baixando atualização", 19f, 0xFFFFFFFF.toInt(), true, 16f))
-        val txt = textoCartao("Preparando download…", 13f, 0xFF8B949E.toInt(), false, 6f)
-        col.addView(txt)
-        val barra = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-            max = 100
-            isIndeterminate = true
-            progressTintList = android.content.res.ColorStateList.valueOf(0xFF4ADE80.toInt())
-            indeterminateTintList = android.content.res.ColorStateList.valueOf(0xFF4ADE80.toInt())
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(0xFF21262D.toInt())
-        }
-        col.addView(barra, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpx(14f)).apply { topMargin = dpx(18f) })
-        col.addView(botaoCartao("Continuar em segundo plano", false) { fecharProgresso() })
-        textoProgresso = txt
-        barraProgresso = barra
-        dlgProgresso = dlg
-        dlg.show()
+        if (progresso?.dlg?.isShowing == true) return
+        progresso = JanelaAtualizacao.progresso(this) { fecharProgresso() }
     }
 
     private fun fecharProgresso() {
         try {
-            dlgProgresso?.dismiss()
+            progresso?.dlg?.dismiss()
         } catch (_: Throwable) {
         }
-        dlgProgresso = null
-        barraProgresso = null
-        textoProgresso = null
+        progresso = null
     }
 
     /** Entrega o evento para a aba Atualizações da página. */
