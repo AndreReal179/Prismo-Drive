@@ -918,8 +918,19 @@ class RotasActivity : Activity() {
                 prefs.alertVibe = i
                 RouteAlert.play(this, 0, i)
             }, lp(10))
+            c.addView(switchRow("Som de bom e de ruim", "ÓTIMO toca um som alegre, RUIM um som grave. MÉDIO usa o som escolhido acima", prefs.alertPorNivel) {
+                prefs.alertPorNivel = it
+            }, lp(16))
+            c.addView(switchRow("Volume no máximo", "Sobe o volume de alarme só durante o aviso e depois volta ao que estava", prefs.alertMaximo) {
+                prefs.alertMaximo = it
+            }, lp(10))
+            c.addView(switchRow("Repetir o toque", "Toca de novo 2 s depois de terminar, até a oferta sumir ou você tocar na tela (máx. 90 s)", prefs.alertRepetir) {
+                prefs.alertRepetir = it
+            }, lp(10))
             c.addView(button("▶  Testar alerta", false) { RouteAlert.play(this, prefs.alertSound, prefs.alertVibe) }, lp(16))
-            c.addView(tx("O som usa o volume de ALARME do celular.", 11.5f, MUTED), lp(10))
+            c.addView(button("▶  Testar som de bom (ÓTIMO)", false) { RouteAlert.play(this, RouteAlert.SOM_BOM, prefs.alertVibe) }, lp(8))
+            c.addView(button("▶  Testar som de ruim (RUIM)", false) { RouteAlert.play(this, RouteAlert.SOM_RUIM, prefs.alertVibe) }, lp(8))
+            c.addView(tx("O som usa o volume de ALARME do celular, por isso toca mesmo no silencioso.", 11.5f, MUTED), lp(10))
         }, lp(8))
         body.addView(secao("g_calc", "🧮", BLUE, "Cálculo",
             "Velocidade média ${num1(prefs.avgSpeed)} km/h"

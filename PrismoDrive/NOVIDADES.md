@@ -24,3 +24,4 @@
 • 💾 Menu lateral salva sozinho: mudou, está salvo (sem botão Salvar)
 • 🧮 Contas da semana mais justas: o que você já usou da Carteira sai do "sobrou", da meta e das contas
 • 🎯 Analisador de rotas com visual novo: medidor de R$/km, selo colorido, etiquetas de km, tempo e gasolina e lucro em destaque (iFood e InDrive)
+• 🔊 Alerta de rota bem mais alto, com som de BOM (ótimo) e de RUIM, repetindo a cada 2 s até você tocar na tela

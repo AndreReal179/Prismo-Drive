@@ -137,6 +137,9 @@ class RouteService : AccessibilityService() {
         val pkg = e.packageName?.toString().orEmpty()
         if (pkg.isNotEmpty() && !ignoredPkg(pkg)) lastPkg = pkg
         lastEvent = SystemClock.uptimeMillis()
+        // você tocou no app (aceitar, recusar, abrir a oferta): o alerta para de repetir
+        if (e.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED && RouteAlert.ativo &&
+            appDeCorrida(pkg, prefs.ridePkgs)) runCatching { RouteAlert.parar(this) }
         if (scheduled) return
         scheduled = true
         handler.postDelayed({
@@ -224,6 +227,7 @@ class RouteService : AccessibilityService() {
         val roots = runCatching { candidateRoots() }.getOrDefault(emptyList())
         if (roots.isEmpty()) {         // app minimizado / sem janela: some com os cards
             overlay.hideSoon()
+            runCatching { RouteAlert.parar(this) }
             return
         }
         var root: AccessibilityNodeInfo? = null
@@ -234,6 +238,7 @@ class RouteService : AccessibilityService() {
         }
         if (root == null || offers.isEmpty()) {
             overlay.hideSoon()
+            runCatching { RouteAlert.parar(this) }   // a oferta sumiu: para de repetir
             runCatching { lerSaldoIfood(roots) }
             return
         }
@@ -337,10 +342,12 @@ class RouteService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
+        runCatching { RouteAlert.parar(this) }
         if (::overlay.isInitialized) overlay.remove()
     }
 
     override fun onDestroy() {
+        runCatching { RouteAlert.parar(this) }
         runCatching { KmGps.parar(this) }
         if (::store.isInitialized) runCatching { store.flush(true) }
         handler.removeCallbacks(tick)

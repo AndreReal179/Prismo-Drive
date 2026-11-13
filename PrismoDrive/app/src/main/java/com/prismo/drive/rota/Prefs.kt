@@ -71,6 +71,21 @@ class Prefs(ctx: Context) {
         get() = sp.getInt("alertSound", 1)
         set(v) { sp.edit().putInt("alertSound", v).apply() }
 
+    /** ÓTIMO toca som de bom e RUIM som de ruim (MÉDIO usa o som escolhido). */
+    var alertPorNivel: Boolean
+        get() = sp.getBoolean("alertPorNivel", true)
+        set(v) { sp.edit().putBoolean("alertPorNivel", v).apply() }
+
+    /** Sobe o volume de alarme ao máximo durante o alerta (e volta ao que estava depois). */
+    var alertMaximo: Boolean
+        get() = sp.getBoolean("alertMaximo", true)
+        set(v) { sp.edit().putBoolean("alertMaximo", v).apply() }
+
+    /** Repete o toque 2 s depois de terminar, até a oferta sumir, você tocar na tela ou passar 90 s. */
+    var alertRepetir: Boolean
+        get() = sp.getBoolean("alertRepetir", true)
+        set(v) { sp.edit().putBoolean("alertRepetir", v).apply() }
+
     /** 0 = sem vibração, 1..5 = tipos (ver RouteAlert.VIBES) */
     var alertVibe: Int
         get() = sp.getInt("alertVibe", 2)
