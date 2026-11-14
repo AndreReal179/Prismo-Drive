@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v2.1: o trajeto das rotas fica só no celular (nem backup na nuvem, nem cópia para outro aparelho) -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="trajetos/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="trajetos/" />
+    </device-transfer>
+</data-extraction-rules>

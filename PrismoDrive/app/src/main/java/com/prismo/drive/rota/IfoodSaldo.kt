@@ -238,6 +238,7 @@ object IfoodSaldo {
         ultBonus = bonus
         rotaId = System.currentTimeMillis().toString(36)
         val (km, fonte) = runCatching { fecharKm(ctx) }.getOrDefault(Pair(0.0, ""))
+        runCatching { Trajeto.fechar(ctx, Trajeto.ATUAL, rotaId) }   // o trajeto ganha o id da rota (Detalhes na Linha do tempo)
         enfileirar(ctx, principal, bonus, fecharDuracao(ctx), km, fonte)
         return principal + bonus
     }

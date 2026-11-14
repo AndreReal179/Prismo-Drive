@@ -29,3 +29,6 @@
 • 💰 Contas da semana: o saldo que você tem na Carteira agora também conta para pagar as contas
 • 🎯 Meta diária mostra só o que você ganhou hoje (o saldo da Carteira não entra mais nela)
 • ⛽ Abastecer pela Carteira (Pro): toque na bomba do card Custo combustível, digite quanto abasteceu e o valor sai direto da Carteira, mostrando o saldo disponível (sem saldo, avisa saldo insuficiente)
+• 🗺️ Detalhes do trajeto (Pro): nas rotas do iFood com GPS e nos turnos, o botão DETALHES da Linha do tempo abre o mapa do caminho, com início, paradas, fim, endereços, tempo, velocidade média, R$ por km, combustível e lucro estimado. Fica só no celular e não gasta bateria a mais
+• 📈 Juros por atraso na Carteira: ao informar o juros (em % ou em R$), escolha se é ao dia ou ao mês. Atrasou, o card mostra o juros somado e quanto você deve de verdade, e o pagamento já desconta com o juros
+• 🛠️ Corrigido: o aviso de Excluir da Linha do tempo (rotas lançadas, turno, iFood e InDrive) abria atrás da tela

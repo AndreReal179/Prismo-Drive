@@ -253,6 +253,7 @@ class TurnoService : Service() {
         avisouParado = false     // voltou a andar: pode avisar de novo se parar outra vez
         pontos++
         Turno.gravar(this, ini, km, pontos, ult)
+        Trajeto.add(this, "turno_" + java.lang.Long.toString(ini, 36), loc)   // trajeto do turno (Detalhes)
         if (km - ultNotif >= 0.1) {
             ultNotif = km
             runCatching { (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(ID, notificacao()) }

@@ -79,6 +79,7 @@ object KmGps {
         if (zerar) {
             km = 0.0; pontos = 0; ult = null; rejeitados = 0; ultNotif = -1.0
             salvar()
+            Trajeto.limpar(a, Trajeto.ATUAL)      // rota nova: começa o trajeto do zero
         } else if (!ativo) carregar(a)
         if (ativo) return
         if (!temPermissao(a)) return
@@ -124,7 +125,7 @@ object KmGps {
     private fun ponto(loc: Location) {
         if (loc.hasAccuracy() && loc.accuracy > PRECISAO_MAX) return
         val u = ult
-        if (u == null) { ult = loc; pontos++; salvar(); return }
+        if (u == null) { ult = loc; pontos++; salvar(); app?.let { Trajeto.add(it, Trajeto.ATUAL, loc) }; return }
         val d = u.distanceTo(loc).toDouble()
         val dt = maxOf(1.0, (loc.time - u.time) / 1000.0)
         // parado: o GPS "anda" alguns metros sozinho
@@ -140,6 +141,7 @@ object KmGps {
         ult = loc
         pontos++
         salvar()
+        app?.let { Trajeto.add(it, Trajeto.ATUAL, loc) }   // mesmo ponto do km (não liga o GPS a mais)
         if (km - ultNotif >= 0.1) { ultNotif = km; app?.let { LocalizacaoService.atualizar(it, km) } }
     }
 

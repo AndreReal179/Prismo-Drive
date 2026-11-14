@@ -308,6 +308,44 @@ class PrismoBridge(private val activity: Activity) {
         "erro"
     }
 
+    // ── Trajeto da rota (v2.1 · Pro) ──
+    /** Dos ids da Linha do tempo, quais têm trajeto gravado. */
+    @JavascriptInterface
+    fun trajetos(ids: String?): String = com.prismo.drive.rota.Trajeto.quais(activity, ids)
+
+    @JavascriptInterface
+    fun trajeto(id: String?): String = if (id.isNullOrBlank()) "" else com.prismo.drive.rota.Trajeto.ler(activity, id)
+
+    @JavascriptInterface
+    fun trajetoApagar(id: String?): Boolean = !id.isNullOrBlank() && com.prismo.drive.rota.Trajeto.apagar(activity, id)
+
+    /** Endereços (rua, número, bairro) dos pontos do trajeto, pelo Geocoder do Android. Responde em window.__prismoEnd(cb, lista). */
+    @JavascriptInterface
+    fun enderecos(json: String?, cb: String?) {
+        val act = activity as? MainActivity ?: return
+        val pedido = runCatching { org.json.JSONArray(json ?: "[]") }.getOrNull() ?: return
+        Thread {
+            val r = org.json.JSONArray()
+            val geo = runCatching { if (android.location.Geocoder.isPresent()) android.location.Geocoder(act, java.util.Locale("pt", "BR")) else null }.getOrNull()
+            for (i in 0 until minOf(pedido.length(), 12)) {
+                val p = pedido.optJSONArray(i)
+                var txt = ""
+                if (geo != null && p != null) runCatching {
+                    @Suppress("DEPRECATION")
+                    val a = geo.getFromLocation(p.optDouble(0), p.optDouble(1), 1)?.firstOrNull()
+                    if (a != null) {
+                        val rua = a.thoroughfare ?: a.featureName ?: ""
+                        val num = a.subThoroughfare?.let { ", $it" } ?: ""
+                        val bairro = a.subLocality ?: a.locality ?: ""
+                        txt = listOf(rua + num, bairro).filter { it.isNotBlank() }.joinToString(" · ")
+                    }
+                }
+                r.put(txt)
+            }
+            act.rodarJs("try{window.__prismoEnd&&window.__prismoEnd(" + JSONObject.quote(cb ?: "") + "," + r.toString() + ");}catch(e){}")
+        }.start()
+    }
+
     @JavascriptInterface
     fun turnoFinalizar(): String = try {
         com.prismo.drive.rota.Turno.finalizar(activity)
@@ -331,6 +369,18 @@ class PrismoBridge(private val activity: Activity) {
     @JavascriptInterface
     fun sincronizarGanhos(json: String?) {
         if (!json.isNullOrEmpty()) com.prismo.drive.rota.Ganhos.salvarManuais(activity, json)
+    }
+
+    /** Compartilha um texto (resumo da rota) pelo WhatsApp, etc. */
+    @JavascriptInterface
+    fun compartilharTexto(texto: String?): Boolean = try {
+        if (texto.isNullOrBlank()) false else {
+            val envio = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, texto.take(4000)) }
+            activity.startActivity(Intent.createChooser(envio, "Compartilhar rota").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            true
+        }
+    } catch (_: Throwable) {
+        false
     }
 
     /** Compartilha a imagem do fechamento (PNG em base64) pelo WhatsApp, etc. */

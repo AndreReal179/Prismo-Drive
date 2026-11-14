@@ -362,6 +362,10 @@ class MainActivity : Activity() {
         @Deprecated("Usado só em WebViews antigos")
         override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean =
             abrirExterno(Uri.parse(url))
+        /** Mapa do trajeto (v2.1): as imagens do OpenStreetMap são pedidas pelo app com a identificação
+         *  exigida pela política de uso deles (User-Agent do app), e ficam em cache por 30 dias. */
+        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? =
+            MapaTiles.interceptar(this@MainActivity, request.url)
     }
 
     private fun abrirExterno(uri: Uri): Boolean {
