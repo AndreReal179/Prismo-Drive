@@ -26,6 +26,10 @@ def itens_de_texto(txt):
             out.append(m.group(1).strip())
     return out
 
+def norm(t):
+    """Compara itens ignorando espaços e maiúsculas (o mesmo item repetido em várias versões)."""
+    return re.sub(r"\s+", " ", t or "").strip().lower()
+
 def chave(v):
     return [int(x) if x.isdigit() else 0 for x in re.split(r"[.\-]", v)]
 
@@ -55,10 +59,10 @@ def main():
     conhecidas |= {"1.7.1", "1.7.2", "1.7.3"}
 
     lista = []
+    # o que já apareceu no histórico fixo não se repete nas versões novas
+    ja = {norm(i) for h in hist for i in h.get("itens", [])}
     nov = os.path.join(PROJ, "NOVIDADES.md")
     atuais = itens_de_texto(open(nov, encoding="utf-8").read()) if os.path.exists(nov) else []
-    if atuais:
-        lista.append({"versao": versao, "data": hoje, "itens": atuais, "atual": True})
 
     # notas das versões já publicadas depois do histórico (1.8, 1.8.1, …)
     rels = None
@@ -77,15 +81,34 @@ def main():
             if not re.match(r"^v\d+\.\d+(\.\d+)?$", tag) or r.get("draft"):
                 continue
             v = tag[1:]
-            if v in conhecidas or v in vistos:
+            if v in conhecidas:
+                # já está no histórico fixo, mas o texto do Release (acumulado) conta como "já mostrado"
+                ja |= {norm(i) for i in itens_de_texto(r.get("body", ""))}
+                continue
+            if v in vistos:
                 continue
             itens = itens_de_texto(r.get("body", ""))
             if not itens:
                 continue
             vistos.add(v)
             pub.append({"versao": v, "data": str(r.get("published_at", ""))[:10], "itens": itens})
+        # v2.1: o NOVIDADES.md é acumulado, então cada Release repetia tudo das anteriores.
+        # Da mais antiga para a mais nova, cada versão mostra só o que ainda não tinha aparecido.
+        pub.sort(key=lambda x: chave(x["versao"]))
+        for p in pub:
+            novos = [i for i in p["itens"] if norm(i) not in ja]
+            ja |= {norm(i) for i in p["itens"]}
+            p["itens"] = list(reversed(novos)) or ["🛠️ Ajustes e correções internas"]
+        atuais = [i for i in atuais if norm(i) not in ja]
         pub.sort(key=lambda x: chave(x["versao"]), reverse=True)
         lista += pub
+    atuais = [i for i in atuais if norm(i) not in ja]
+    # versão sendo gerada: só o que é novo nela (o mais recente primeiro)
+    novas = list(reversed(atuais)) or ["🛠️ Ajustes e correções internas"]
+    lista.insert(0, {"versao": versao, "data": hoje, "itens": novas, "atual": True})
+    # notas desta versão para o Release e para o aviso de atualização (o workflow usa este arquivo)
+    with open(os.path.join(AQUI, "notas_versao.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join("• " + i for i in novas) + "\n")
 
     lista += hist
     destino = os.path.join(PROJ, "app", "src", "main", "assets", "novidades.js")

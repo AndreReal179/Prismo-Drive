@@ -166,7 +166,7 @@ object JanelaAtualizacao {
 
     // ───────── novidades vindas das notas da versão ─────────
 
-    /** As novidades mais recentes da versão, em frases curtas (sem emoji e sem a explicação depois de ":"). */
+    /** As primeiras novidades da versão (as mais recentes), em frases curtas (sem emoji e sem a explicação depois de ":"). */
     fun novidades(notas: String, max: Int = 3): Pair<List<String>, Int> {
         val todas = notas.lines().mapNotNull { l ->
             val s = l.trim()
@@ -178,8 +178,9 @@ object JanelaAtualizacao {
             if (t.length > 64) t = t.substring(0, 62).trimEnd() + "…"
             t.takeIf { it.isNotBlank() }?.replaceFirstChar { it.uppercase() }
         }
-        val ultimas = todas.takeLast(max).reversed()
-        return Pair(ultimas, todas.size - ultimas.size)
+        // desde a v2.1 as notas de cada versão vêm só com o que é novo, o mais recente primeiro
+        val primeiras = todas.take(max)
+        return Pair(primeiras, todas.size - primeiras.size)
     }
 
     // ───────── "Atualização disponível" ─────────
