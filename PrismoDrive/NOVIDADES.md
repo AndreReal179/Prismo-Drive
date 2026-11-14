@@ -32,3 +32,4 @@
 • 🗺️ Detalhes do trajeto (Pro): nas rotas do iFood com GPS e nos turnos, o botão DETALHES da Linha do tempo abre o mapa do caminho, com início, paradas, fim, endereços, tempo, velocidade média, R$ por km, combustível e lucro estimado. Fica só no celular e não gasta bateria a mais
 • 📈 Juros por atraso na Carteira: ao informar o juros (em % ou em R$), escolha se é ao dia ou ao mês. Atrasou, o card mostra o juros somado e quanto você deve de verdade, e o pagamento já desconta com o juros
 • 🛠️ Corrigido: o aviso de Excluir da Linha do tempo (rotas lançadas, turno, iFood e InDrive) abria atrás da tela
+• 👑 Adquirir plano com tabela Free × Pro: mostra lado a lado o que é bloqueado, o que tem limite e o que os dois têm (e o teste grátis agora aparece certo: 3 dias)

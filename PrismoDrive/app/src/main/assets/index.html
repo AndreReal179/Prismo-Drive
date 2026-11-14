@@ -6498,6 +6498,31 @@ body.pc-sem-conta .pc-cad{display:inline-flex;}
 .pa-cod em{font-style:normal;font-size:.6rem;font-weight:800;color:#8b949e;font-family:inherit;}
 .pa-cod em.livre{color:#7ee2a0;}
 /* Adquirir plano */
+/* v2.1 · tabela Free × Pro */
+.fp-tit{display:flex;align-items:center;gap:7px;margin:2px 2px 9px;font-size:.62rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#f0b72f;}
+.fp-tit .material-icons{font-size:15px;}
+.fp-tab{border-radius:18px;background:#0e1410;border:1px solid #1f2a24;overflow:hidden;margin-bottom:12px;}
+.fp-hd,.fp-r{display:grid;grid-template-columns:minmax(0,1fr) 64px 72px;align-items:center;gap:4px;}
+.fp-hd{padding:10px 10px 9px;border-bottom:1px solid #1a241e;align-items:end;}
+.fp-hd>span{font-size:.55rem;font-weight:900;letter-spacing:.12em;color:#8b949e;}
+.fp-col{text-align:center;border-radius:10px;padding:6px 0;font-size:.68rem;font-weight:900;letter-spacing:.03em;line-height:1.1;}
+.fp-col i{display:block;font-style:normal;font-size:.48rem;letter-spacing:.04em;font-weight:800;margin-top:2px;text-transform:uppercase;opacity:.85;}
+.fp-col.f{background:#151c18;border:1px solid #26302a;color:#c9d1d9;}
+.fp-col.p{background:linear-gradient(135deg,#b8860b,#f0b72f);color:#241800;box-shadow:0 4px 14px rgba(240,183,47,.28);}
+.fp-grp{padding:8px 10px 4px;font-size:.52rem;font-weight:900;letter-spacing:.14em;color:#f0b72f;background:rgba(240,183,47,.04);border-bottom:1px solid #17201b;}
+.fp-grp.ok{color:#4ade80;background:rgba(74,222,128,.04);}
+.fp-r{padding:8px 10px;border-bottom:1px solid #151d18;}
+.fp-r:last-child{border-bottom:0;}
+.fp-ft{display:flex;align-items:center;gap:8px;min-width:0;}
+.fp-ic{width:28px;height:28px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#141c17;border:1px solid #223028;color:#9aa4ae;}
+.fp-ic .material-icons{font-size:16px;}
+.fp-ft b{font-size:.7rem;display:block;line-height:1.2;color:#e6edf3;font-weight:800;}
+.fp-ft small{font-size:.56rem;color:#7d8790;display:block;margin-top:1px;line-height:1.2;}
+.fp-c{text-align:center;font-size:.58rem;font-weight:800;line-height:1.15;}
+.fp-c .material-icons{font-size:19px;display:block;margin:0 auto 1px;}
+.fp-ok{color:#4ade80;}.fp-no{color:#f85149;}.fp-lim{color:#d29922;}
+.fp-pro{color:#f0d27a;}.fp-pro .material-icons{color:#f0b72f;}
+.fp-nota{font-size:.62rem;color:#6e7781;text-align:center;line-height:1.45;margin:-2px 6px 14px;}
 .ap-card{border-radius:15px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);overflow:hidden;transition:border-color .2s;}
 .ap-card.atual{border-color:rgba(46,164,79,.45);}
 .ap-card.pro{border-color:rgba(250,204,21,.35);background:linear-gradient(170deg,rgba(234,179,8,.07),rgba(255,255,255,.015));}
@@ -6758,7 +6783,7 @@ window.PrismoConta=(function(){
 
   var TELAS={
     inicio:function(){
-      return topo(logado()?null:(modo()==='livre'?'__fechar':null))+hero('directions_car','Prismo Drive','Entre para guardar seus dados na sua conta, trocar de celular sem perder nada e ganhar 7 dias de Pro grátis.')
+      return topo(logado()?null:(modo()==='livre'?'__fechar':null))+hero('directions_car','Prismo Drive','Entre para guardar seus dados na sua conta, trocar de celular sem perder nada e ganhar 3 dias de Pro grátis.')
         +MSGS
         +'<button class="pc-btn pc-google" id="pc-bt-google" onclick="PrismoConta.google()">'+G_SVG+'Entrar com Google</button>'
         +'<div class="pc-ou">ou</div>'
@@ -6777,7 +6802,7 @@ window.PrismoConta=(function(){
         +'<button class="pc-link" onclick="PrismoConta.abrir(\'criar\')">Ainda não tem conta? <b>Criar conta</b></button>';
     },
     criar:function(){
-      return topo('inicio')+hero('person_add','Criar conta','É grátis e você ganha 7 dias de Pro. Você recebe um código no e-mail para confirmar.')
+      return topo('inicio')+hero('person_add','Criar conta','É grátis e você ganha 3 dias de Pro para testar. Você recebe um código no e-mail para confirmar.')
         +campo('pc-nome','Nome','text','Como você quer ser chamado','autocomplete="name" value="'+esc(dados.nome||'')+'"')
         +campo('pc-email','E-mail','email','seu@email.com','autocomplete="email" inputmode="email" value="'+esc(dados.email||'')+'"')
         +campo('pc-senha','Senha','password','Mínimo de 6 caracteres','autocomplete="new-password" onkeydown="if(event.key===\'Enter\')PrismoConta.criar()"')
@@ -6847,7 +6872,7 @@ window.PrismoConta=(function(){
         +it('check_circle','Lançar corridas, abastecer e o resumo do dia e do mês','',true)
         +it('check_circle','Avisos de manutenção','',true)
         +'</div>'
-        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>'
+        +'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 3 dias de Pro</button>'
         +'<button class="pc-btn pc-sec" onclick="PrismoConta.semConta()">Continuar como usuário</button>';
     },
     /* comparação dos planos */
@@ -6855,13 +6880,9 @@ window.PrismoConta=(function(){
       var p=plano();
       function card(id,tit,sub,itens){return '<div class="pc-pl '+(id==='pro'?'pro ':'')+(p===id?'atual':'')+'"><h4>'+chipPlano(id).replace(' · até '+dataCurta(conta().proAte),'')+(p===id?'<span style="font-size:11px;color:#3fb950;font-weight:800">· seu plano</span>':'')+'</h4><p>'+sub+'</p><ul>'+itens+'</ul></div>';}
       return topo('__fechar')+hero('workspace_premium','Planos',p==='pro'?'Seu Pro vale até <b>'+dataCurta(conta().proAte)+'</b> ('+diasPro()+' dias).':(p==='admin'?'Você é Administrador: tudo liberado.':'Conheça o que cada plano libera.'),true)
-        +'<div class="pc-planos">'
-        +card('usuario','Usuário','Sem conta. Os dados ficam só neste celular.',li('Lançar corridas, abastecer, resumo do dia e do mês')+li('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')+li('Dados guardados na conta',1)+li('Recursos Pro',1))
-        +card('free','Free','Conta grátis.',li('Tudo do usuário')+li('Dados guardados na sua conta e ID fixo')+li('Biometria, PIN e opções da conta')+li('Com anúncios',1)+li('Recursos Pro',1))
-        +card('pro','Pro','30 dias, renovável. Quando vence, nada é apagado: só volta o cadeado.',li('Tudo do Free')+li('Carteira completa e plano de quitação')+li('Assistente de rotas (iFood e InDrive)')+li('Turno com GPS, Balanço semanal e Comparativo')+li('Widgets, manutenção sem limite e calendário completo'))
-        +'</div>'
+        +tabelaPlanos()+'<p class="fp-nota">Sem conta (usuário) os dados ficam só neste celular. Venceu o Pro? Nada é apagado: só volta o cadeado.</p>'
         +(logado()?'<button class="pc-btn pc-ouro" onclick="PrismoConta.abrir(\'resgatar\')"><span class="material-icons">redeem</span>Tenho um código Pro</button>'
-          :'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>')
+          :'<button class="pc-btn pc-pri" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 3 dias de Pro</button>')
         +'<div class="pc-rodape">Para comprar o Pro fale com a equipe Prismo: <a href="mailto:prismolabtec@gmail.com?subject=Quero%20o%20Prismo%20Drive%20Pro">prismolabtec@gmail.com</a>'+(conta().contaId?'<br>Informe o seu ID: <b style="color:#e6edf3">'+esc(conta().contaId)+'</b>':'')+'</div>';
     },
     /* resgatar código Pro */
@@ -7092,7 +7113,7 @@ window.PrismoConta=(function(){
     }).then(function(ok){
       if(ok===false||ler(K_SYNC_BASE))return; /* deu erro (a tela explica) ou vai recarregar com os dados da conta */
       var c=conta();
-      toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome&&!novo?', '+c.nome.split(' ')[0]:'')+(plano()==='pro'&&novo?' · 7 dias de Pro grátis':'')+(c.contaId?' · ID '+c.contaId:''));
+      toast((novo?'Conta criada! ':'Bem-vindo')+(c.nome&&!novo?', '+c.nome.split(' ')[0]:'')+(plano()==='pro'&&novo?' · 3 dias de Pro grátis':'')+(c.contaId?' · ID '+c.contaId:''));
       if(nat()&&!metodoSeg()&&typeof (nat()||{}).segurancaEstado==='function')abrir('protecao');else fechar();
     });
   }
@@ -7642,13 +7663,13 @@ window.PrismoConta=(function(){
     calendario:['Histórico completo','Sem o Pro o calendário mostra só os últimos '+DIAS_CAL+' dias. Seus dados antigos estão guardados.'],
     seguranca:['Segurança','Biometria e PIN protegem a sua conta. Crie sua conta grátis para usar.'],
     opcoes:['Opções da conta','Mudar senha e excluir conta são só para quem tem conta.'],
-    conta:['Sua conta','Crie sua conta grátis para guardar seus dados na conta, ter o seu ID fixo e ganhar 7 dias de Pro.']
+    conta:['Sua conta','Crie sua conta grátis para guardar seus dados na conta, ter o seu ID fixo e ganhar 3 dias de Pro.']
   };
   var SO_CONTA={seguranca:1,opcoes:1,conta:1};
   function trava(r){
     var t=TRAVAS[r]||TRAVAS.conta,box=$c('pt-box'),l=logado(),pro=!SO_CONTA[r];
     if(pro&&l&&precisaConfirmar()&&(conta().plano==='pro')&&conta().proAte>agora())t=[t[0],'Conecte à internet para confirmar o seu Pro (faz mais de 7 dias sem conferir com o servidor).'];
-    var html='<div class="pt-ic'+(pro&&l?' pro':'')+'"><span class="material-icons">'+(pro&&l?'workspace_premium':'lock')+'</span></div><div class="pt-t">'+esc(t[0])+'</div><div class="pt-s">'+esc(t[1])+(pro&&!l?' Crie sua conta e ganhe 7 dias de Pro grátis.':'')+'</div>';
+    var html='<div class="pt-ic'+(pro&&l?' pro':'')+'"><span class="material-icons">'+(pro&&l?'workspace_premium':'lock')+'</span></div><div class="pt-t">'+esc(t[0])+'</div><div class="pt-s">'+esc(t[1])+(pro&&!l?' Crie sua conta e ganhe 3 dias de Pro grátis.':'')+'</div>';
     if(!l){
       html+='<button class="pc-btn pc-pri" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button>'
         +'<button class="pc-btn pc-sec" onclick="PrismoConta.fecharTrava();PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Já tenho conta · Entrar</button>';
@@ -7692,7 +7713,7 @@ window.PrismoConta=(function(){
         var lin=function(r,v){return '<div style="display:flex;gap:8px;font-size:13px;min-width:0"><span style="color:#8b949e;font-weight:700;width:52px;flex-shrink:0">'+r+'</span><span style="color:#e6edf3;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(v||'—')+'</span></div>';};
         pf.innerHTML='<div style="display:flex;flex-direction:column;gap:9px">'+lin('Nome:',c.nome)+lin('Email:',c.email||(s&&s.user&&s.user.email))+'</div>';
       }else{
-        pf.innerHTML='<div style="display:flex;align-items:center;gap:10px"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela e ganhar 7 dias de Pro.</p></div></div>'
+        pf.innerHTML='<div style="display:flex;align-items:center;gap:10px"><div class="pc-conta-av" style="background:rgba(240,136,62,.1);border-color:rgba(240,136,62,.3)"><span class="material-icons" style="color:#f0883e">person_outline</span></div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:900;color:#e6edf3">Você é usuário (sem conta)</p><p style="font-size:.64rem;color:#8b949e;margin-top:2px;line-height:1.35">Crie a conta para guardar seus dados nela e ganhar 3 dias de Pro.</p></div></div>'
           +'<div class="pc-mini-btns"><button type="button" class="pc-mini verde" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta</button><button type="button" class="pc-mini" onclick="PrismoConta.abrir(\'inicio\')"><span class="material-icons">login</span>Entrar</button></div>';
       }
     }
@@ -8322,26 +8343,44 @@ window.PrismoConta=(function(){
     });
   }};
 
+  /* v2.1: tabela Free × Pro (Adquirir plano e tela Planos) */
+  function tabelaPlanos(){
+    var p=plano(),temPro=(p==='pro'||p==='admin');
+    var bl='<div class="fp-c fp-no"><span class="material-icons">lock</span>Bloqueado</div>',lib='<div class="fp-c fp-pro"><span class="material-icons">check_circle</span>Liberado</div>';
+    var r=function(ic,t,s,f,pr){return '<div class="fp-r"><div class="fp-ft"><div class="fp-ic"><span class="material-icons">'+ic+'</span></div><div><b>'+t+'</b><small>'+s+'</small></div></div>'+(f||bl)+(pr||lib)+'</div>';};
+    var c=function(cls,ic,t){return '<div class="fp-c '+cls+'"><span class="material-icons">'+ic+'</span>'+t+'</div>';};
+    return '<div class="fp-tab"><div class="fp-hd"><span>RECURSO</span><div class="fp-col f">FREE'+(p==='free'?'<i>seu plano</i>':'')+'</div><div class="fp-col p">👑 PRO'+(temPro?'<i>'+(p==='admin'?'liberado':'seu plano')+'</i>':'')+'</div></div>'
+      +'<div class="fp-grp">SÓ NO PRO</div>'
+      +r('campaign','Anúncios','No Free, em breve',c('fp-lim','campaign','Com anúncio'),c('fp-pro','block','Sem anúncio'))
+      +r('account_balance_wallet','Carteira','Dívidas, contas, metas e quitação',c('fp-no','lock','Bloqueada'),c('fp-pro','check_circle','Completa'))
+      +r('radar','Assistente de rotas','Avalia corridas iFood e InDrive')
+      +r('notifications_active','Alerta alto de corrida','Som de boa e de ruim')
+      +r('timer','Turno com GPS','Km e tempo automáticos')
+      +r('map','Detalhes do trajeto','Mapa, paradas e velocidade')
+      +r('local_gas_station','Abastecer pela Carteira','Toque na bomba e desconta')
+      +r('insights','Balanço e Comparativo','Imagem da semana e dias lado a lado')
+      +r('widgets','Widgets','Meta do dia na tela inicial')
+      +'<div class="fp-grp">COM LIMITE NO FREE</div>'
+      +r('build','Manutenção','Peças e trocas monitoradas',c('fp-lim','filter_'+LIMITE_PECAS,'Até '+LIMITE_PECAS+' itens'),c('fp-pro','all_inclusive','Sem limite'))
+      +r('calendar_month','Calendário','Histórico de ganhos',c('fp-lim','history',DIAS_CAL+' dias'),c('fp-pro','all_inclusive','Completo'))
+      +'<div class="fp-grp ok">OS DOIS TÊM</div>'
+      +r('payments','Faturamento e meta do dia','Rotas, ganhos e combustível',c('fp-ok','check_circle','Sim'),c('fp-pro','check_circle','Sim'))
+      +r('cloud_done','Conta e backup','ID fixo, biometria e PIN',c('fp-ok','check_circle','Sim'),c('fp-pro','check_circle','Sim'))
+      +'</div>';
+  }
   function desenharPlano(){
     var box=$c('acc-plano');if(!box)return;
     var p=plano(),l=logado(),c=conta();
     var li2=function(t,n,ads){return '<li class="'+(n?'nao':'')+(ads?' ads':'')+'"><span class="material-icons">'+(ads?'campaign':(n?'block':'check_circle'))+'</span><span>'+t+'</span></li>';};
     var seu='<span class="ap-seu">seu plano</span>';
     var temPro=(p==='pro'||p==='admin');
-    var html=(temPro?'':''
-      /* Free */
-      +'<div class="ap-card free'+(p==='free'?' atual':'')+'"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
-        +'<span class="ap-ic"><span class="material-icons">person</span></span>'
-        +'<span class="ap-t"><b>Free'+(p==='free'?seu:'')+'</b><small><span class="ap-ads"><span class="material-icons">campaign</span>Com anúncios</span></small></span>'
-        +'<span class="ap-preco">Grátis</span><span class="material-icons ap-chev">expand_more</span></button>'
-        +'<div class="ap-body"><ul>'+li2('Anúncios em alguns pontos do app',0,1)+li2('Lançar corridas, abastecer, resumo do dia e do mês')+li2('Dados guardados na conta, ID, biometria e PIN')+li2('Manutenção até '+LIMITE_PECAS+' itens e calendário de '+DIAS_CAL+' dias')
-        +li2('Sem Carteira, Assistente de rotas, Turno, Balanço, Comparativo e widgets',1)+'</ul></div></div>')
+    var html='<div class="fp-tit"><span class="material-icons">compare_arrows</span>Free × Pro: o que muda</div>'+tabelaPlanos()
       /* Pro */
       +'<div class="ap-card pro'+(p==='pro'||p==='admin'?' atual':'')+' aberta"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">workspace_premium</span></span>'
         +'<span class="ap-t"><b>Pro'+(p==='pro'?seu:(p==='admin'?'<span class="ap-seu">liberado</span>':''))+'</b><small>'+(p==='pro'?'Vale até '+dataBr(new Date(c.proAte).toISOString())+' · '+diasPro()+' dia'+(diasPro()===1?'':'s'):'Tudo liberado · sem anúncios')+'</small></span>'
         +(temPro?'<span class="ap-preco ativo"><small>status</small>Ativo</span>':'<span class="ap-preco"><small>a partir de</small>R$ 29,90<small>/mês</small></span>')+'<span class="material-icons ap-chev">expand_more</span></button>'
-        +'<div class="ap-body"><ul>'+li2('Sem anúncios')+li2('Carteira completa e plano de quitação')+li2('Assistente de rotas em tempo real (iFood e InDrive)')+li2('Turno com GPS, Balanço semanal e Comparativo')+li2('Widgets, manutenção sem limite e calendário completo')+'</ul>'
+        +'<div class="ap-body">'
         +apGrade()
         +'<p class="ap-nota">Os dias se somam: se ainda tem Pro e paga outro plano, os dias novos entram depois dos que você já tem. Quando vence, nada é apagado: só volta o cadeado.</p></div></div>';
     if(l){
@@ -8352,7 +8391,7 @@ window.PrismoConta=(function(){
         +'<button type="button" class="ap-assinar" id="ap-assinar" onclick="PrismoConta.assinar()">'+apBotao()+'</button>'
         +'<p class="ap-rod"><span class="material-icons" style="font-size:13px;vertical-align:-2px;color:#3fb950">lock</span> Pagamento seguro pelo Mercado Pago · Pix ou cartão<br>Seu ID: <b>'+esc(c.contaId||'—')+'</b></p>';
     }else{
-      html+='<button class="pc-btn pc-pri" style="margin-top:2px" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 7 dias de Pro</button>';
+      html+='<button class="pc-btn pc-pri" style="margin-top:2px" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta e ganhar 3 dias de Pro</button>';
     }
     box.innerHTML=html;
   }
