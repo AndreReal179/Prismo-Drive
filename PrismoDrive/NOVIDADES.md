@@ -33,3 +33,5 @@
 • 📈 Juros por atraso na Carteira: ao informar o juros (em % ou em R$), escolha se é ao dia ou ao mês. Atrasou, o card mostra o juros somado e quanto você deve de verdade, e o pagamento já desconta com o juros
 • 🛠️ Corrigido: o aviso de Excluir da Linha do tempo (rotas lançadas, turno, iFood e InDrive) abria atrás da tela
 • 👑 Adquirir plano com tabela Free × Pro: mostra lado a lado o que é bloqueado, o que tem limite e o que os dois têm (e o teste grátis agora aparece certo: 3 dias)
+• 📅 Calendário do Free: mostra a semana atual (7 dias) e recomeça toda segunda-feira. Os dias anteriores ficam guardados e voltam a aparecer no Pro
+• 📖 Guia do app atualizado com as novidades (conta e planos, juros, abastecer, trajeto, alerta, atualizações) e Termos de uso revisados (versão 1.1): o app pede o aceite de novo
