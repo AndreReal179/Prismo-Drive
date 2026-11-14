@@ -68,9 +68,10 @@ object Conta {
     fun liberado(ctx: Context): Boolean {
         if (!Integridade.oficial(ctx)) return false   // APK modificado nunca libera o Pro
         if (!logado(ctx)) return false
-        if (cachePlano == "admin") return true
         // hora do servidor + relógio interno (mudar a data do celular não estende o Pro)
+        // v2.1: o administrador também precisa da confirmação periódica com o servidor
         if (Relogio.precisaConfirmar(ctx)) return false
+        if (cachePlano == "admin") return true
         return cacheProAte > Relogio.agora(ctx)
     }
 }

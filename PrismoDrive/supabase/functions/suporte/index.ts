@@ -20,6 +20,13 @@ function chaveServico(): string {
   return Deno.env.get("SUPABASE_SECRET_KEY") || "";
 }
 const esc = (s: string) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
+// v2.1 (segurança): resumo do IP (nunca o IP em texto) para limitar abuso de quem manda sem conta
+async function ipResumo(req: Request): Promise<string> {
+  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+  if (!ip) return "";
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("prismo:" + ip)));
+  return Array.from(h).slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 
 Deno.serve(async (req) => {
@@ -85,13 +92,24 @@ Deno.serve(async (req) => {
     if (errE || !reg) return resp(500, { erro: "banco" });
     // só o primeiro de cada erro (por versão) abre chamado; no máximo 30 erros novos por hora
     if (!reg.novo || reg.chamado || Number(reg.recentes) > 30) return resp(200, { ok: true, novo: false, vezes: reg.ocorrencias });
+    // v2.1: sem conta, cada rede abre no máximo 3 chamados de erro por hora; e no total até 40 e-mails de erro por dia
+    const ipE = await ipResumo(req);
+    const umaHoraE = new Date(Date.now() - 3600e3).toISOString(), umDiaE = new Date(Date.now() - 86400e3).toISOString();
+    if (!uidE && ipE) {
+      const { count: nIp } = await admE.from("suporte").select("id", { count: "exact", head: true }).eq("categoria", "erro_auto").eq("ip", ipE).gte("criado_em", umaHoraE);
+      if ((nIp || 0) >= 3) return resp(200, { ok: true, novo: false, vezes: reg.ocorrencias });
+    }
+    const { count: nDia } = await admE.from("suporte").select("id", { count: "exact", head: true }).eq("categoria", "erro_auto").gte("criado_em", umDiaE);
+    if ((nDia || 0) >= 40) return resp(200, { ok: true, novo: false, vezes: reg.ocorrencias });
     const ORIG: Record<string, string> = { js: "Tela do app (JavaScript)", promessa: "Tela do app (tarefa em segundo plano)", android: "Android (o app fechou)" };
     const assuntoE = "Erro automático: " + msgE.replace(/\s+/g, " ").slice(0, 90);
     const mensagemE = `Relatório enviado automaticamente pelo app.\n\nOnde: ${ORIG[origem]}${telaE ? " · tela " + telaE : ""}\nVersão: ${versaoE}\nAparelho: ${aparE || "?"}\n\nErro: ${msgE}\n\n${pilha.slice(0, 2500)}`;
-    const { data: ch } = await admE.from("suporte").insert({
+    const linhaE: Record<string, unknown> = {
       user_id: uidE, conta_id: contaE, nome: nomeE || "Relatório automático", email: emailE, categoria: "erro_auto",
-      assunto: assuntoE.slice(0, 120), mensagem: mensagemE.slice(0, 4000), anexos: [], app_versao: versaoE, aparelho: aparE, plano: planoE,
-    }).select("id").single();
+      assunto: assuntoE.slice(0, 120), mensagem: mensagemE.slice(0, 4000), anexos: [], app_versao: versaoE, aparelho: aparE, plano: planoE, ip: ipE || null,
+    };
+    let { data: ch, error: eCh } = await admE.from("suporte").insert(linhaE).select("id").single();
+    if (eCh && /ip/.test(eCh.message || "")) { delete linhaE.ip; ({ data: ch } = await admE.from("suporte").insert(linhaE).select("id").single()); } // banco sem a coluna ip ainda
     if (ch?.id) await admE.from("erros_app").update({ chamado_id: ch.id }).eq("id", reg.id);
     try {
       const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: DESTINO, pass: senha } });
@@ -135,6 +153,16 @@ Deno.serve(async (req) => {
   const { count } = await adm.from("suporte").select("id", { count: "exact", head: true })
     .gte("criado_em", umaHora).or(userId ? `user_id.eq.${userId}` : `email.eq.${email}`);
   if ((count || 0) >= 5) return resp(429, { erro: "limite", msg: "Você já enviou várias mensagens agora. Aguarde um pouco." });
+  // v2.1 (segurança): sem conta, trocar o e-mail não burla o limite: 3 por hora por rede e 30 por hora no total
+  const ip = await ipResumo(req);
+  if (!userId) {
+    if (ip) {
+      const { count: nIp } = await adm.from("suporte").select("id", { count: "exact", head: true }).is("user_id", null).neq("categoria", "erro_auto").eq("ip", ip).gte("criado_em", umaHora);
+      if ((nIp || 0) >= 3) return resp(429, { erro: "limite", msg: "Muitas mensagens enviadas desta rede agora. Aguarde um pouco ou entre na sua conta." });
+    }
+    const { count: nAnon } = await adm.from("suporte").select("id", { count: "exact", head: true }).is("user_id", null).neq("categoria", "erro_auto").gte("criado_em", umaHora);
+    if ((nAnon || 0) >= 30) return resp(429, { erro: "limite", msg: "O suporte está recebendo muitas mensagens agora. Tente de novo em alguns minutos ou entre na sua conta." });
+  }
 
   // anexos
   const anexos: { filename: string; content: Uint8Array; contentType: string }[] = [];
@@ -150,10 +178,12 @@ Deno.serve(async (req) => {
   }
 
   const versao = String(b.versao || "").slice(0, 20), aparelho = String(b.aparelho || "").slice(0, 80);
-  const { data: reg } = await adm.from("suporte").insert({
-    user_id: userId, conta_id: contaId, nome, email, categoria: cat, assunto, mensagem,
+  const linha: Record<string, unknown> = {
+    user_id: userId, conta_id: contaId, nome, email, categoria: cat, assunto, mensagem, ip: ip || null,
     anexos: anexos.map((x) => ({ nome: x.filename, tipo: x.contentType, tam: x.content.length })), app_versao: versao, aparelho, plano,
-  }).select("id").single();
+  };
+  let { data: reg, error: eReg } = await adm.from("suporte").insert(linha).select("id").single();
+  if (eReg && /ip/.test(eReg.message || "")) { delete linha.ip; ({ data: reg } = await adm.from("suporte").insert(linha).select("id").single()); } // banco sem a coluna ip ainda
 
   const html = `<div style="font-family:Arial,sans-serif;font-size:14px;color:#111">
   <h2 style="margin:0 0 6px">${esc(CATS[cat])} · ${esc(assunto)}</h2>

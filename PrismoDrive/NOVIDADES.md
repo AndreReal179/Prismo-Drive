@@ -37,3 +37,4 @@
 • 📜 Termos de uso revisados (versão 1.1): o app pede o aceite de novo
 • 🌃 Telas de carregamento novas: carro de app e motoboy lado a lado na cidade à noite ao abrir o app, e uma própria para a Carteira
 • 📖 Guia do app em duas partes: primeiro o que é grátis, depois os recursos Pro (com selo PRO), capítulos novos (Turno, Detalhes do trajeto, Abastecer, Widgets, Segurança e backup, Indique e ganhe, Suporte) e prints novos
+• 🔐 Mais segurança: o link do e-mail da conta só funciona no celular que pediu e para o mesmo e-mail, e o app confere com o servidor também para administradores

@@ -6680,7 +6680,7 @@ window.PrismoConta=(function(){
   var K_SESSAO='prismo_sessao',K_CONTA='prismo_conta',K_MODO='prismo_conta_modo',K_BKP='prismo_backup_em';
   var K_DONO='prismo_dono',K_SYNC_EM='prismo_sync_em',K_SYNC_SIG='prismo_sync_sig',K_SYNC_BASE='prismo_sync_base',K_AVISO='prismo_aviso_pro',K_PLANO_ANT='prismo_plano_ant';
   /* chaves de controle: nunca vão para a conta */
-  function naoCopiar(k){return /^(prismo_sessao|prismo_conta|prismo_backup_em|prismo_dono|prismo_sync_|prismo_aviso_pro|prismo_plano_ant|prismo_termos|prismo_pag_pend|prismo_avisos|prismo_sup_|trk_)/.test(k||'');}
+  function naoCopiar(k){return /^(prismo_sessao|prismo_conta|prismo_backup_em|prismo_dono|prismo_sync_|prismo_aviso_pro|prismo_plano_ant|prismo_termos|prismo_pag_pend|prismo_avisos|prismo_sup_|prismo_link_|trk_)/.test(k||'');}
   var LIMITE_PECAS=3,DIAS_CAL=7,BLOQ_MIN=3,DIA=86400000;
 
   function $c(id){return document.getElementById(id);}
@@ -6712,7 +6712,8 @@ window.PrismoConta=(function(){
     if(!logado())return 'usuario';
     if(!oficial())return 'free';   /* APK modificado nunca libera o Pro */
     var c=conta();
-    if(c.plano==='admin')return 'admin';
+    /* v2.1 (segurança): o administrador também precisa da confirmação periódica com o servidor */
+    if(c.plano==='admin')return precisaConfirmar()?'free':'admin';
     if(c.proAte&&c.proAte>agora()&&!precisaConfirmar())return 'pro';
     return 'free';
   }
@@ -7010,6 +7011,7 @@ window.PrismoConta=(function(){
     if(senha.length<6)return mostrarErro('A senha precisa ter pelo menos 6 caracteres.');
     if(!termosAceitos()){mostrarErro('');termosAbrir('aceitar',criar,'Criar conta',false);return;} /* termos: uma vez, só ao criar a conta */
     mostrarErro('');ocupado(true,'pc-bt','Criando conta…');
+    linkEsperado(email);
     http('POST','/auth/v1/signup',{email:email,password:senha,data:{nome:nome}}).then(function(r){
       ocupado(false);
       if(r.status>=200&&r.status<300){
@@ -7035,6 +7037,7 @@ window.PrismoConta=(function(){
   function reenviar(){
     if(!emailOk(dados.email||''))return abrir('criar');
     var b=$c('pc-reenviar');if(b){b.disabled=true;b.innerHTML='Enviando…';}
+    linkEsperado(dados.email);
     http('POST','/auth/v1/resend',{type:'signup',email:dados.email}).then(function(r){
       if(r.status>=200&&r.status<300){mostrarOk('Pronto! Enviamos um código novo. Use só o último que chegou.');esperaAte=Date.now()+60000;}
       else{mostrarErro(msgErro(r));esperaAte=Date.now()+5000;}
@@ -7045,6 +7048,7 @@ window.PrismoConta=(function(){
     var email=deNovo?dados.email:val('pc-email').toLowerCase();dados.email=email;
     if(!emailOk(email||''))return mostrarErro('Digite um e-mail válido.');
     if(deNovo){var b=$c('pc-reenviar');if(b){b.disabled=true;b.innerHTML='Enviando…';}}else ocupado(true,'pc-bt','Enviando…');
+    linkEsperado(email);
     http('POST','/auth/v1/recover',{email:email}).then(function(r){
       if(!deNovo)ocupado(false);
       if(r.status>=200&&r.status<300){
@@ -7185,6 +7189,11 @@ window.PrismoConta=(function(){
     });
   }
 
+  /* v2.1 (segurança): o link do e-mail só é aceito se ESTE celular pediu o e-mail há pouco, para o MESMO endereço.
+     Sem isso, um link malicioso (WhatsApp, site ou outro app) poderia conectar o celular na conta de outra pessoa
+     e mandar os seus lançamentos para ela. */
+  var K_LINK='prismo_link_esp';
+  function linkEsperado(email){try{gravar(K_LINK,{email:String(email||'').trim().toLowerCase(),em:Date.now()});}catch(e){}}
   /* link do e-mail (1.9.1): com.prismo.drive://auth#access_token=…&type=signup|recovery */
   function verLink(){
     var n=nat(),l='';try{if(n&&typeof n.contaLink==='function')l=n.contaLink()||'';}catch(e){}
@@ -7193,9 +7202,15 @@ window.PrismoConta=(function(){
     var p={};frag.split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)p[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' '));});
     if(p.error||p.error_code){abrir(p.type==='recovery'?'esqueci':'inicio');mostrarErro(/expired/i.test(p.error_code+p.error_description)?'O link expirou ou já foi usado. Peça um código novo.':'Não foi possível abrir o link: '+(p.error_description||p.error));return;}
     if(!p.access_token)return;
+    var esp=ler(K_LINK)||{};
+    if(!esp.email||!(Date.now()-(Number(esp.em)||0)<48*3600e3)){abrir('inicio');return mostrarErro('Por segurança, este link só funciona no celular onde você pediu o e-mail. Entre com o seu e-mail e senha (ou peça um código novo).');}
     var s={access_token:p.access_token,refresh_token:p.refresh_token,expires_at:p.expires_at?Number(p.expires_at):0,expires_in:Number(p.expires_in)||3600,user:null};
     http('GET','/auth/v1/user',null,p.access_token).then(function(r){
       if(r.status!==200||!r.json){abrir('inicio');return mostrarErro(msgErro(r));}
+      var em=String(r.json.email||'').toLowerCase(),atual=(sessao()||{}).user||{};
+      if(em!==esp.email){abrir('inicio');return mostrarErro('Este link é de outro e-mail ('+em+'), não do que você pediu neste celular. Por segurança, ele não foi usado.');}
+      if(logado()&&atual.id&&atual.id!==r.json.id){abrir('inicio');return mostrarErro('Você já está conectado em outra conta. Saia dela antes de usar este link.');}
+      try{localStorage.removeItem(K_LINK);}catch(e){}
       s.user=r.json;guardarSessao(s,'email');
       if(p.type==='recovery'){abrir('novasenha');return;}
       abrir('inicio');depoisDeEntrar(p.type==='signup');
