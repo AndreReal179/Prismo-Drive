@@ -72,7 +72,11 @@ object Turno {
         val e = estado(ctx)
         return JSONObject().put("ativo", e.ativo).put("ini", e.ini).put("km", Math.round(e.km * 100) / 100.0)
             .put("pontos", e.pontos).put("gps", KmGps.temPermissao(ctx))
-            .put("dur", if (e.ativo) System.currentTimeMillis() - e.ini else 0L).toString()
+            .put("dur", if (e.ativo) System.currentTimeMillis() - e.ini else 0L)
+            // v2.1.8: rota do iFood em andamento agora (o km dela é "em rota", não "fora de rota")
+            .put("emRota", e.ativo && IfoodSaldo.emAndamento(ctx))
+            .put("kmRota", if (e.ativo && IfoodSaldo.emAndamento(ctx)) Math.round(KmGps.kmArquivo(ctx) * 100) / 100.0 else 0.0)
+            .toString()
     }
 
     /** Começa um turno novo (o anterior, se havia, é descartado). Precisa da permissão de localização. */

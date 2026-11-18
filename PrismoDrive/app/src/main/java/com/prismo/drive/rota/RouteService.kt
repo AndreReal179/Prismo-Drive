@@ -277,7 +277,7 @@ class RouteService : AccessibilityService() {
             if (lido == null) {
                 IfoodSaldo.telaSumiu()
                 // "EM DESLOCAMENTO" = rota iniciada: começa a contar o tempo da rota
-                if (IfoodSaldo.emDeslocamento(r)) IfoodSaldo.marcarInicio(this)
+                if (IfoodSaldo.emDeslocamento(r)) IfoodSaldo.marcarInicio(this) else IfoodSaldo.semDeslocamento()
                 continue
             }
             val lancado = IfoodSaldo.observarConclusao(this, lido.first, lido.second)

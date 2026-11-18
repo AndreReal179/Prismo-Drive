@@ -811,6 +811,10 @@ class Fab(private val svc: AccessibilityService) {
                 addView(section("Turno em andamento"))
                 addView(turnoLinha())
             }
+            if (ifood && (KmGps.ativo || IfoodSaldo.emAndamento(svc))) {
+                addView(section("Rota em andamento · medindo km"))
+                addView(rotaLinha())
+            }
             if (ifood) {
                 addView(section("Configurações rápidas · iFood"))
                 addView(ifoodGroup)
@@ -904,6 +908,49 @@ class Fab(private val svc: AccessibilityService) {
             background = rounded(0x1A2F81F7, 14f, 0x552F81F7)
             addView(info, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             addView(fim)
+        }
+    }
+
+    /** v2.1.8 · Rota do iFood em andamento: km medido, tempo e "Parar rota" (quando a tela de ganho não aparece). */
+    private fun rotaLinha(): View {
+        val ini = IfoodSaldo.inicio(svc)
+        val km = if (KmGps.ativo) KmGps.kmAtual() else KmGps.kmArquivo(svc)
+        val m = if (ini > 0) ((System.currentTimeMillis() - ini) / 60000L).coerceAtLeast(0) else 0L
+        val desde = if (ini > 0) "desde " + java.text.SimpleDateFormat("HH:mm", BR).format(java.util.Date(ini)) +
+            " · " + (if (m < 60) "$m min" else "${m / 60}h" + String.format(BR, "%02d", m % 60)) else ""
+        val topo = LinearLayout(svc).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(label(KmGps.fmtKm(km), 20f, TXT, true), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            addView(label(desde, 12f, MUTED, true))
+        }
+        val parar = label("⏹  Parar rota", 14f, TXT, true).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0xFF8E1519.toInt(), 0xFFF85149.toInt()))
+                .apply { cornerRadius = dpf(13f) }
+            setOnClickListener { abrirPararRota() }
+        }
+        return LinearLayout(svc).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = rounded(0x124ADE80, 14f, 0x404ADE80)
+            addView(topo)
+            addView(parar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
+            addView(label("Use se a tela \"rota concluída\" do iFood não apareceu e o km continua contando.", 10.5f, MUTED),
+                LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
+        }
+    }
+
+    /** Abre o Prismo Drive na janela "Parar rota" (pergunta quanto ganhou antes de parar o GPS). */
+    private fun abrirPararRota() {
+        closeMenu(animate = false)
+        runCatching {
+            svc.startActivity(
+                Intent(svc, com.prismo.drive.MainActivity::class.java)
+                    .putExtra(Turno.EXTRA_ACAO, IfoodSaldo.ACAO_PARAR)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
         }
     }
 

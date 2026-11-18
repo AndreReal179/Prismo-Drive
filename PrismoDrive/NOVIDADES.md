@@ -38,3 +38,9 @@
 • 🌃 Telas de carregamento novas: carro de app e motoboy lado a lado na cidade à noite ao abrir o app, e uma própria para a Carteira
 • 📖 Guia do app em duas partes: primeiro o que é grátis, depois os recursos Pro (com selo PRO), capítulos novos (Turno, Detalhes do trajeto, Abastecer, Widgets, Segurança e backup, Indique e ganhe, Suporte) e prints novos
 • 🔐 Mais segurança: o link do e-mail da conta só funciona no celular que pediu e para o mesmo e-mail, e o app confere com o servidor também para administradores
+• ⏹️ Parar rota: no botão flutuante e na notificação "Medindo km da rota". Se a tela de ganho do iFood não aparecer, o app avisa e pergunta quanto você ganhou
+• 🛣️ Turno com Em rota e Fora de rota: veja quantos km rodou nas corridas e quantos rodou sem ganhar, com o custo da gasolina
+• 🏁 Finalizar turno novo: o iFood já vem somado (dá para editar), lance InDrive e outros ganhos, gorjetas e gastos (pneu, abastecimento…) e veja o lucro do turno
+• 💛 Botão Gorjeta nas rotas da Linha do tempo: some quantas vezes quiser e remova se errar. Entra no faturamento e na Carteira
+• 📸 Compartilhar nos Detalhes da rota agora envia uma imagem igual à tela (mapa, valores e paradas)
+• ⛽ Card do analisador de rotas: o custo da gasolina aparece inteiro (antes ficava cortado só com "R$")

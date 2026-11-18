@@ -316,6 +316,44 @@ class PrismoBridge(private val activity: Activity) {
     @JavascriptInterface
     fun trajeto(id: String?): String = if (id.isNullOrBlank()) "" else com.prismo.drive.rota.Trajeto.ler(activity, id)
 
+    /** v2.1.8 · Compartilha um print da tela atual (Detalhes do trajeto). Responde em window.__prismoPrint(ok). */
+    @JavascriptInterface
+    fun compartilharTela(nome: String?, titulo: String?) {
+        val act = activity as? MainActivity ?: return
+        main.post {
+            act.printTela(nome ?: "rota-prismo-drive") { f ->
+                var ok = false
+                if (f != null) runCatching {
+                    val uri: Uri = FileProvider.getUriForFile(act, act.packageName + ".arquivos", f)
+                    val envio = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        clipData = ClipData.newRawUri("", uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    act.startActivity(Intent.createChooser(envio, titulo ?: "Compartilhar rota").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    ok = true
+                }
+                act.rodarJs("try{window.__prismoPrint&&window.__prismoPrint($ok);}catch(e){}")
+            }
+        }
+    }
+
+    /** v2.1.8 · Rota do iFood em andamento ({ativo, ini, km}). */
+    @JavascriptInterface
+    fun rotaAtual(): String = com.prismo.drive.rota.IfoodSaldo.atual(activity)
+
+    /** v2.1.8 · Pede ao assistente para encerrar a rota em andamento (a tela de ganho do iFood não apareceu). */
+    @JavascriptInterface
+    fun rotaParar(): Boolean = com.prismo.drive.rota.LocalizacaoService.pedirParada(activity)
+
+    /** v2.1.8 · Rota parada à mão esperando o valor ("" = nenhuma). */
+    @JavascriptInterface
+    fun rotaParada(): String = com.prismo.drive.rota.IfoodSaldo.parada(activity)
+
+    @JavascriptInterface
+    fun rotaParadaOk(id: String?) = com.prismo.drive.rota.IfoodSaldo.paradaOk(activity, id)
+
     @JavascriptInterface
     fun trajetoApagar(id: String?): Boolean = !id.isNullOrBlank() && com.prismo.drive.rota.Trajeto.apagar(activity, id)
 

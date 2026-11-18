@@ -104,6 +104,41 @@ class MainActivity : Activity() {
     }
 
     /** Roda um trecho de JavaScript na página (de qualquer thread). */
+    /**
+     * v2.1.8 · Print da tela do app (o que a pessoa está vendo) para compartilhar como imagem.
+     * Android 8+: PixelCopy da janela (sai igual à tela, com o mapa). Antes disso: desenha a WebView.
+     * cb recebe o PNG salvo em cache/compartilhar (null = não deu).
+     */
+    fun printTela(nome: String, cb: (File?) -> Unit) {
+        if (!::web.isInitialized || web.width <= 0 || web.height <= 0) { cb(null); return }
+        val pos = IntArray(2)
+        web.getLocationInWindow(pos)
+        val bmp = runCatching { android.graphics.Bitmap.createBitmap(web.width, web.height, android.graphics.Bitmap.Config.ARGB_8888) }
+            .getOrNull() ?: run { cb(null); return }
+        fun salvar(ok: Boolean) {
+            if (!ok) { bmp.recycle(); cb(null); return }
+            Thread {
+                val f = runCatching {
+                    val pasta = File(cacheDir, "compartilhar").apply { mkdirs() }
+                    pasta.listFiles()?.forEach { it.delete() }
+                    val arq = File(pasta, nome.replace(Regex("[^A-Za-z0-9._-]+"), "-").trim('-').ifEmpty { "prismo-drive" } + ".png")
+                    arq.outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+                    arq
+                }.getOrNull()
+                bmp.recycle()
+                handler.post { cb(f) }
+            }.start()
+        }
+        if (Build.VERSION.SDK_INT >= 26) {
+            val r = android.graphics.Rect(pos[0], pos[1], pos[0] + web.width, pos[1] + web.height)
+            try {
+                android.view.PixelCopy.request(window, r, bmp, { res -> salvar(res == android.view.PixelCopy.SUCCESS) }, handler)
+            } catch (_: Throwable) {
+                salvar(runCatching { web.draw(android.graphics.Canvas(bmp)) }.isSuccess)
+            }
+        } else salvar(runCatching { web.draw(android.graphics.Canvas(bmp)) }.isSuccess)
+    }
+
     fun rodarJs(js: String) {
         handler.post {
             if (!isDestroyed && ::web.isInitialized) runCatching { web.evaluateJavascript(js, null) }

@@ -299,14 +299,8 @@ class Overlay(private val svc: AccessibilityService) {
                 LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT).apply { leftMargin = dp(6) })
         }
-        val row2 = LinearLayout(svc).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            tags.forEachIndexed { i, v ->
-                addView(v, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT).apply { if (i > 0) leftMargin = dp(4) })
-            }
-        }
+        // v2.1.8: as etiquetas quebram linha quando não cabem (antes a da gasolina ficava cortada só com "R$")
+        val row2 = LinhaQuebra(svc, dp(4), dp(4)).apply { tags.forEach { addView(it) } }
         val mid = LinearLayout(svc).apply {
             orientation = LinearLayout.VERTICAL
             addView(row1)
@@ -434,6 +428,42 @@ class Overlay(private val svc: AccessibilityService) {
             smallP.isFakeBoldText = true
             canvas.drawText(big, w / 2, h / 2 + 2.5f * density * k, bigP)
             canvas.drawText("R$/KM", w / 2, h / 2 + 12f * density * k, smallP)
+        }
+    }
+}
+
+/** Linha de etiquetas que passa para a linha de baixo quando a próxima não cabe inteira. */
+private class LinhaQuebra(ctx: android.content.Context, private val gapX: Int, private val gapY: Int) : android.view.ViewGroup(ctx) {
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val maxW = MeasureSpec.getSize(widthMeasureSpec)
+        val livre = MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED
+        var x = 0; var y = 0; var linhaH = 0; var usado = 0
+        for (i in 0 until childCount) {
+            val c = getChildAt(i)
+            if (c.visibility == GONE) continue
+            c.measure(MeasureSpec.makeMeasureSpec(if (livre) 0 else maxW, if (livre) MeasureSpec.UNSPECIFIED else MeasureSpec.AT_MOST),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+            val w = c.measuredWidth
+            if (!livre && x > 0 && x + gapX + w > maxW) { y += linhaH + gapY; x = 0; linhaH = 0 }
+            x += (if (x > 0) gapX else 0) + w
+            linhaH = maxOf(linhaH, c.measuredHeight)
+            usado = maxOf(usado, x)
+        }
+        setMeasuredDimension(if (livre) usado else resolveSize(usado, widthMeasureSpec), y + linhaH)
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val maxW = r - l
+        var x = 0; var y = 0; var linhaH = 0
+        for (i in 0 until childCount) {
+            val c = getChildAt(i)
+            if (c.visibility == GONE) continue
+            val w = c.measuredWidth; val h = c.measuredHeight
+            if (x > 0 && x + gapX + w > maxW) { y += linhaH + gapY; x = 0; linhaH = 0 }
+            if (x > 0) x += gapX
+            c.layout(x, y, x + w, y + h)
+            x += w
+            linhaH = maxOf(linhaH, h)
         }
     }
 }

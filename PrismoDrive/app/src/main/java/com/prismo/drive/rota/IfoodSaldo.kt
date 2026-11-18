@@ -26,6 +26,15 @@ import java.io.RandomAccessFile
 object IfoodSaldo {
 
     const val ACTION_NOVO = "com.prismo.drive.action.IFOOD_RECEBIMENTO"
+    /** Botão flutuante / notificação "Parar rota": abre o app perguntando quanto ganhou. */
+    const val ACAO_PARAR = "rota_parar"
+    private const val ARQ_PARADA = "ifood_parada.json"          // rota parada à mão, esperando o valor na tela do app
+    private const val ARQ_ULT_PARADA = "ifood_ult_parada.json"  // se a tela de ganho aparecer depois, junta nesta rota
+    private const val JUNTAR_MS = 90 * 60_000L
+    // depois de parar à mão, o "EM DESLOCAMENTO" que ainda está na tela não começa uma rota nova
+    @Volatile private var ignorarDesloc = false
+    @Volatile private var semDeslocDesde = 0L
+    @Volatile private var ignorarAte = 0L
 
     private const val ARQ_ESTADO = "ifood_ultimo.json"
     private const val ARQ_FILA = "ifood_pendentes.json"
@@ -92,6 +101,8 @@ object IfoodSaldo {
      */
     fun marcarInicio(ctx: Context) {
         val agora = System.currentTimeMillis()
+        if (ignorarDesloc && agora < ignorarAte) { semDeslocDesde = 0L; return }
+        ignorarDesloc = false
         ultDeslocVisto = agora
         val ini = inicio(ctx)
         if (ini > 0 && agora - ini < MAX_ROTA_MS) {
@@ -103,6 +114,73 @@ object IfoodSaldo {
         runCatching { File(dir(ctx), ARQ_ROTA_OFERTA).writeText(of.toString()) }
         KmGps.iniciar(ctx, zerar = true)
     }
+
+    /** Leitura do iFood SEM "EM DESLOCAMENTO": 1 min fora dele libera a próxima rota depois de uma parada manual. */
+    fun semDeslocamento() {
+        if (!ignorarDesloc) return
+        val agora = System.currentTimeMillis()
+        if (semDeslocDesde == 0L) { semDeslocDesde = agora; return }
+        if (agora - semDeslocDesde >= 60_000L) { ignorarDesloc = false; semDeslocDesde = 0L }
+    }
+
+    /** Há uma rota do iFood em andamento (o GPS está medindo)? Funciona em qualquer processo. */
+    fun emAndamento(ctx: Context): Boolean {
+        val ini = inicio(ctx)
+        return ini > 0 && System.currentTimeMillis() - ini < MAX_ROTA_MS
+    }
+
+    /** Rota em andamento para a tela do app: {ativo, ini, km}. */
+    fun atual(ctx: Context): String = runCatching {
+        val ini = inicio(ctx)
+        val ativo = ini > 0 && System.currentTimeMillis() - ini < MAX_ROTA_MS
+        JSONObject().put("ativo", ativo).put("ini", if (ativo) ini else 0L)
+            .put("km", if (ativo) Math.round(KmGps.kmArquivo(ctx) * 100) / 100.0 else 0.0).toString()
+    }.getOrDefault("{\"ativo\":false}")
+
+    /**
+     * "Parar rota" confirmado na tela do app (roda no processo do assistente): fecha o km, o tempo e o
+     * trajeto como se a rota tivesse sido concluída e deixa o resultado para a tela pedir o valor.
+     */
+    fun pararManual(ctx: Context) {
+        val agora = System.currentTimeMillis()
+        val ini = inicio(ctx)
+        if (ini <= 0 && !KmGps.ativo) return
+        val id = agora.toString(36)
+        val (km, fonte) = runCatching { fecharKm(ctx) }.getOrDefault(Pair(0.0, ""))
+        runCatching { Trajeto.fechar(ctx, Trajeto.ATUAL, id) }
+        val dur = fecharDuracao(ctx)
+        val o = JSONObject().put("id", id).put("km", km).put("kmFonte", fonte).put("dur", dur)
+            .put("ini", if (ini > 0) ini else agora - dur).put("ts", agora).toString()
+        runCatching { comTrava(ctx) { gravar(File(dir(ctx), ARQ_PARADA), o); gravar(File(dir(ctx), ARQ_ULT_PARADA), o) } }
+        ignorarDesloc = true; semDeslocDesde = 0L; ignorarAte = agora + 3 * 3600_000L
+        avisarApp(ctx)
+    }
+
+    /** Rota parada à mão esperando o valor ("" = nenhuma). Lido pela tela do app. */
+    fun parada(ctx: Context): String = runCatching {
+        comTrava(ctx) { lerJson(File(dir(ctx), ARQ_PARADA)) ?: "" }
+    }.getOrDefault("")
+
+    /** A tela lançou (ou descartou) a rota parada. */
+    fun paradaOk(ctx: Context, id: String?) {
+        runCatching {
+            comTrava(ctx) {
+                val f = File(dir(ctx), ARQ_PARADA)
+                val o = lerJson(f)?.let { runCatching { JSONObject(it) }.getOrNull() }
+                if (o == null || id.isNullOrEmpty() || o.optString("id") == id) f.delete()
+            }
+        }
+    }
+
+    /** Última rota parada à mão há pouco (para juntar o ganho que aparecer depois). Consome. */
+    private fun paradaRecente(ctx: Context): JSONObject? = runCatching {
+        comTrava(ctx) {
+            val f = File(dir(ctx), ARQ_ULT_PARADA)
+            val o = lerJson(f)?.let { runCatching { JSONObject(it) }.getOrNull() }
+            f.delete()
+            if (o != null && System.currentTimeMillis() - o.optLong("ts") in 0..JUNTAR_MS) o else null
+        }
+    }.getOrNull()
 
     /** Batimento do serviço: retoma o GPS de uma rota em andamento ou desliga o de uma rota abandonada. */
     fun manterGps(ctx: Context) {
@@ -236,6 +314,16 @@ object IfoodSaldo {
         sessaoAtiva = true
         ultPrincipal = principal
         ultBonus = bonus
+        // a pessoa parou a rota à mão e só agora o iFood mostrou o ganho: o valor vai para aquela rota
+        // (o km, o tempo e o trajeto já foram fechados na parada)
+        val par = if (inicio(ctx) <= 0 && !KmGps.ativo) paradaRecente(ctx) else null
+        if (par != null) {
+            rotaId = par.optString("id")
+            ignorarDesloc = false
+            enfileirar(ctx, principal, bonus, parada = true)
+            return principal + bonus
+        }
+        runCatching { File(dir(ctx), ARQ_ULT_PARADA).delete() }
         rotaId = System.currentTimeMillis().toString(36)
         val (km, fonte) = runCatching { fecharKm(ctx) }.getOrDefault(Pair(0.0, ""))
         runCatching { Trajeto.fechar(ctx, Trajeto.ATUAL, rotaId) }   // o trajeto ganha o id da rota (Detalhes na Linha do tempo)
@@ -255,7 +343,7 @@ object IfoodSaldo {
         if (agora - sumiuDesde >= 1200) { sessaoAtiva = false; sumiuDesde = 0L }
     }
 
-    private fun enfileirar(ctx: Context, valor: Double, bonus: Double, dur: Long = 0L, km: Double = 0.0, kmFonte: String = "") {
+    private fun enfileirar(ctx: Context, valor: Double, bonus: Double, dur: Long = 0L, km: Double = 0.0, kmFonte: String = "", parada: Boolean = false) {
         if (valor <= 0 && bonus <= 0) return
         runCatching {
             comTrava(ctx) {
@@ -271,7 +359,8 @@ object IfoodSaldo {
                     .put("app", "ifood")
                     .put("dur", dur)
                     .put("km", km)
-                    .put("kmFonte", kmFonte))
+                    .put("kmFonte", kmFonte)
+                    .put("parada", parada))
                 gravar(fFila, fila.toString())
                 Ganhos.registrarIfood(ctx, agora, valor + bonus)   // rendimento do dia / calendário
                 gravar(File(dir(ctx), ARQ_ESTADO), JSONObject()

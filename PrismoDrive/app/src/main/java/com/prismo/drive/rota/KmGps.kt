@@ -120,6 +120,12 @@ object KmGps {
 
     fun kmAtual(): Double = km
 
+    /** km medido até agora, lido do arquivo (serve para a tela do app, que roda em outro processo). */
+    fun kmArquivo(ctx: Context): Double = runCatching {
+        val f = arq(ctx)
+        if (f.exists()) JSONObject(f.readText()).optDouble("km", 0.0) else 0.0
+    }.getOrDefault(0.0)
+
     // ───────────── pontos ─────────────
 
     private fun ponto(loc: Location) {
@@ -181,6 +187,12 @@ class LocalizacaoService : Service() {
     companion object {
         private const val CANAL = "prismo_rota_km"
         private const val ID = 7702
+        const val ACAO_PARAR = "com.prismo.drive.action.PARAR_ROTA"
+
+        /** Tela do app → processo do assistente: "Lançar rota" depois de tocar em Parar rota. */
+        fun pedirParada(ctx: Context): Boolean = runCatching {
+            ctx.startService(Intent(ctx, LocalizacaoService::class.java).setAction(ACAO_PARAR)); true
+        }.getOrDefault(false)
 
         fun iniciar(ctx: Context) {
             if (Build.VERSION.SDK_INT < 26) return
@@ -211,10 +223,21 @@ class LocalizacaoService : Service() {
                 Intent(ctx, RotasActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
+            // v2.1.8: "Parar rota" abre o Prismo Drive perguntando quanto ganhou (a tela de ganho do iFood não apareceu)
+            val parar = PendingIntent.getActivity(
+                ctx, 4,
+                Intent(ctx, com.prismo.drive.MainActivity::class.java)
+                    .putExtra(Turno.EXTRA_ACAO, IfoodSaldo.ACAO_PARAR)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val ini = IfoodSaldo.inicio(ctx)
+            val desde = if (ini > 0) " · desde " + java.text.SimpleDateFormat("HH:mm", Locale("pt", "BR")).format(java.util.Date(ini)) else ""
             return Notification.Builder(ctx, CANAL)
                 .setSmallIcon(R.drawable.ic_stat_rota)
                 .setContentTitle("Medindo km da rota")
-                .setContentText("📍 " + KmGps.fmtKm(km) + " pelo GPS")
+                .setContentText("📍 " + KmGps.fmtKm(km) + " pelo GPS" + desde)
+                .addAction(Notification.Action.Builder(null as android.graphics.drawable.Icon?, "⏹ Parar rota", parar).build())
                 .setColor(0xFF2EA44F.toInt())
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -228,6 +251,12 @@ class LocalizacaoService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACAO_PARAR) {
+            // pedido da tela do app (outro processo): encerra a rota aqui, onde o GPS está medindo
+            runCatching { IfoodSaldo.pararManual(this) }
+            if (!KmGps.ativo) stopSelf()
+            return START_NOT_STICKY
+        }
         val ok = runCatching {
             val n = notificacao(this, KmGps.kmAtual())
             if (Build.VERSION.SDK_INT >= 29) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
