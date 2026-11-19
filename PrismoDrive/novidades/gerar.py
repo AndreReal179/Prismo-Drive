@@ -26,6 +26,8 @@ def itens_de_texto(txt):
             out.append(m.group(1).strip())
     return out
 
+JUNTAR = {"2.1.8", "2.1.9", "2.2"}
+
 def norm(t):
     """Compara itens ignorando espaços e maiúsculas (o mesmo item repetido em várias versões)."""
     return re.sub(r"\s+", " ", t or "").strip().lower()
@@ -81,6 +83,10 @@ def main():
             if not re.match(r"^v\d+\.\d+(\.\d+)?$", tag) or r.get("draft"):
                 continue
             v = tag[1:]
+            # 2.1.8, 2.1.9 e 2.2 foram a MESMA atualização enviada várias vezes enquanto era ajustada
+            # (e saíram com o novidades.js errado): o que entrou nelas aparece junto na próxima versão.
+            if v in JUNTAR:
+                continue
             if v in conhecidas:
                 # já está no histórico fixo, mas o texto do Release (acumulado) conta como "já mostrado"
                 ja |= {norm(i) for i in itens_de_texto(r.get("body", ""))}

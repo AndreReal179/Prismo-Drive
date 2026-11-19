@@ -45,3 +45,5 @@
 • 📸 Compartilhar nos Detalhes da rota agora envia uma imagem igual à tela (mapa, valores e paradas)
 • ⛽ Card do analisador de rotas: o custo da gasolina aparece inteiro (antes ficava cortado só com "R$")
 • 📍 Paradas do trajeto: cada tela NO LOCAL do iFood marca um ponto numerado no mapa (Coleta, Entrega 1, Entrega 2…), no lugar das paradas por tempo
+• 🗞️ Aba Novidades corrigida: agora sempre mostra o que entrou na versão que você instalou
+• 🎉 Janela de novidades: na primeira vez que você abre o app depois de atualizar, ele mostra o que mudou (uma vez só por versão)
