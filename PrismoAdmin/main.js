@@ -3,9 +3,13 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, safeStorage, shell, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const crypto = require('crypto');
 
 const SUPABASE = 'https://xzdqvdrwvozoedmjwwhm.supabase.co';
 const APP_ID = 'com.prismo.drive.admin';
+const CHAVE = 'sb_publishable_OGjy3PepqOrIiVmw4s9EWA_kJGoFOFL';   // chave pública (a mesma do app)
+const PORTA_GOOGLE = 53682;                                        // volta do Google: http://127.0.0.1:53682/callback
 
 let janela = null;
 let bandeja = null;
@@ -105,6 +109,63 @@ ipcMain.handle('http', async (_e, req) => {
     return { status: r.status, texto: await r.text() };
   } catch (e) { return { status: 0, texto: '' }; }
 });
+
+/* ── Entrar com Google: abre o navegador, o Supabase devolve um código para este computador (PKCE) ── */
+let googleAberto = null;
+const b64url = (b) => b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const paginaVolta = (ok, msg) => `<!doctype html><meta charset="utf-8"><title>Prismo Drive Admin</title><body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#06100b;color:#e6edf3;font-family:Segoe UI,Arial,sans-serif"><div style="text-align:center;padding:30px;border-radius:18px;background:#0a140e;border:1px solid #17291e;max-width:420px"><div style="font-size:42px">${ok ? '✅' : '⚠️'}</div><h2 style="margin:10px 0 6px">${ok ? 'Pronto!' : 'Não deu certo'}</h2><p style="color:#9fb0a6;line-height:1.5">${msg}</p></div></body>`;
+ipcMain.handle('google:entrar', () => {
+  if (googleAberto) { try { googleAberto.close(); } catch (e) {} googleAberto = null; }
+  const verificador = b64url(crypto.randomBytes(48));
+  const desafio = b64url(crypto.createHash('sha256').update(verificador).digest());
+  const volta = `http://127.0.0.1:${PORTA_GOOGLE}/callback`;
+  return new Promise((ok) => {
+    let fim = false;
+    const terminar = (r) => {
+      if (fim) return; fim = true;
+      clearTimeout(limite);
+      setTimeout(() => { try { srv.close(); } catch (e) {} if (googleAberto === srv) googleAberto = null; }, 500);
+      mostrar();
+      ok(r);
+    };
+    const srv = http.createServer(async (req, res) => {
+      const u = new URL(req.url, volta);
+      if (u.pathname !== '/callback') { res.writeHead(404); res.end(); return; }
+      const codigo = u.searchParams.get('code');
+      const erro = u.searchParams.get('error_description') || u.searchParams.get('error');
+      if (!codigo) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(paginaVolta(false, 'O Google não liberou a entrada. Feche esta aba e tente de novo no programa.'));
+        return terminar({ erro: erro || 'sem_codigo' });
+      }
+      try {
+        const r = await fetch(SUPABASE + '/auth/v1/token?grant_type=pkce', {
+          method: 'POST', headers: { apikey: CHAVE, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ auth_code: codigo, code_verifier: verificador }), signal: AbortSignal.timeout(30000)
+        });
+        const j = await r.json().catch(() => null);
+        const certo = r.status === 200 && j && j.access_token;
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(paginaVolta(!!certo, certo ? 'Você entrou no Prismo Drive Admin. Pode fechar esta aba e voltar para o programa.' : 'Não foi possível concluir a entrada. Feche esta aba e tente de novo.'));
+        terminar(certo ? { sessao: j } : { erro: (j && (j.msg || j.error_description || j.error)) || 'troca_falhou' });
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(paginaVolta(false, 'Sem internet. Feche esta aba e tente de novo.'));
+        terminar({ erro: 'sem_internet' });
+      }
+    });
+    const limite = setTimeout(() => terminar({ erro: 'tempo' }), 4 * 60 * 1000);
+    srv.on('error', () => terminar({ erro: 'porta' }));
+    srv.listen(PORTA_GOOGLE, '127.0.0.1', () => {
+      googleAberto = srv;
+      const url = SUPABASE + '/auth/v1/authorize?provider=google'
+        + '&redirect_to=' + encodeURIComponent(volta)
+        + '&code_challenge=' + desafio + '&code_challenge_method=s256';
+      shell.openExternal(url);
+    });
+  });
+});
+ipcMain.handle('google:cancelar', () => { if (googleAberto) { try { googleAberto.close(); } catch (e) {} googleAberto = null; } return true; });
 
 function notificar(titulo, texto) {
   try {

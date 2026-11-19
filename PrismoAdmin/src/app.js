@@ -98,6 +98,25 @@ async function entrar() {
   if (!(await conferirAdmin())) { er.textContent = 'Esta conta não é de administrador.'; await sair(true); return; }
   abrirApp();
 }
+async function entrarGoogle() {
+  const er = $('lg-erro'); er.textContent = '';
+  const b = $('lg-google'); b.disabled = true; const antes = b.innerHTML;
+  b.innerHTML = '<span class="material-icons gira">autorenew</span>Continue no navegador…';
+  const r = await P.google();
+  b.disabled = false; b.innerHTML = antes;
+  if (!r || !r.sessao) {
+    const e = String((r && r.erro) || '');
+    er.textContent = e === 'tempo' ? 'O tempo acabou. Toque em "Entrar com Google" de novo.'
+      : e === 'porta' ? 'Outro programa está usando a porta 53682. Feche e abra o Prismo Drive Admin e tente de novo.'
+      : e === 'sem_internet' ? 'Sem internet. Verifique a conexão.'
+      : /access_denied/i.test(e) ? 'A entrada foi cancelada no Google.'
+      : 'Não foi possível entrar com o Google.' + (e && e !== 'sem_codigo' ? ' (' + e + ')' : '');
+    return;
+  }
+  await guardar(r.sessao);
+  if (!(await conferirAdmin())) { er.textContent = 'Esta conta Google não é de administrador.'; await sair(true); return; }
+  abrirApp();
+}
 let EU = {};
 async function conferirAdmin() {
   const r = await rpc('minha_conta');
@@ -492,6 +511,7 @@ document.addEventListener('click', (e) => {
   if (d.enc) return encerrar(Number(d.enc));
   switch (el.id) {
     case 'lg-entrar': return entrar();
+    case 'lg-google': return entrarGoogle();
     case 'bt-sair': return confirmar('Sair da conta?', 'Para voltar, entre de novo com e-mail e senha.', 'Sair', true).then((s) => s && sair());
     case 'us-bt': return buscar();
     case 'us-pro': return darPro();

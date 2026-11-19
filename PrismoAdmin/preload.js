@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('prismo', {
   notificar: (titulo, texto) => ipcRenderer.invoke('notificar', titulo, texto),
   contador: (n) => ipcRenderer.invoke('contador', n),
   versao: () => ipcRenderer.invoke('versao'),
-  abrirEmail: (email) => ipcRenderer.invoke('abrir-email', email)
+  abrirEmail: (email) => ipcRenderer.invoke('abrir-email', email),
+  google: () => ipcRenderer.invoke('google:entrar'),
+  googleCancelar: () => ipcRenderer.invoke('google:cancelar')
 });
