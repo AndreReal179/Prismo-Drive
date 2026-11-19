@@ -12,6 +12,8 @@ on:
     paths-ignore:
       - 'README.md'
       - '**/README.md'
+      - 'PrismoAdmin/**'
+      - '.github/workflows/build-admin.yml'
 
 permissions:
   contents: write
@@ -147,12 +149,14 @@ jobs:
           {
             echo "<!-- versionCode: $VERSION_CODE -->"
             echo "<!-- versionName: $VERSAO -->"
-            if [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi
+            # v2.1: só o que é novo nesta versão (gerado pelo novidades/gerar.py no build); sem ele, o NOVIDADES.md inteiro
+            if [ -s "$PROJ/novidades/notas_versao.md" ]; then cat "$PROJ/novidades/notas_versao.md"
+            elif [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi
           } > notas.md
           cat notas.md
           # versao.json: o app lê este arquivo (sem usar a API do GitHub, que tem limite por hora)
           REPO_REL="${REPO_ATUALIZACAO:-${{ github.repository }}}"
-          NOTAS_TXT=$(if [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi)
+          NOTAS_TXT=$(if [ -s "$PROJ/novidades/notas_versao.md" ]; then cat "$PROJ/novidades/notas_versao.md"; elif [ -f "$PROJ/NOVIDADES.md" ]; then cat "$PROJ/NOVIDADES.md"; else echo "Melhorias e correções."; fi)
           jq -n \
             --arg vn "$VERSAO" \
             --argjson vc "$VERSION_CODE" \
