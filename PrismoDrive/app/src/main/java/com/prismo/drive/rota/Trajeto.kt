@@ -25,6 +25,35 @@ object Trajeto {
 
     private fun dir(ctx: Context) = File((ctx.applicationContext ?: ctx).filesDir, PASTA).apply { mkdirs() }
     private fun arq(ctx: Context, id: String): File? = if (NOME.matches(id)) File(dir(ctx), "$id.trk") else null
+    /** v2.1.8: pontos de parada marcados pela tela "NO LOCAL" do iFood (lat,lng,hora,tipo). */
+    private fun arqP(ctx: Context, id: String): File? = if (NOME.matches(id)) File(dir(ctx), "$id.stp") else null
+
+    /** Último ponto gravado do trajeto (onde a pessoa chegou). */
+    private fun ultimo(ctx: Context, id: String): DoubleArray? = runCatching {
+        val f = arq(ctx, id) ?: return null
+        if (!f.exists() || f.length() == 0L) return null
+        val raf = java.io.RandomAccessFile(f, "r")
+        raf.use {
+            val ini = (it.length() - 200).coerceAtLeast(0)
+            it.seek(ini)
+            val b = ByteArray((it.length() - ini).toInt()); it.readFully(b)
+            val l = String(b).trim().lines().lastOrNull { x -> x.isNotBlank() } ?: return null
+            val p = l.split(',')
+            doubleArrayOf(p[0].toDouble(), p[1].toDouble())
+        }
+    }.getOrNull()
+
+    /** Marca um ponto de parada (coleta/entrega) no trajeto. loc = posição atual do GPS, se tiver. */
+    @Synchronized
+    fun marcarParada(ctx: Context, id: String, loc: Location?, tipo: String) {
+        runCatching {
+            val f = arqP(ctx, id) ?: return
+            val pos = loc?.let { doubleArrayOf(it.latitude, it.longitude) } ?: ultimo(ctx, id) ?: return
+            if (f.exists() && f.length() > 20_000) return
+            val t = System.currentTimeMillis()
+            f.appendText(String.format(Locale.US, "%.6f,%.6f,%d,%s\n", pos[0], pos[1], t, tipo.replace(Regex("[^a-z]"), "")))
+        }
+    }
 
     @Synchronized
     fun add(ctx: Context, id: String, loc: Location) {
@@ -35,7 +64,7 @@ object Trajeto {
         }
     }
 
-    fun limpar(ctx: Context, id: String) { runCatching { arq(ctx, id)?.delete() } }
+    fun limpar(ctx: Context, id: String) { runCatching { arq(ctx, id)?.delete(); arqP(ctx, id)?.delete() } }
 
     /** Rota concluída: o trajeto em andamento passa a ter o id da rota (com menos de 2 pontos, é descartado). */
     @Synchronized
@@ -47,13 +76,15 @@ object Trajeto {
             if (a.readLines().count { it.isNotBlank() } < 2) { a.delete(); return }
             b.delete()
             if (!a.renameTo(b)) { b.writeText(a.readText()); a.delete() }
+            val pa = arqP(ctx, de); val pb = arqP(ctx, para)
+            if (pa != null && pb != null) { pb.delete(); if (pa.exists() && !pa.renameTo(pb)) { pb.writeText(pa.readText()); pa.delete() } }
         }
         limparAntigos(ctx)
     }
 
     fun existe(ctx: Context, id: String) = arq(ctx, id)?.exists() == true
 
-    fun apagar(ctx: Context, id: String): Boolean = runCatching { arq(ctx, id)?.delete() == true }.getOrDefault(false)
+    fun apagar(ctx: Context, id: String): Boolean = runCatching { arqP(ctx, id)?.delete(); arq(ctx, id)?.delete() == true }.getOrDefault(false)
 
     /** Dos ids pedidos, quais têm trajeto gravado. */
     fun quais(ctx: Context, idsJson: String?): String = runCatching {
@@ -66,7 +97,7 @@ object Trajeto {
     fun limparAntigos(ctx: Context) {
         runCatching {
             val lim = System.currentTimeMillis() - DIAS * 86_400_000L
-            dir(ctx).listFiles()?.forEach { if (it.name != "$ATUAL.trk" && it.lastModified() < lim) it.delete() }
+            dir(ctx).listFiles()?.forEach { if (!it.name.startsWith("$ATUAL.") && it.lastModified() < lim) it.delete() }
         }
     }
 
@@ -87,9 +118,18 @@ object Trajeto {
         }
         val n = lat.size
         if (n < 2) return@runCatching ""
-        // paradas: intervalo grande entre dois pontos seguidos (o GPS não grava enquanto o carro está parado)
+        // paradas: v2.1.8 = cada tela "NO LOCAL" do iFood (coleta/entrega), na ordem.
+        // Trajetos sem marcação (antigos ou turno sem iFood): intervalo grande entre dois pontos seguidos.
         val paradas = JSONArray()
-        for (i in 1 until n) {
+        val fp = arqP(ctx, id)
+        if (fp != null && fp.exists()) fp.forEachLine { l ->
+            val p = l.split(',')
+            if (p.size >= 4) {
+                val a = p[0].toDoubleOrNull(); val b = p[1].toDoubleOrNull(); val c = p[2].toLongOrNull()
+                if (a != null && b != null && c != null) paradas.put(JSONArray().put(a).put(b).put(c).put(c).put(p[3]))
+            }
+        }
+        if (paradas.length() == 0) for (i in 1 until n) {
             val gap = t[i] - t[i - 1]
             if (gap >= PARADA_MS) paradas.put(JSONArray().put(lat[i - 1]).put(lng[i - 1]).put(t[i - 1]).put(t[i]))
         }

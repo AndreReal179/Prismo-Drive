@@ -41,6 +41,7 @@
 • ⏹️ Parar rota: no botão flutuante e na notificação "Medindo km da rota". Se a tela de ganho do iFood não aparecer, o app avisa e pergunta quanto você ganhou
 • 🛣️ Turno com Em rota e Fora de rota: veja quantos km rodou nas corridas e quantos rodou sem ganhar, com o custo da gasolina
 • 🏁 Finalizar turno novo: o iFood já vem somado (dá para editar), lance InDrive e outros ganhos, gorjetas e gastos (pneu, abastecimento…) e veja o lucro do turno
-• 💛 Botão Gorjeta nas rotas da Linha do tempo: some quantas vezes quiser e remova se errar. Entra no faturamento e na Carteira
+• 💛 Botão Gorjeta nas rotas da Linha do tempo: some quantas vezes quiser e remova se errar. A gorjeta fica no dia da rota e entra na Carteira (gorjeta de uma rota de outro dia não soma no faturamento de hoje)
 • 📸 Compartilhar nos Detalhes da rota agora envia uma imagem igual à tela (mapa, valores e paradas)
 • ⛽ Card do analisador de rotas: o custo da gasolina aparece inteiro (antes ficava cortado só com "R$")
+• 📍 Paradas do trajeto: cada tela NO LOCAL do iFood marca um ponto numerado no mapa (Coleta, Entrega 1, Entrega 2…), no lugar das paradas por tempo

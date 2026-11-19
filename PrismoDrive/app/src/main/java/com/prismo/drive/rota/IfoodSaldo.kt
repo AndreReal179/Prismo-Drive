@@ -115,6 +115,54 @@ object IfoodSaldo {
         KmGps.iniciar(ctx, zerar = true)
     }
 
+    /* ── v2.1.8 · Paradas do trajeto: cada vez que a tela "NO LOCAL" do iFood abre (coleta ou entrega) ── */
+    @Volatile private var noLocal = false
+    @Volatile private var foraDoLocalDesde = 0L
+
+    /** Tela "NO LOCAL" (com "Entregar pedido"/"Sair do local"). Devolve o tipo ("entrega", "coleta", "parada") ou null. */
+    fun telaNoLocal(root: AccessibilityNodeInfo): String? {
+        val fila = ArrayDeque<AccessibilityNodeInfo>()
+        fila.add(root)
+        var vistos = 0
+        var titulo = false; var entrega = false; var coleta = false; var sair = false
+        while (fila.isNotEmpty() && vistos < 400) {
+            val n = fila.removeFirst()
+            vistos++
+            val t = (n.text?.toString() ?: n.contentDescription?.toString() ?: "").trim()
+            if (t.equals("no local", true)) titulo = true
+            if (t.contains("entregar pedido", true)) entrega = true
+            if (t.contains("sair do local", true)) sair = true
+            if (t.contains("coletar", true) || t.contains("retirar pedido", true) || t.contains("confirmar coleta", true) || t.contains("confirmar retirada", true)) coleta = true
+            for (i in 0 until n.childCount) n.getChild(i)?.let { fila.add(it) }
+        }
+        if (!titulo || !(entrega || coleta || sair)) return null
+        return if (entrega) "entrega" else if (coleta) "coleta" else "parada"
+    }
+
+    /** Leitura do iFood: marca a parada na 1ª vez que a tela "NO LOCAL" aparece; libera a próxima ao sair dela. */
+    fun verNoLocal(ctx: Context, root: AccessibilityNodeInfo) {
+        val tipo = runCatching { telaNoLocal(root) }.getOrNull()
+        val agora = System.currentTimeMillis()
+        if (tipo == null) {
+            if (noLocal) {
+                if (foraDoLocalDesde == 0L) foraDoLocalDesde = agora
+                else if (agora - foraDoLocalDesde >= 8_000L) { noLocal = false; foraDoLocalDesde = 0L }
+            }
+            return
+        }
+        foraDoLocalDesde = 0L
+        if (noLocal) return
+        noLocal = true
+        if (!emAndamento(ctx) && !KmGps.ativo) return
+        val loc = KmGps.posicao()
+        Trajeto.marcarParada(ctx, Trajeto.ATUAL, loc, tipo)
+        // turno ligado: a parada também vai para o trajeto do turno
+        runCatching {
+            val e = Turno.estadoRapido(ctx)
+            if (e.ativo) Trajeto.marcarParada(ctx, "turno_" + java.lang.Long.toString(e.ini, 36), loc, tipo)
+        }
+    }
+
     /** Leitura do iFood SEM "EM DESLOCAMENTO": 1 min fora dele libera a próxima rota depois de uma parada manual. */
     fun semDeslocamento() {
         if (!ignorarDesloc) return

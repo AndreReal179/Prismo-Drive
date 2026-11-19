@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Prismo Drive Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Entrar -->
+<div id="tela-login" class="login" hidden>
+  <div class="lg-box">
+    <div class="lg-logo"><span class="material-icons">route</span></div>
+    <h1>Prismo Drive <span>Admin</span></h1>
+    <p class="mut">Entre com a sua conta de administrador do Prismo Drive.</p>
+    <label class="campo"><span>E-mail</span><input id="lg-email" type="email" autocomplete="username" spellcheck="false"></label>
+    <label class="campo"><span>Senha</span><input id="lg-senha" type="password" autocomplete="current-password"></label>
+    <button id="lg-entrar" class="btn g grande"><span class="material-icons">login</span>Entrar</button>
+    <p id="lg-erro" class="erro"></p>
+    <p class="mut peq">Entra pelo Google no app e não tem senha? No app, use "Esqueci a senha" para criar uma.</p>
+  </div>
+</div>
+
+<!-- Programa -->
+<div id="tela-app" class="app" hidden>
+  <nav class="sd">
+    <div class="brand"><i><span class="material-icons">route</span></i><div><b>Prismo Drive</b><small>ADMIN</small></div></div>
+    <button class="nv" data-v="painel"><span class="material-icons">dashboard</span>Painel</button>
+    <button class="nv" data-v="suporte"><span class="material-icons">support_agent</span>Suporte<em id="bd-suporte" hidden></em></button>
+    <button class="nv" data-v="vendas"><span class="material-icons">payments</span>Vendas</button>
+    <button class="nv" data-v="usuarios"><span class="material-icons">group</span>Usuários</button>
+    <button class="nv" data-v="codigos"><span class="material-icons">confirmation_number</span>Códigos Pro</button>
+    <button class="nv" data-v="avisos"><span class="material-icons">campaign</span>Avisos</button>
+    <button class="nv" data-v="erros"><span class="material-icons">bug_report</span>Erros do app<em id="bd-erros" hidden></em></button>
+    <button class="nv" data-v="backups"><span class="material-icons">backup</span>Backups</button>
+    <div class="me"><div class="av" id="me-av">A</div><div class="me-t"><b id="me-nome">Administrador</b><small>● Administrador</small></div><button class="ic-bt" id="bt-sair" title="Sair da conta"><span class="material-icons">logout</span></button></div>
+    <p class="ver" id="ver"></p>
+  </nav>
+  <main class="mn" id="mn"></main>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<div id="modal" class="modal" hidden><div class="md-box"><h3 id="md-tit"></h3><p id="md-txt"></p><div class="md-bt"><button class="btn" id="md-nao">Cancelar</button><button class="btn g" id="md-sim">Confirmar</button></div></div></div>
+<script src="app.js"></script>
+</body>
+</html>

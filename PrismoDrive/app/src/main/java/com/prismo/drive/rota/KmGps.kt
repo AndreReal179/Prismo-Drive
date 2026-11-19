@@ -120,6 +120,9 @@ object KmGps {
 
     fun kmAtual(): Double = km
 
+    /** Última posição recebida do GPS (para marcar a parada no lugar certo). */
+    fun posicao(): Location? = ult
+
     /** km medido até agora, lido do arquivo (serve para a tela do app, que roda em outro processo). */
     fun kmArquivo(ctx: Context): Double = runCatching {
         val f = arq(ctx)

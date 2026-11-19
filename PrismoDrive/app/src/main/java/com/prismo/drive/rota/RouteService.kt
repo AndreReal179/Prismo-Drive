@@ -273,6 +273,7 @@ class RouteService : AccessibilityService() {
             val p = r.packageName?.toString().orEmpty()
             val ehIfood = p.contains("ifood", true) || (p.isNotEmpty() && p == prefs.ifoodPkg)
             if (!ehIfood) continue
+            runCatching { IfoodSaldo.verNoLocal(this, r) }   // v2.1.8: parada no trajeto (tela NO LOCAL)
             val lido = IfoodSaldo.lerConclusao(r)
             if (lido == null) {
                 IfoodSaldo.telaSumiu()
