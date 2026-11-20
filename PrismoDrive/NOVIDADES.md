@@ -47,3 +47,4 @@
 • 📍 Paradas do trajeto: cada tela NO LOCAL do iFood marca um ponto numerado no mapa (Coleta, Entrega 1, Entrega 2…), no lugar das paradas por tempo
 • 🗞️ Aba Novidades corrigida: agora sempre mostra o que entrou na versão que você instalou
 • 🎉 Janela de novidades: na primeira vez que você abre o app depois de atualizar, ele mostra o que mudou (uma vez só por versão)
+• 📍 Correção nas paradas do trajeto: a mesma coleta ou entrega não aparece mais repetida, e todos os endereços carregam (antes da 13ª parada ficava "Buscando endereço…")

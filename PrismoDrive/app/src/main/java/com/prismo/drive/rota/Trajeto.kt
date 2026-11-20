@@ -21,6 +21,7 @@ object Trajeto {
     private const val DIAS = 120L                 // mesmo prazo da Linha do tempo
     private const val MAX_BYTES = 3_000_000L      // ~80 mil pontos: nunca enche o celular
     private const val PARADA_MS = 120_000L        // 2 min sem andar = parada
+    private const val JUNTAR_M = 150f             // mesma visita: marcas seguidas mais perto que isso viram um ponto
     private val NOME = Regex("^[a-z0-9_]{1,48}$")
 
     private fun dir(ctx: Context) = File((ctx.applicationContext ?: ctx).filesDir, PASTA).apply { mkdirs() }
@@ -122,12 +123,32 @@ object Trajeto {
         // Trajetos sem marcação (antigos ou turno sem iFood): intervalo grande entre dois pontos seguidos.
         val paradas = JSONArray()
         val fp = arqP(ctx, id)
-        if (fp != null && fp.exists()) fp.forEachLine { l ->
-            val p = l.split(',')
-            if (p.size >= 4) {
-                val a = p[0].toDoubleOrNull(); val b = p[1].toDoubleOrNull(); val c = p[2].toLongOrNull()
-                if (a != null && b != null && c != null) paradas.put(JSONArray().put(a).put(b).put(c).put(c).put(p[3]))
+        if (fp != null && fp.exists()) {
+            // v2.2.1: a mesma visita marcada várias vezes (abrir cada pedido no restaurante, voltar para a tela
+            // NO LOCAL depois de entregar…) vira UM ponto: marcas seguidas a menos de 150 m e do mesmo tipo
+            // (ou uma delas "parada", que é a tela só com "Sair do local") se juntam.
+            val marcas = ArrayList<Array<Any>>()   // lat, lng, hora, tipo
+            fp.forEachLine { l ->
+                val p = l.split(',')
+                if (p.size >= 4) {
+                    val a = p[0].toDoubleOrNull(); val b = p[1].toDoubleOrNull(); val c = p[2].toLongOrNull()
+                    if (a != null && b != null && c != null) {
+                        val tipo = p[3].trim()
+                        val ult = marcas.lastOrNull()
+                        if (ult != null) {
+                            val d = FloatArray(1)
+                            Location.distanceBetween(ult[0] as Double, ult[1] as Double, a, b, d)
+                            val tu = ult[3] as String
+                            if (d[0] < JUNTAR_M && (tu == tipo || tu == "parada" || tipo == "parada")) {
+                                if (tu == "parada") ult[3] = tipo
+                                return@forEachLine
+                            }
+                        }
+                        marcas.add(arrayOf(a, b, c, tipo))
+                    }
+                }
             }
+            marcas.forEach { m -> paradas.put(JSONArray().put(m[0]).put(m[1]).put(m[2]).put(m[2]).put(m[3])) }
         }
         if (paradas.length() == 0) for (i in 1 until n) {
             val gap = t[i] - t[i - 1]

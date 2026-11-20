@@ -2895,13 +2895,26 @@ function _trkEnderecos(lls){
   const k=ll=>Number(ll[0]).toFixed(4)+','+Number(ll[1]).toFixed(4);
   const pedir=[],idx=[];
   lls.forEach((ll,i)=>{const c=cache[k(ll)];const el=$('trk-end-'+i);if(c!=null){if(el)el.innerText=c||'Endereço não encontrado';}else{pedir.push([ll[0],ll[1]]);idx.push(i);}});
-  if(!pedir.length||!n||!n.enderecos)return;
-  window.__prismoEnd=(id,lista)=>{
-    if(id!==cb)return;
-    lista.forEach((txt,j)=>{const i=idx[j];const el=$('trk-end-'+i);if(el)el.innerText=txt||'Sem internet ou endereço não encontrado';if(txt)cache[k(lls[i])]=txt;});
-    try{const ks=Object.keys(cache);if(ks.length>400)ks.slice(0,ks.length-400).forEach(x=>delete cache[x]);localStorage.setItem('trk_end',JSON.stringify(cache));}catch(e){}
+  if(!pedir.length||!n||!n.enderecos){idx.forEach(i=>{const el=$('trk-end-'+i);if(el&&!n)el.innerText='';});return;}
+  /* v2.2.1: o celular busca no máximo 12 endereços por vez; pede em partes até acabar
+     (antes, da 13ª parada em diante ficava "Buscando endereço…" para sempre) */
+  const LOTE=12;let pos=0;
+  const proximo=()=>{
+    if(pos>=pedir.length)return;
+    const ini=pos;pos+=LOTE;
+    window.__prismoEnd=(id,lista)=>{
+      if(id!==cb)return;
+      for(let j=0;j<Math.min(LOTE,pedir.length-ini);j++){
+        const i=idx[ini+j],txt=(lista||[])[j]||'';const el=$('trk-end-'+i);
+        if(el)el.innerText=txt||'Sem internet ou endereço não encontrado';
+        if(txt)cache[k(lls[i])]=txt;
+      }
+      try{const ks=Object.keys(cache);if(ks.length>400)ks.slice(0,ks.length-400).forEach(x=>delete cache[x]);localStorage.setItem('trk_end',JSON.stringify(cache));}catch(e){}
+      proximo();
+    };
+    try{n.enderecos(JSON.stringify(pedir.slice(ini,ini+LOTE)),cb);}catch(e){}
   };
-  try{n.enderecos(JSON.stringify(pedir),cb);}catch(e){}
+  proximo();
 }
 function _trkDesenhar(t,paradas){
   if(_trkMapa){try{_trkMapa.remove();}catch(e){}_trkMapa=null;}

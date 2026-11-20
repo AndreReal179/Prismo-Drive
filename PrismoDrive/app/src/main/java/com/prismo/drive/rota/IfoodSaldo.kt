@@ -146,7 +146,7 @@ object IfoodSaldo {
         if (tipo == null) {
             if (noLocal) {
                 if (foraDoLocalDesde == 0L) foraDoLocalDesde = agora
-                else if (agora - foraDoLocalDesde >= 8_000L) { noLocal = false; foraDoLocalDesde = 0L }
+                else if (agora - foraDoLocalDesde >= 30_000L) { noLocal = false; foraDoLocalDesde = 0L }   // 30 s fora da tela = saiu do local
             }
             return
         }
