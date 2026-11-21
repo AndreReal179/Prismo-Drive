@@ -111,6 +111,7 @@ const PAGINAS = {
   insignias: ['Insígnias', 'As conquistas que os motoristas ganham nas missões', insignias],
   vendas: ['Vendas do Pro', 'Pagamentos do Mercado Pago', vendas],
   notificacoes: ['Notificações', 'Envie avisos no celular dos motoristas, na hora ou agendados', notificacoes],
+  planos: ['Planos e preços', 'O que muda aqui vale na hora no app, no site e na cobrança do Mercado Pago', planos],
   codigos: ['Códigos Pro', 'Gere códigos de dias de Pro para presentear ou vender', codigos],
   backups: ['Backups', 'Cópias de segurança do banco de dados', backups],
   historico: ['Histórico de ações', 'Tudo o que foi feito pelos administradores', historico],
@@ -579,7 +580,7 @@ async function vendas() {
 const nt = { aba: 'enviar', publico: 'todos', conta: '', quando: 'agora', titulo: '', texto: '', data: '' };
 const PUBLICOS = { todos: 'Todos', pro: 'Só Pro', free: 'Só Free', usuario: 'Sem conta', conta: 'Uma pessoa (ID)' };
 const STN = { agendada: ['Agendada', 'on'], enviada: ['Enviada', 'rota'], cancelada: ['Cancelada', 'cinza'], erro: ['Erro', 'verm'] };
-function abasNt() { return '<div class="barra"><div class="seg">' + [['enviar', 'Nova notificação'], ['lista', 'Agendadas e enviadas'], ['anuncios', 'Anúncios recorrentes']].map((t) => '<button data-nab="' + t[0] + '" class="' + (nt.aba === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('') + '</div></div>'; }
+function abasNt() { return '<div class="barra"><div class="seg">' + [['enviar', 'Nova notificação'], ['lista', 'Agendadas e enviadas'], ['anuncios', 'Anúncios e popups']].map((t) => '<button data-nab="' + t[0] + '" class="' + (nt.aba === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('') + '</div></div>'; }
 function dtLocal(d) { const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 async function notificacoes() {
   if (nt.aba === 'lista') return notifLista();
@@ -642,36 +643,77 @@ async function cancelarNotif(id) {
   if (r.status === 200) { toast('Notificação cancelada'); notifLista(); } else toast(erroTxt(r), true);
 }
 /* anúncios recorrentes (o app agenda no próprio celular: dias da semana e turnos) */
-const an = { publico: 'todos', semana: [0, 1, 2, 3, 4, 5, 6], turnos: ['manha'], dias: 7 };
+const an = { publico: 'todos', semana: [0, 1, 2, 3, 4, 5, 6], turnos: ['manha', 'tarde', 'noite'], dias: 5, titulo: '', texto: '', inicio: '', imagem: '', popup: true };
 const SEM = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], TURN = { manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' };
 async function anuncios() {
   const r = await rpc('admin_avisos');
   if (atual !== 'notificacoes') return;
   if (r.status !== 200) return falhou(r);
   const l = r.json || [], hj = new Date().toISOString().slice(0, 10);
-  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">campaign</span>Novo anúncio recorrente</h3><p class="muted small" style="margin:-6px 0 12px">Repete nos dias e turnos escolhidos (o próprio celular agenda). Bom para promoções e lembretes de vários dias.</p><div class="form" id="af">'
-    + '<label class="full">Título<input name="titulo" maxlength="60" placeholder="Prismo Drive"></label>'
-    + '<label class="full">Mensagem<textarea name="texto" maxlength="300" placeholder="Ex.: Lembre de lançar as corridas do dia!"></textarea></label>'
-    + '<label>Começa em<input name="inicio" type="date" value="' + hj + '" min="' + hj + '"></label>'
+  if (!an.inicio || an.inicio < hj) an.inicio = hj;
+  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">campaign</span>Novo anúncio</h3><p class="muted small" style="margin:-6px 0 12px">O servidor manda a notificação nos turnos escolhidos (8h, 13h e 19h), mesmo com o app fechado. Com imagem, quem abrir o app no turno vê o popup (fecha depois de 10 segundos), sem atrapalhar o odômetro, a atualização ou outras janelas.</p>'
+    + '<div class="grid" style="grid-template-columns:1fr 230px;gap:18px;align-items:start"><div class="form" id="af">'
+    + '<label class="full">Título<input name="titulo" maxlength="60" placeholder="Prismo Drive" value="' + esc(an.titulo) + '"></label>'
+    + '<label class="full">Mensagem<textarea name="texto" maxlength="300" placeholder="Ex.: Pro Anual com 53% OFF só até domingo!">' + esc(an.texto) + '</textarea></label>'
+    + '<label class="full">Imagem do popup (opcional)<div class="img-up"><span class="img-pv an-pv" id="an-pv">' + (okImg(an.imagem) ? '<img src="' + esc(an.imagem) + '" alt="">' : '<span class="mi">image</span>') + '</span>'
+    + '<button type="button" class="bt sm" data-anesc="1"><span class="mi">upload</span>' + (an.imagem ? 'Trocar imagem' : 'Enviar imagem') + '</button>' + (an.imagem ? '<button type="button" class="bt sm ghost" data-antira="1"><span class="mi">close</span>Tirar</button>' : '')
+    + '<input type="file" id="an-arq" accept="image/png,image/jpeg,image/webp" hidden><span class="muted small">PNG, JPG ou WEBP · em pé ou quadrada fica melhor</span></div></label>'
+    + '<label class="full chk"><input name="popup" type="checkbox"' + (an.popup ? ' checked' : '') + '><span><b>Mostrar popup ao abrir o app</b><small>Uma vez em cada turno escolhido, enquanto o anúncio estiver valendo. Sem imagem, o popup mostra só o título e a mensagem.</small></span></label>'
+    + '<label>Começa em<input name="inicio" type="date" value="' + esc(an.inicio) + '" min="' + hj + '"></label>'
     + '<label>Por quantos dias<input name="dias" type="number" min="1" max="60" value="' + an.dias + '"></label>'
     + '<label class="full">Para quem<div class="opc">' + ['todos', 'pro', 'free', 'usuario'].map((k) => '<button type="button" data-apub="' + k + '" class="' + (an.publico === k ? 'on' : '') + '">' + PUBLICOS[k] + '</button>').join('') + '</div></label>'
     + '<label class="full">Dias da semana<div class="opc">' + SEM.map((d, i) => '<button type="button" data-asem="' + i + '" class="' + (an.semana.includes(i) ? 'on' : '') + '">' + d + '</button>').join('') + '</div></label>'
-    + '<label class="full">Turnos<div class="opc">' + Object.keys(TURN).map((k) => '<button type="button" data-atur="' + k + '" class="' + (an.turnos.includes(k) ? 'on' : '') + '">' + TURN[k] + '</button>').join('') + '</div></label>'
-    + '</div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bt pri" data-apub2="1"><span class="mi">campaign</span>Publicar anúncio</button></div></div>'
+    + '<label class="full">Vezes ao dia (turnos)<div class="opc">' + Object.keys(TURN).map((k) => '<button type="button" data-atur="' + k + '" class="' + (an.turnos.includes(k) ? 'on' : '') + '">' + TURN[k] + ' · ' + { manha: '8h', tarde: '13h', noite: '19h' }[k] + '</button>').join('') + '</div></label>'
+    + '<p class="muted small full" id="an-resumo">' + anResumo() + '</p>'
+    + '</div><div><p class="muted small" style="margin-bottom:8px">COMO FICA NO APP</p><div class="an-prev" id="an-prev">' + anPrevia() + '</div></div></div>'
+    + '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bt pri" data-apub2="1"><span class="mi">campaign</span>Publicar anúncio</button></div></div>'
     + '<div class="card"><h3><span class="mi">list</span>Anúncios publicados</h3><div class="grid">' + (l.length ? l.map((a) => {
       const p = a.inicio.split('-'), fim = new Date(+p[0], +p[1] - 1, +p[2] + a.dias - 1).toISOString().slice(0, 10);
       const st = !a.ativo ? ['Encerrado', 'cinza'] : (fim < hj ? ['Terminou', 'cinza'] : (a.inicio > hj ? ['Agendado', 'on'] : ['Ativo', 'rota']));
-      return '<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="display:flex;gap:8px;align-items:center"><span class="chip ' + st[1] + '">' + st[0] + '</span><b style="flex:1">' + esc(a.titulo) + '</b>' + (a.ativo && fim >= hj ? '<button class="bt sm verm" data-aenc="' + a.id + '">Encerrar</button>' : '') + '</div><div class="muted small" style="margin-top:4px">' + esc(a.texto) + '</div><div class="muted small" style="margin-top:4px">' + esc(PUBLICOS[a.publico] || a.publico) + ' · ' + data(a.inicio) + ' por ' + a.dias + ' dias · ' + (a.turnos || []).map((t) => TURN[t] || t).join(', ') + '</div></div>';
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:10px">' + (okImg(a.imagem) ? '<img src="' + esc(a.imagem) + '" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:10px;flex-shrink:0">' : '')
+        + '<div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:center"><span class="chip ' + st[1] + '">' + st[0] + '</span>' + (a.popup ? '<span class="chip">Popup</span>' : '') + '<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.titulo) + '</b>' + (a.ativo && fim >= hj ? '<button class="bt sm verm" data-aenc="' + a.id + '">Encerrar</button>' : '') + '</div>'
+        + '<div class="muted small" style="margin-top:4px">' + esc(a.texto) + '</div><div class="muted small" style="margin-top:4px">' + esc(PUBLICOS[a.publico] || a.publico) + ' · ' + data(a.inicio) + ' até ' + data(fim) + ' · ' + (a.turnos || []).map((t) => TURN[t] || t).join(', ') + (a.servidor ? ' · ' + num(a.envios || 0) + ' envio(s) do servidor' : '') + '</div></div></div>';
     }).join('') : '<div class="vazio" style="padding:20px">Nenhum anúncio ainda.</div>') + '</div></div></div>';
   marcarAtualizado();
 }
+function anResumo() {
+  const v = an.dias * an.turnos.length, sem = an.semana.length;
+  return '<span class="mi" style="font-size:16px;vertical-align:-3px">info</span> ' + (an.turnos.length ? an.turnos.length + 'x ao dia' : 'escolha um turno') + ' por ' + an.dias + ' dia(s)' + (sem < 7 ? ' (só ' + an.semana.map((i) => SEM[i]).join(', ') + ')' : '') + ': até ' + v + ' notificações. Expira e some sozinho depois disso.';
+}
+function anPrevia() {
+  return '<div class="an-pp">' + (okImg(an.imagem) ? '<img src="' + esc(an.imagem) + '" alt="">' : '<div class="an-pp-ic"><span class="mi">campaign</span></div>') + '<span class="an-pp-x">10</span>'
+    + '<div class="an-pp-t"><b>' + esc(an.titulo || 'Prismo Drive') + '</b><p>' + esc(an.texto || 'Sua mensagem aparece aqui.') + '</p></div></div>';
+}
+function lerAf() { const f = $('af'); if (!f) return; f.querySelectorAll('[name]').forEach((e) => { an[e.name] = e.type === 'checkbox' ? e.checked : (e.name === 'dias' ? Math.max(1, Math.min(60, Number(e.value) || 1)) : e.value); }); const pv = $('an-prev'); if (pv) pv.innerHTML = anPrevia(); const rs = $('an-resumo'); if (rs) rs.innerHTML = anResumo(); }
+/* imagem do popup: até 1080 px no lado maior, mantém o formato */
+function reduzirFoto(arq) {
+  return new Promise((ok, erro) => {
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const e = Math.min(1, 1080 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * e); c.height = Math.round(im.naturalHeight * e); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      c.toBlob((b) => b ? ok(b) : erro(new Error('não deu para ler a imagem')), 'image/webp', 0.86);
+    }; im.onerror = () => erro(new Error('arquivo não é uma imagem')); im.src = r.result; };
+    r.onerror = () => erro(new Error('não deu para ler o arquivo')); r.readAsDataURL(arq);
+  });
+}
+async function anImagem(arq) {
+  toast('Enviando imagem…');
+  try {
+    const blob = await reduzirFoto(arq), t = await token(); if (!t) throw new Error('sessão expirada');
+    const nome = 'avisos/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) + '.webp';
+    const r = await fetch(URL_SB + '/storage/v1/object/jogo/' + nome, { method: 'POST', headers: { apikey: CHAVE, Authorization: 'Bearer ' + t, 'Content-Type': 'image/webp', 'x-upsert': 'true' }, body: blob });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || j.error || ('erro ' + r.status)); }
+    lerAf(); an.imagem = URL_SB + '/storage/v1/object/public/jogo/' + nome; an.popup = true; toast('Imagem pronta.'); anuncios();
+  } catch (e) { toast('Não deu para enviar a imagem: ' + e.message, true); }
+}
 async function publicarAnuncio() {
-  const f = {}; $('af').querySelectorAll('[name]').forEach((e) => { f[e.name] = e.value; });
-  if ((f.texto || '').trim().length < 3) return toast('Escreva a mensagem.', true);
+  lerAf();
+  if ((an.texto || '').trim().length < 3) return toast('Escreva a mensagem.', true);
   if (!an.semana.length || !an.turnos.length) return toast('Escolha pelo menos um dia e um turno.', true);
-  const dias = Math.max(1, Math.min(60, Number(f.dias) || 7));
-  const r = await rpc('admin_anunciar', { titulo: (f.titulo || '').trim(), texto: f.texto.trim(), publico: an.publico, inicio: f.inicio, dias, semana: an.semana.slice().sort(), turnos: an.turnos.slice() });
-  if (r.status === 200) { toast('Anúncio publicado.'); anuncios(); } else toast(erroTxt(r), true);
+  if (!confirm('Publicar o anúncio para ' + (PUBLICOS[an.publico] || an.publico) + '? ' + anResumo().replace(/<[^>]+>/g, '').replace(/^\s*info\s*/, ''))) return;
+  const r = await rpc('admin_anunciar', { titulo: (an.titulo || '').trim(), texto: an.texto.trim(), publico: an.publico, inicio: an.inicio, dias: an.dias, semana: an.semana.slice().sort(), turnos: an.turnos.slice(), imagem: an.imagem || null, popup: !!an.popup });
+  if (r.status === 200) { toast('Anúncio publicado.'); Object.assign(an, { titulo: '', texto: '', imagem: '' }); anuncios(); } else toast(erroTxt(r), true);
 }
 async function encerrarAnuncio(id) {
   if (!confirm('Encerrar este anúncio?')) return;
@@ -726,7 +768,7 @@ async function backupAgora() {
 }
 
 /* ═══════════ HISTÓRICO ═══════════ */
-const ACOES = { ranking: 'Mudou a ranqueada', dar_pro: 'Deu dias de Pro', tornar_free: 'Tirou o Pro', anunciar: 'Publicou anúncio', notificar: 'Enviou notificação', agendar_notificacao: 'Agendou notificação', gerar_codigos: 'Gerou códigos', encerrar_aviso: 'Encerrou anúncio' };
+const ACOES = { planos: 'Mudou os preços dos planos', ranking: 'Mudou a ranqueada', dar_pro: 'Deu dias de Pro', tornar_free: 'Tirou o Pro', anunciar: 'Publicou anúncio', notificar: 'Enviou notificação', agendar_notificacao: 'Agendou notificação', gerar_codigos: 'Gerou códigos', encerrar_aviso: 'Encerrou anúncio' };
 async function historico() {
   const r = await rpc('admin_historico', { p_limite: 150 });
   if (atual !== 'historico') return;
@@ -740,6 +782,52 @@ async function historico() {
   marcarAtualizado();
 }
 
+
+
+/* ═══════════ PLANOS E PREÇOS ═══════════ */
+let plOrig = null, plEd = null;   // como está no servidor · como está sendo editado
+const reais = (v) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+async function planos(forcar) {
+  if (!plEd || (forcar && !plMudancas().length)) {   // a atualização automática não apaga o que você está editando
+    const r = await rpc('admin_planos');
+    if (atual !== 'planos') return;
+    if (r.status !== 200) return falhou(r);
+    plOrig = (r.json || []).map((x) => ({ ...x, preco: Number(x.preco) })); plEd = plOrig.map((x) => ({ ...x }));
+  }
+  if (atual !== 'planos') return;
+  const base = (plEd.find((x) => x.id === 'mensal') || plEd[0] || {}).preco || 0, mudou = plMudancas().length;
+  $('conteudo').innerHTML = '<div class="grid g21"><div class="card"><h3><span class="mi">sell</span>Planos do Pro</h3>'
+    + '<table class="tab pl-tab"><thead><tr><th>PLANO</th><th>NO APP</th><th>PREÇO (R$)</th><th>DIAS</th><th>CARTÃO</th><th>SELO</th><th>POR MÊS</th><th>DESCONTO</th></tr></thead><tbody>'
+    + plEd.map((x, i) => { const pm = x.preco / x.meses, pc = x.id === 'mensal' ? 0 : Math.round((1 - x.preco / (base * x.meses)) * 100), o = plOrig[i] || {};
+      const dif = (k) => String(o[k]) !== String(x[k]) ? ' mudou' : '';
+      return '<tr class="' + (x.ativo ? '' : 'off') + '"><td><b>' + esc(x.nome) + '</b><div class="muted small">' + x.meses + (x.meses === 1 ? ' mês' : ' meses') + '</div></td>'
+        + '<td><label class="sw"><input type="checkbox" data-plc="ativo" data-pli="' + i + '"' + (x.ativo ? ' checked' : '') + '><span></span></label></td>'
+        + '<td><input class="pl-in' + dif('preco') + '" data-plc="preco" data-pli="' + i + '" type="number" step="0.10" min="5" max="1000" value="' + Number(x.preco).toFixed(2) + '"></td>'
+        + '<td><input class="pl-in sm' + dif('dias') + '" data-plc="dias" data-pli="' + i + '" type="number" min="1" max="3660" value="' + x.dias + '"></td>'
+        + '<td><select class="pl-in sm' + dif('parcelas') + '" data-plc="parcelas" data-pli="' + i + '">' + [1, 2, 3, 4, 5, 6, 10, 12].map((n) => '<option value="' + n + '"' + (Number(x.parcelas) === n ? ' selected' : '') + '>' + (n === 1 ? 'à vista' : 'até ' + n + 'x') + '</option>').join('') + '</select></td>'
+        + '<td><input class="pl-in' + dif('selo') + '" data-plc="selo" data-pli="' + i + '" maxlength="30" placeholder="—" value="' + esc(x.selo || '') + '"></td>'
+        + '<td><b>' + reais(pm) + '</b></td><td>' + (pc > 0 ? '<span class="chip rota">-' + pc + '%</span>' : '<span class="muted">—</span>') + '</td></tr>'; }).join('')
+    + '</tbody></table>'
+    + '<div style="display:flex;gap:10px;align-items:center;margin-top:16px"><span class="muted small" style="flex:1">' + (mudou ? '<b style="color:#fbbf24">' + mudou + ' mudança(s) não salva(s)</b>' : 'Tudo salvo.') + ' O desconto e o "por mês" são calculados em cima do Mensal.</span>'
+    + (mudou ? '<button class="bt ghost" data-pldesf="1"><span class="mi">undo</span>Desfazer</button>' : '') + '<button class="bt pri" data-plsalvar="1"' + (mudou ? '' : ' disabled') + '><span class="mi">save</span>Salvar preços</button></div></div>'
+    + '<div><div class="card"><h3><span class="mi">smartphone</span>Como fica no app</h3><div class="pl-prev">' + plEd.filter((x) => x.ativo).map((x) => { const pc = x.id === 'mensal' ? 0 : Math.round((1 - x.preco / (base * x.meses)) * 100);
+      return '<div class="pl-op' + (x.selo ? ' dest' : '') + '">' + (x.selo ? '<i>' + esc(x.selo) + '</i>' : '') + '<b>' + esc(x.nome) + '</b><small>' + x.dias + ' dias</small><strong>' + reais(x.preco) + '</strong><small>' + (x.meses > 1 ? reais(x.preco / x.meses) + '/mês' : 'por mês') + '</small>' + (pc > 0 ? '<em>-' + pc + '%</em>' : '<em class="n">sem desconto</em>') + '</div>'; }).join('') + '</div></div>'
+    + '<div class="card mt"><h3><span class="mi">verified_user</span>Segurança</h3><ul class="pl-seg"><li>Vale na hora no app, no site (Termos) e na cobrança do Mercado Pago.</li><li>O preço é decidido pelo servidor: ninguém consegue mudar pelo celular.</li><li>Quem já pagou não é afetado: vale para os próximos pedidos.</li><li>Limite de R$ 5 a R$ 1.000 por plano. Toda mudança vai para o Histórico de ações.</li></ul></div></div></div>';
+  marcarAtualizado();
+}
+function plMudancas() {
+  const l = []; if (!plOrig || !plEd) return l;
+  plEd.forEach((x, i) => { const o = plOrig[i] || {}; [['preco', 'Preço', (v) => reais(v)], ['dias', 'Dias', (v) => v + ' dias'], ['parcelas', 'Cartão', (v) => Number(v) === 1 ? 'à vista' : 'até ' + v + 'x'], ['selo', 'Selo', (v) => v || 'sem selo'], ['ativo', 'No app', (v) => v ? 'aparece' : 'escondido']].forEach(([k, n, f]) => { if (String(o[k] ?? '') !== String(x[k] ?? '')) l.push(x.nome + ' · ' + n + ': ' + f(o[k]) + ' → ' + f(x[k])); }); });
+  return l;
+}
+async function plSalvar() {
+  const m = plMudancas(); if (!m.length) return;
+  if (plEd.some((x) => !(Number(x.preco) >= 5 && Number(x.preco) <= 1000))) return toast('Cada preço precisa ficar entre R$ 5,00 e R$ 1.000,00.', true);
+  if (!plEd.some((x) => x.ativo)) return toast('Deixe pelo menos um plano aparecendo no app.', true);
+  if (!confirm('Salvar estas mudanças? Valem na hora no app e no Mercado Pago.\n\n• ' + m.join('\n• '))) return;
+  const r = await rpc('admin_planos_salvar', { p_planos: plEd.map((x) => ({ id: x.id, preco: Number(x.preco), dias: Number(x.dias), parcelas: Number(x.parcelas), selo: x.selo || '', ativo: !!x.ativo })) });
+  if (r.status === 200) { toast('Preços salvos. Já valem no app e no Mercado Pago.'); plEd = null; planos(); } else toast(erroTxt(r), true);
+}
 
 /* ═══════════ RANQUEADA ═══════════ */
 let rkEd = null;   // prêmios sendo editados (sobrevive à atualização automática)
@@ -859,20 +947,25 @@ document.addEventListener('click', (e) => {
   if (d.ncanc) return cancelarNotif(Number(d.ncanc));
   if (d.nrep) { const n = (notifLista._l || []).find((x) => x.id === Number(d.nrep)); if (n) Object.assign(nt, { titulo: n.titulo, texto: n.texto, publico: n.publico, conta: n.conta_id || '', aba: 'enviar' }); return notificacoes(); }
   if (d.unotif) { Object.assign(nt, { publico: 'conta', conta: d.unotif, aba: 'enviar', quando: 'agora' }); return ir('notificacoes'); }
-  if (d.apub) { an.publico = d.apub; document.querySelectorAll('[data-apub]').forEach((b) => b.classList.toggle('on', b === t)); return; }
-  if (d.asem) { const i = Number(d.asem); an.semana = an.semana.includes(i) ? an.semana.filter((x) => x !== i) : an.semana.concat(i); t.classList.toggle('on'); return; }
-  if (d.atur) { an.turnos = an.turnos.includes(d.atur) ? an.turnos.filter((x) => x !== d.atur) : an.turnos.concat(d.atur); t.classList.toggle('on'); return; }
+  if (d.apub) { lerAf(); an.publico = d.apub; document.querySelectorAll('[data-apub]').forEach((b) => b.classList.toggle('on', b === t)); return; }
+  if (d.asem) { const i = Number(d.asem); an.semana = an.semana.includes(i) ? an.semana.filter((x) => x !== i) : an.semana.concat(i); t.classList.toggle('on'); lerAf(); return; }
+  if (d.atur) { an.turnos = an.turnos.includes(d.atur) ? an.turnos.filter((x) => x !== d.atur) : an.turnos.concat(d.atur); t.classList.toggle('on'); lerAf(); return; }
   if (d.apub2) return publicarAnuncio();
+  if (d.anesc) return $('an-arq') && $('an-arq').click();
+  if (d.antira) { lerAf(); an.imagem = ''; return anuncios(); }
   if (d.aenc) return encerrarAnuncio(Number(d.aenc));
   if (d.cgerar) return gerarCodigos();
   if (d.ccopiar) { navigator.clipboard.writeText(codGerados.join('\n')).then(() => toast('Códigos copiados')); return; }
   if (d.bagora) return backupAgora();
+  if (d.plsalvar) return plSalvar();
+  if (d.pldesf) { plEd = plOrig.map((x) => ({ ...x })); return planos(); }
   if (d.rkpausa) return rkSalvar(d.rkpausa === '1', false);
   if (d.rksalvar) return rkSalvar(null, true);
   if (d.rkadd) { rkEd.push({ pos: rkEd.length + 1, texto: '', dias: 0 }); return ranqueada(); }
   if (d.rkdel) { rkEd.splice(Number(d.rkdel), 1); rkEd.forEach((p, i) => { p.pos = i + 1; }); return ranqueada(); }
 });
 document.addEventListener('input', (e) => {
+  if (e.target.closest && e.target.closest('#af')) { lerAf(); return; }
   if (e.target.dataset && e.target.dataset.rki !== undefined && rkEd) { const p = rkEd[Number(e.target.dataset.rki)]; if (p) p[e.target.dataset.rkc] = e.target.dataset.rkc === 'dias' ? (Number(e.target.value) || 0) : e.target.value; return; }
   if (e.target.id === 'us-busca') { clearTimeout(tBusca); tBusca = setTimeout(() => { us.busca = e.target.value.trim(); us.pag = 0; usuarios(true); }, 350); return; }
   if (e.target.closest && e.target.closest('#nf')) {
@@ -882,7 +975,7 @@ document.addEventListener('input', (e) => {
   }
   if (e.target.closest && e.target.closest('#fm')) { if ($('fm').querySelector('[name=titulo]')) prevMissao(); else prevInsignia(); }
 });
-document.addEventListener('change', (e) => { if (e.target.id === 'img-arq' && e.target.files && e.target.files[0]) { trocarImagem(e.target.files[0]); e.target.value = ''; } });
+document.addEventListener('change', (e) => { if (e.target.dataset && e.target.dataset.pli !== undefined && plEd) { const x = plEd[Number(e.target.dataset.pli)], k = e.target.dataset.plc; if (x) { x[k] = k === 'ativo' ? e.target.checked : (k === 'selo' ? e.target.value.trim() : Number(e.target.value)); } return planos(); } if (e.target.id === 'an-arq' && e.target.files && e.target.files[0]) { anImagem(e.target.files[0]); e.target.value = ''; return; } if (e.target.closest && e.target.closest('#af')) lerAf(); if (e.target.id === 'img-arq' && e.target.files && e.target.files[0]) { trocarImagem(e.target.files[0]); e.target.value = ''; } });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('modal').hidden) fecharModal();
   /* chat do suporte: Enter envia, Shift+Enter pula linha */

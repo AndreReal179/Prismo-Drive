@@ -59,7 +59,7 @@ footer{text-align:center;color:#4b5b51;font-size:12px;margin-top:22px}
 <p>Hoje o Prismo Drive <b>não exibe anúncios</b>. <b>Futuramente</b>, o uso sem conta e o plano Free poderão exibir anúncios, por exemplo banners, vídeos curtos ou ofertas de parceiros (oficinas, postos, lojas e serviços para motoristas). O <b>plano Pro continua sem anúncios</b>.</p>
 <p>Os anúncios não vão aparecer por cima de outros apps nem durante o uso do Assistente de rotas. Antes de começar, avisaremos no app e atualizaremos estes termos e a Política de Privacidade, explicando quais empresas de anúncios forem usadas e quais dados elas recebem.</p>
 <h3>9. Planos pagos, preços e pagamento</h3>
-<ul><li><b>Mensal</b> (30 dias): R$ 29,90</li><li><b>Trimestral</b> (90 dias): R$ 79,90</li><li><b>Semestral</b> (180 dias): R$ 149,90, em até 3x no cartão</li><li><b>Anual</b> (365 dias): R$ 249,90, em até 3x no cartão</li></ul>
+<ul id="precos"><li><b>Mensal</b> (30 dias): R$ 24,90</li><li><b>Trimestral</b> (90 dias): R$ 63,90</li><li><b>Semestral</b> (180 dias): R$ 89,90, em até 3x no cartão</li><li><b>Anual</b> (365 dias): R$ 139,90, em até 3x no cartão</li></ul>
 <p>O pagamento é feito pelo <b>Mercado Pago</b>, por Pix ou cartão. <b>Não existe renovação automática nem cobrança recorrente</b>: cada compra vale pelos dias do plano escolhido. Se você ainda tem Pro e compra outro plano, <b>os dias se somam</b>.</p>
 <p>O Pro é liberado sozinho quando o Mercado Pago aprova o pagamento (o Pix costuma aprovar na hora; o cartão pode passar por análise). Os preços podem mudar para compras futuras, sem afetar os dias que você já comprou.</p>
 <p>Quando o Pro vence, a conta volta para Free: <b>nenhum dado é apagado</b>, os recursos Pro só ficam bloqueados até você renovar. Para confirmar a validade do Pro, o app usa a hora do servidor e precisa de internet pelo menos uma vez a cada 7 dias.</p>
@@ -99,4 +99,11 @@ footer{text-align:center;color:#4b5b51;font-size:12px;margin-top:22px}
 <p>Estes termos seguem as leis brasileiras. Eventuais disputas podem ser resolvidas no foro do seu domicílio, como garante o Código de Defesa do Consumidor.</p>
 <p class="tm-fim">✔ Fim dos termos. Obrigado por ler!</p></div></div>
 <footer>Prismo Drive · <a style="color:#7ee2a0" href="privacidade.html">Política de Privacidade</a></footer>
-</div></body></html>
+</div><script>
+/* preços atuais dos planos (os mesmos do app e do Mercado Pago) */
+fetch('https://xzdqvdrwvozoedmjwwhm.supabase.co/rest/v1/rpc/planos_app',{method:'POST',headers:{apikey:'sb_publishable_OGjy3PepqOrIiVmw4s9EWA_kJGoFOFL','Content-Type':'application/json'},body:'{}'})
+.then(function(r){return r.ok?r.json():null;}).then(function(l){var u=document.getElementById('precos');if(!u||!Array.isArray(l)||!l.length)return;
+var f=function(v){return 'R$ '+Number(v).toFixed(2).replace('.',',');},e=function(t){return String(t).replace(/[<>&]/g,'');};
+u.innerHTML=l.filter(function(x){return x.ativo!==false;}).map(function(x){return '<li><b>'+e(x.nome)+'</b> ('+x.dias+' dias): '+f(x.preco)+(x.parcelas>1?', em até '+x.parcelas+'x no cartão':'')+'</li>';}).join('');}).catch(function(){});
+</script>
+</body></html>
