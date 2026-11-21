@@ -1031,6 +1031,11 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .pg-hex.on .material-icons{color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.35)}
 .pg-ins.rola{justify-content:flex-start;overflow-x:auto;gap:12px;scrollbar-width:none}
 .pg-ins.rola::-webkit-scrollbar{display:none}
+.pg-ins.so button{width:58px}
+.pg-mais{width:56px;height:56px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fbbf24;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.35)}
+.pg-todas{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-top:16px;max-height:52vh;overflow-y:auto}
+.pg-todas button{background:none;border:0;padding:0;text-align:center;min-width:0}
+.pg-todas small{display:block;font-size:11px;color:#4f5f56;margin-top:6px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pg-ins.rola button{flex-shrink:0;width:62px}
 .pg-ins small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pg-cel{display:inline-block;animation:pgCel 1.2s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 10px 30px rgba(250,204,21,.45))}
@@ -10196,19 +10201,37 @@ window.PrismoPaginas=(function(){
          :(ms?'<button class="pg-bt" style="margin-top:16px;background:linear-gradient(135deg,#6d28d9,#a78bfa)" onclick="PrismoPaginas.fecharSheet();PrismoPaginas.abrir(\'missoes\');setTimeout(function(){PrismoPaginas.missao('+ms.id+')},350)"><span class="material-icons">flag</span>Ver a missão "'+esc(ms.titulo)+'"</button>':'<p style="margin-top:12px;font-size:12.5px;color:#8b949e">Em breve uma missão para ganhar esta insígnia.</p>'))
       +'</div>','radial-gradient(300px 200px at 50% 0%,rgba(250,204,21,.18),transparent),linear-gradient(180deg,#1a160a,#0b1410 55%)','rgba(250,204,21,.4)');
   }
-  /* bloco CONQUISTAS do Perfil */
+  /* bloco CONQUISTAS do Perfil: só as imagens, as últimas ganhas primeiro; "Ver todas" abre todas na ordem */
   function conquistasHtml(){
     var l=logado(),d=l?msDados():null,ins=d&&Array.isArray(d.insignias)?d.insignias:[],minhas={};
     (d&&d.minhas||[]).forEach(function(x){minhas[x.id]=x;});
     var tem=Object.keys(minhas).length;
-    var h='<div class="pg-sec"><span>CONQUISTAS · '+tem+(ins.length?'/'+ins.length:'')+'</span>'+(l?'<button onclick="PrismoPaginas.abrir(\'missoes\')">Missões ›</button>':'')+'</div><div class="pg-box"><div class="pg-ins'+(ins.length>5?' rola':'')+'">';
-    if(!ins.length){for(var k=0;k<5;k++)h+='<button onclick="PrismoPaginas.abrir(\'missoes\')">'+hexIns(null,52,false)+'<small>???</small></button>';}
+    var h='<div class="pg-sec"><span>CONQUISTAS · '+tem+(ins.length?'/'+ins.length:'')+'</span>'+(l?'<button onclick="PrismoPaginas.'+(ins.length?'conquistas()':'abrir(\'missoes\')')+'">'+(ins.length?'Ver todas ›':'Missões ›')+'</button>':'')+'</div><div class="pg-box"><div class="pg-ins so">';
+    if(!ins.length){for(var k=0;k<5;k++)h+='<button onclick="PrismoPaginas.abrir(\'missoes\')">'+hexIns(null,56,false)+'</button>';}
     else{
-      ins.slice().sort(function(a,b){return (minhas[b.id]?1:0)-(minhas[a.id]?1:0);}).forEach(function(i){
-        h+='<button onclick="PrismoPaginas.insignia('+i.id+')">'+hexIns(i,52,!!minhas[i.id])+'<small'+(minhas[i.id]?' style="color:#e6edf3"':'')+'>'+esc(minhas[i.id]?i.nome:'???')+'</small></button>';
+      /* 5 lugares: as últimas ganhas primeiro; passou de 5, as 4 mais novas + o botão "+N" que abre todas */
+      var ganha=function(i){var g=minhas[i.id];return g?new Date(g.ganha_em).getTime()||1:0;};
+      var ord=ins.slice().sort(function(a,b){return ganha(b)-ganha(a);});
+      var mostra=ord.length>5?ord.slice(0,4):ord;
+      mostra.forEach(function(i){
+        h+='<button onclick="PrismoPaginas.insignia('+i.id+')" aria-label="'+esc(minhas[i.id]?i.nome:'Insígnia bloqueada')+'">'+hexIns(i,56,!!minhas[i.id])+'</button>';
       });
+      if(ord.length>5)h+='<button onclick="PrismoPaginas.conquistas()" aria-label="Ver todas as conquistas"><div class="pg-mais">+'+(ord.length-4)+'</div></button>';
     }
     return h+'</div></div>';
+  }
+  /* todas as conquistas, na ordem definida pela equipe */
+  function conquistas(){
+    var d=msDados()||{},ins=Array.isArray(d.insignias)?d.insignias:[],minhas={};
+    (d.minhas||[]).forEach(function(x){minhas[x.id]=x;});
+    var tem=Object.keys(minhas).length;
+    var h='<div style="text-align:center"><p style="font-size:11px;font-weight:900;letter-spacing:.12em;color:#fbbf24">SUAS CONQUISTAS</p>'
+      +'<b style="display:block;font-size:20px;color:#fff;margin-top:4px">'+tem+' de '+ins.length+' insígnia'+(ins.length===1?'':'s')+'</b>'
+      +'<p style="font-size:12.5px;color:#8b949e;margin-top:4px">Toque em uma para ver como ganhar</p></div>'
+      +'<div class="pg-todas">'+ins.map(function(i){var g=!!minhas[i.id];
+        return '<button onclick="PrismoPaginas.fecharSheet();setTimeout(function(){PrismoPaginas.insignia('+i.id+')},300)">'+hexIns(i,64,g)+'<small'+(g?' style="color:#e6edf3"':'')+'>'+esc(g?i.nome:'???')+'</small></button>';}).join('')+'</div>'
+      +'<button class="pg-bt" style="margin-top:14px;background:linear-gradient(135deg,#6d28d9,#a78bfa)" onclick="PrismoPaginas.fecharSheet();PrismoPaginas.abrir(\'missoes\')"><span class="material-icons">flag</span>Ver missões</button>';
+    sheet(h,'radial-gradient(300px 200px at 50% 0%,rgba(250,204,21,.18),transparent),linear-gradient(180deg,#1a160a,#0b1410 55%)','rgba(250,204,21,.4)');
   }
 
   /* ════════ VEÍCULO ════════ */
@@ -10283,7 +10306,7 @@ window.PrismoPaginas=(function(){
 
   return {abrir:abrir,fechar:fechar,voltar:voltar,fecharSheet:function(){fecharSheet();},editar:editar,salvarNomeEx:salvarNomeEx,editarNome:editarNome,salvarNome:salvarNome,
     trocarFoto:trocarFoto,copiarId:copiarId,emBreve:emBreve,addAmigo:addAmigo,indCompleto:indCompleto,admin:admin,privacidade:privacidade,
-    abaMissao:abaMissao,missao:missao,missaoAceitar:missaoAceitar,missaoDesistir:missaoDesistir,insignia:insignia,missoesSync:missoesSync,salvarVeic:salvarVeic,passo:passo,odo:odo,manut:manut,
+    abaMissao:abaMissao,missao:missao,missaoAceitar:missaoAceitar,missaoDesistir:missaoDesistir,insignia:insignia,conquistas:conquistas,missoesSync:missoesSync,salvarVeic:salvarVeic,passo:passo,odo:odo,manut:manut,
     alerta:alerta,alertaTestar:alertaTestar,nvAbrir:nvAbrir,nvTodas:nvTodasFn,
     atual:function(){return aberta;},redesenhar:function(){if(aberta&&!EMP[aberta])desenhar(aberta);}};
 })();

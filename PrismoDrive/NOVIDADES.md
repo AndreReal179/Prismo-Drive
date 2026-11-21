@@ -72,3 +72,4 @@
 • 🏅 Insígnias com imagem aparecem inteiras, sem a moldura de hexágono
 • 🚀 Missões em sequência: conclua uma e a próxima aparece. Algumas missões especiais ficam disponíveis a qualquer momento
 • 🧭 Missões de rotas agora também contam as rotas lançadas à mão
+• 🏅 Conquistas no Perfil só com as imagens, as últimas ganhas primeiro. Ver todas mostra cada insígnia na ordem
