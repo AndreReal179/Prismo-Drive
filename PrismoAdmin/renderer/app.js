@@ -396,7 +396,7 @@ async function resolverErro(id, v) {
 
 /* ═══════════ MISSÕES E INSÍGNIAS ═══════════ */
 const ICONES = ['flag', 'route', 'local_shipping', 'delivery_dining', 'local_taxi', 'two_wheeler', 'directions_car', 'local_fire_department', 'bolt', 'rocket_launch', 'emoji_events', 'military_tech', 'workspace_premium', 'star', 'diamond', 'whatshot', 'speed', 'timer', 'schedule', 'calendar_month', 'today', 'nights_stay', 'wb_sunny', 'savings', 'payments', 'paid', 'attach_money', 'volunteer_activism', 'favorite', 'thumb_up', 'groups', 'person_add', 'handshake', 'sports_mma', 'map', 'explore', 'place', 'local_gas_station', 'eco', 'build', 'verified', 'shield', 'auto_awesome', 'celebration', 'pets', 'coffee', 'restaurant', 'trending_up', 'insights', 'stars'];
-const TIPOS = { rotas: ['Rotas feitas (iFood/InDrive)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'], assistente: ['Dias com o assistente de rotas ligado', 'dias'] };
+const TIPOS = { rotas_todas: ['Rotas feitas (todas: lançadas à mão e automáticas)', 'rotas'], rotas: ['Rotas feitas só no iFood/InDrive (automáticas)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'], assistente: ['Dias com o assistente de rotas ligado', 'dias'] };
 const DIFS = { facil: ['Fácil', COR.verde], media: ['Média', COR.azul], dificil: ['Difícil', '#fb7185'] };
 const RARS = { comum: ['Comum', '#9ca3af'], rara: ['Rara', COR.azul], epica: ['Épica', '#c084fc'], lendaria: ['Lendária', COR.ouro] };
 let jogo = { missoes: [], insignias: [] };
@@ -465,7 +465,7 @@ async function missoes() {
   marcarAtualizado();
 }
 function editorMissao(m) {
-  m = m || { titulo: '', descricao: '', icone: 'flag', imagem: '', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas', meta: 10, prazo_dias: '', insignia_id: '', exige_assistente: false, livre: false, ativa: true, ordem: (jogo.missoes.length + 1) };
+  m = m || { titulo: '', descricao: '', icone: 'flag', imagem: '', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas_todas', meta: 10, prazo_dias: '', insignia_id: '', exige_assistente: false, livre: false, ativa: true, ordem: (jogo.missoes.length + 1) };
   abrirModal('<h3><span class="mi">flag</span>' + (m.id ? 'Editar missão' : 'Nova missão') + '</h3><div class="ed"><div class="form" id="fm">'
     + '<label class="full">Título<input name="titulo" maxlength="40" value="' + esc(m.titulo) + '" placeholder="Ex.: Maratonista"></label>'
     + '<label class="full">Descrição (o que a pessoa precisa fazer)<textarea name="descricao" maxlength="400" placeholder="Ex.: Rode 300 km em rotas dentro de 7 dias.">' + esc(m.descricao) + '</textarea></label>'
