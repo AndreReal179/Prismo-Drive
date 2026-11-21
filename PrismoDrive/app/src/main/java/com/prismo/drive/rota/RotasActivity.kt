@@ -778,11 +778,21 @@ class RotasActivity : Activity() {
     }
 
     private fun conteudoGasolina(c: LinearLayout, withMinRpk: Boolean) {
+        // v2.3: gasolina e consumo agora ficam no app, em Menu › Veículo (um lugar só para os dois valores)
         c.addView(tx("Gasto = km ÷ consumo × preço do litro · vale para os dois apps", 12f, MUTED))
-        c.addView(pair(
-            field("Gasolina (R$/litro)", prefs.fuelPrice) { prefs.fuelPrice = it },
-            field("Consumo (km/litro)", prefs.kmPerLiter) { prefs.kmPerLiter = it }
-        ), lp(12))
+        c.addView(tx("⛽ ${br(prefs.fuelPrice)}/litro  ·  🚗 ${num1(prefs.kmPerLiter)} km/litro", 16f, TXT, true), lp(10))
+        c.addView(tx("Para mudar, abra o Prismo Drive › Menu › Veículo.", 12.5f, MUTED), lp(4))
+        c.addView(tx("Abrir Veículo no app  ›", 14f, 0xFF7EE2A0.toInt(), true).apply {
+            setPadding(dp(14), dp(11), dp(14), dp(11))
+            background = rounded(INPUT, 10, LINE)
+            setOnClickListener {
+                runCatching {
+                    startActivity(android.content.Intent(this@RotasActivity, com.prismo.drive.MainActivity::class.java)
+                        .putExtra(Turno.EXTRA_ACAO, "veiculo")
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                }
+            }
+        }, lp(10))
         if (withMinRpk) c.addView(field("R$/km mínimo (abaixo disso sugere valor)", prefs.minRpk) { prefs.minRpk = it }, lp(12))
     }
 

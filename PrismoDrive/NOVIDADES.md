@@ -48,3 +48,9 @@
 • 🗞️ Aba Novidades corrigida: agora sempre mostra o que entrou na versão que você instalou
 • 🎉 Janela de novidades: na primeira vez que você abre o app depois de atualizar, ele mostra o que mudou (uma vez só por versão)
 • 📍 Correção nas paradas do trajeto: a mesma coleta ou entrega não aparece mais repetida, e todos os endereços carregam (antes da 13ª parada ficava "Buscando endereço…")
+• 👤 Perfil novo: abre uma tela própria com foto, nome de exibição, ID, plano, indique e ganhe, seus dados e conta (trocar senha, termos, privacidade e excluir conta)
+• 🏅 Conquistas e Amigos no Perfil: já aparecem como "em breve" (ainda não valem)
+• 🚀 Missões: nova tela no menu com as missões que estão chegando (ainda não valem)
+• 🚗 Veículo: nova tela no menu com valor do combustível, consumo, pedir odômetro e manutenção em um só lugar
+• ⛽ Valor do combustível agora é um só para o app e o assistente de rotas (muda no Veículo e vale para os dois)
+• 🧭 Assistente de rotas mudou de lugar: toque na sua foto no menu para Ativar (ou Desligar) o assistente e abrir o Relatório. Um balão avisa toda vez que o menu abre

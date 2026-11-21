@@ -339,6 +339,22 @@ class PrismoBridge(private val activity: Activity) {
         }
     }
 
+    /** v2.3 · Veículo: preço da gasolina e consumo usados pelo assistente de rotas (um lugar só: Menu › Veículo). */
+    @JavascriptInterface
+    fun veiculoLer(): String = runCatching {
+        val p = com.prismo.drive.rota.Prefs(activity)
+        JSONObject().put("preco", p.fuelPrice.toDouble()).put("consumo", p.kmPerLiter.toDouble()).toString()
+    }.getOrDefault("{}")
+
+    @JavascriptInterface
+    fun veiculoSalvar(preco: Double, consumo: Double) {
+        runCatching {
+            val p = com.prismo.drive.rota.Prefs(activity)
+            if (preco in 0.5..50.0) p.fuelPrice = preco.toFloat()
+            if (consumo in 0.5..100.0) p.kmPerLiter = consumo.toFloat()
+        }
+    }
+
     /** v2.1.8 · Rota do iFood em andamento ({ativo, ini, km}). */
     @JavascriptInterface
     fun rotaAtual(): String = com.prismo.drive.rota.IfoodSaldo.atual(activity)

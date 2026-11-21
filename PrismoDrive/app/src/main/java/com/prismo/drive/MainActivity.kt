@@ -458,6 +458,8 @@ class MainActivity : Activity() {
  var pcv=window.PrismoConta?PrismoConta.voltar():false;
  if(pcv==='min')return '0';
  if(pcv)return '1';
+ if(window.PrismoPaginas&&PrismoPaginas.voltar())return '1';
+ if(window.PrismoRotas&&PrismoRotas.menuAberto&&PrismoRotas.menuAberto()){PrismoRotas.fecharMenu();return '1';}
  var c=el('carteira-app');
  if(c&&c.style.display==='block'&&typeof fecharCarteira==='function'){fecharCarteira();return '1';}
  if(vis(el('modal-turno-fim'))&&typeof PrismoTurno!=='undefined'){PrismoTurno.fecharFim();return '1';}
