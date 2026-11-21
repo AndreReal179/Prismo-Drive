@@ -221,3 +221,17 @@ nav button.on .mi{color:var(--verde)}
 .codg{display:flex;flex-wrap:wrap;gap:8px}
 .codg span{font-family:Consolas,monospace;font-weight:800;letter-spacing:.08em;padding:8px 12px;border-radius:10px;background:#0a110d;border:1px dashed var(--line2);color:#d9f99d}
 pre.js{background:#080d0a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:11.5px/1.45 Consolas,monospace;color:#b8c9be;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:auto}
+.ins-img{width:68%;height:68%;object-fit:cover;border-radius:12px;position:relative}
+.hex.g .ins-img{width:70%;height:70%}
+.mis-img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.mic{overflow:hidden}
+.img-up{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.img-pv{width:56px;height:56px;border-radius:14px;border:1px dashed var(--line2);display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0a110d;color:var(--mut2)}
+.img-pv img{width:100%;height:100%;object-fit:cover}
+label.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px solid rgba(74,222,128,.25);background:rgba(74,222,128,.05);cursor:pointer}
+label.chk input{margin-top:3px}
+label.chk b{display:block;color:var(--tx);font-size:13px}
+label.chk small{display:block;font-weight:500;color:var(--mut);font-size:11.5px;margin-top:2px}
+.lst2{display:flex;flex-direction:column;gap:8px}
+.it.novo{box-shadow:inset 3px 0 0 #f87171}
+.ao-vivo{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--verde);margin-right:6px;animation:pulso 1.8s infinite;vertical-align:1px}

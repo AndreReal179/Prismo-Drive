@@ -127,6 +127,15 @@ function ir(pg) {
   $('conteudo').innerHTML = '<div class="carreg"><span class="mi">autorenew</span><p>Carregando…</p></div>';
   PAGINAS[pg][2]();
 }
+/* atualiza a tela aberta sozinha a cada 1 minuto (Suporte e Online têm o próprio ritmo, mais rápido).
+   Não atualiza com uma janela aberta, enquanto você digita, nem nas telas de escrever. */
+setInterval(() => {
+  if (!sess || $('app').hidden || !$('modal').hidden) return;
+  if (['suporte', 'online'].includes(atual)) return;
+  if (atual === 'notificacoes' && nt.aba !== 'lista') return;
+  const a = document.activeElement; if (a && a.matches && a.matches('input,textarea,select')) return;
+  recarregar();
+}, 60000);
 function recarregar() { const sc = $('conteudo').scrollTop; limparGraficos(); PAGINAS[atual][2](true); $('conteudo').scrollTop = sc; }
 function marcarAtualizado() { $('atualizado').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
 function falhou(r) { $('conteudo').innerHTML = '<div class="vazio"><span class="mi">cloud_off</span><b>' + esc(erroTxt(r)) + '</b><p class="small" style="margin-top:6px">Toque em Atualizar para tentar de novo.</p></div>'; }
@@ -202,7 +211,7 @@ async function painel() {
   grafico('g-ven', { type: 'bar', data: { labels: lb, datasets: [barra('Vendas (R$)', COR.ouro, s.map((x) => Number(x.vendas) || 0))] }, options: { maintainAspectRatio: false, scales: eixos((v) => 'R$ ' + num(v)), plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => brl(c.parsed.y) } } } } });
   grafico('g-rot', { type: 'bar', data: { labels: lb, datasets: [barra('Rotas', COR.roxo, s.map((x) => x.rotas)), linha('Contas novas', COR.cia, s.map((x) => x.novos), { fill: false, yAxisID: 'y1', pointRadius: 2 })] }, options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: Object.assign(eixos(), { y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { precision: 0, color: COR.cia } } }), plugins: { legend: { position: 'top', align: 'end' } } } });
   marcarAtualizado();
-  clearInterval(timer); timer = setInterval(() => { if (atual === 'painel' && $('modal').hidden) recarregar(); }, 30000);
+
 }
 function listaOnline(l, curta) {
   if (!l.length) return '<div class="vazio" style="padding:24px"><span class="mi">bedtime</span>Ninguém online agora.</div>';
@@ -304,41 +313,56 @@ async function tirarPro(i) {
 const sp = { abertos: true, lista: [], sel: null };
 const ST = { aguardando: ['Aguardando', 'verm'], andamento: ['Em andamento', 'on'], respondido: ['Respondido', 'rota'], finalizado: ['Finalizado', 'cinza'] };
 const CAT = { duvida: 'Dúvida', problema: 'Problema', bug: 'BUG', pagamento: 'Pagamento', sugestao: 'Sugestão' };
+function assinCh(l) { return l.map((c) => c.id + ':' + c.status + ':' + c.atualizado_em + ':' + (c.msgs || []).length).join('|'); }
 async function suporte(manter) {
   const r = await rpc('admin_chamados', { abertos: sp.abertos });
   if (atual !== 'suporte') return;
-  if (r.status !== 200) return falhou(r);
-  sp.lista = r.json || [];
+  if (r.status !== 200) { if (!manter || !$('sp-det')) falhou(r); return; }
+  const nova = r.json || [];
+  /* tempo real: a cada 4 s confere se chegou algo; só redesenha o que mudou (sem apagar o que você está digitando) */
+  const mudou = assinCh(nova) !== assinCh(sp.lista) || !$('sp-det');
+  sp.lista = nova;
   if (sp.abertos) badge('nb-suporte', sp.lista.filter((c) => c.status === 'aguardando' || c.status === 'andamento').length);
-  $('conteudo').innerHTML = '<div class="dois"><div class="lst"><div class="seg" style="align-self:flex-start;margin-bottom:6px"><button data-sab="1" class="' + (sp.abertos ? 'on' : '') + '">Abertos</button><button data-sab="0" class="' + (!sp.abertos ? 'on' : '') + '">Finalizados</button></div>'
-    + (sp.lista.length ? sp.lista.map((c) => '<button class="it' + (sp.sel === c.id ? ' on' : '') + '" data-ch="' + c.id + '"><div class="l1"><span class="chip ' + (ST[c.status] || ST.aguardando)[1] + '">' + (ST[c.status] || ST.aguardando)[0] + '</span><small>' + ha(c.atualizado_em) + '</small></div><b>' + esc(c.assunto) + '</b><small>#' + c.id + ' · ' + esc(CAT[c.categoria] || c.categoria) + ' · ' + esc(c.nome || c.email || '') + (c.anexos ? ' · 📎 ' + c.anexos : '') + '</small></button>').join('')
-      : '<div class="vazio"><span class="mi">inbox</span>' + (sp.abertos ? 'Nenhum chamado aberto. Tudo em dia! 🎉' : 'Nenhum chamado finalizado.') + '</div>')
-    + '</div><div class="card det" id="sp-det"><div class="vazio"><span class="mi">forum</span>Escolha um chamado na lista.</div></div></div>';
-  if (sp.sel && sp.lista.some((c) => c.id === sp.sel)) abrirChamado(sp.sel, true);
+  if (mudou) {
+    const lst = $('sp-lst');
+    const itens = (sp.lista.length ? sp.lista.map((c) => '<button class="it' + (sp.sel === c.id ? ' on' : '') + (c.status === 'aguardando' ? ' novo' : '') + '" data-ch="' + c.id + '"><div class="l1"><span class="chip ' + (ST[c.status] || ST.aguardando)[1] + '">' + (ST[c.status] || ST.aguardando)[0] + '</span><small>' + ha(c.atualizado_em) + '</small></div><b>' + esc(c.assunto) + '</b><small>#' + c.id + ' · ' + esc(CAT[c.categoria] || c.categoria) + ' · ' + esc(c.nome || c.email || '') + (c.anexos ? ' · 📎 ' + c.anexos : '') + ((c.msgs || []).length ? ' · 💬 ' + c.msgs.length : '') + '</small></button>').join('')
+      : '<div class="vazio"><span class="mi">inbox</span>' + (sp.abertos ? 'Nenhum chamado aberto. Tudo em dia! 🎉' : 'Nenhum chamado finalizado.') + '</div>');
+    if (lst && manter) lst.innerHTML = itens;
+    else $('conteudo').innerHTML = '<div class="dois"><div class="lst"><div class="seg" style="align-self:flex-start;margin-bottom:6px"><button data-sab="1" class="' + (sp.abertos ? 'on' : '') + '">Abertos</button><button data-sab="0" class="' + (!sp.abertos ? 'on' : '') + '">Finalizados</button></div><div id="sp-lst" class="lst2">' + itens + '</div><p class="muted small" style="margin-top:6px"><span class="ao-vivo"></span>Ao vivo: novas mensagens aparecem sozinhas</p></div>'
+      + '<div class="card det" id="sp-det"><div class="vazio"><span class="mi">forum</span>Escolha um chamado na lista.</div></div></div>';
+    if (sp.sel && sp.lista.some((c) => c.id === sp.sel)) abrirChamado(sp.sel, true);
+    else if (sp.sel) { sp.sel = null; const d = $('sp-det'); if (d) d.innerHTML = '<div class="vazio"><span class="mi">task_alt</span>Este chamado foi finalizado.</div>'; }
+  }
   marcarAtualizado();
-  clearInterval(timer); timer = setInterval(() => { if (atual === 'suporte' && !document.activeElement.matches('textarea')) suporte(true); }, 60000);
+  clearInterval(timer); timer = setInterval(() => { if (atual === 'suporte' && $('modal').hidden) suporte(true); }, 4000);
 }
 async function abrirChamado(id, sóMostrar) {
   sp.sel = id;
   document.querySelectorAll('.it').forEach((b) => b.classList.toggle('on', Number(b.dataset.ch) === id));
   let c = sp.lista.find((x) => x.id === id);
-  if (!sóMostrar && c && c.status === 'aguardando') { const r = await rpc('admin_chamado_abrir', { chamado: id }); if (r.status === 200 && r.json) { c = r.json; sp.lista = sp.lista.map((x) => x.id === id ? c : x); } }
+  if (!sóMostrar && c && c.status === 'aguardando') { const r = await rpc('admin_chamado_abrir', { chamado: id }); if (r.status === 200 && r.json && r.json.id) { c = r.json; sp.lista = sp.lista.map((x) => x.id === id ? c : x); const it = document.querySelector('.it[data-ch="' + id + '"] .chip'); if (it) { it.className = 'chip on'; it.textContent = 'Em andamento'; } } }
   if (!c) return;
-  const box = $('sp-det');
+  const box = $('sp-det'); if (!box) return;
+  /* guarda o que está sendo digitado e a posição antes de redesenhar */
+  const ta = $('sp-txt'), rasc = ta && box.dataset.ch === String(id) ? ta.value : '', foco = ta && document.activeElement === ta;
+  const ms = box.querySelector('.msgs'), noFim = !ms || ms.scrollHeight - ms.scrollTop - ms.clientHeight < 40;
+  box.dataset.ch = String(id);
   box.innerHTML = '<div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><span class="chip ' + (ST[c.status] || ST.aguardando)[1] + '">' + (ST[c.status] || ST.aguardando)[0] + '</span> <span class="chip cinza">' + esc(CAT[c.categoria] || c.categoria) + '</span><h3 style="font-size:18px;margin:10px 0 6px">' + esc(c.assunto) + '</h3>'
     + '<div class="info"><span>Cliente: <b>' + esc(c.nome || '—') + '</b></span><span>E-mail: <b>' + esc(c.email || '—') + '</b></span><span>ID: <b class="idf">' + idFmt(c.conta_id) + '</b></span><span>Plano: <b>' + esc(c.plano || '—') + '</b></span><span>App: <b>' + esc(c.app_versao || '—') + '</b></span><span>Celular: <b>' + esc(c.aparelho || '—') + '</b></span><span>Aberto: <b>' + dataHora(c.criado_em) + '</b></span></div></div>'
     + (c.status !== 'finalizado' ? '<button class="bt sm" data-fin="' + c.id + '"><span class="mi">task_alt</span>Finalizar</button>' : '') + '</div>'
     + (c.ocorrencias ? '<p class="small" style="margin-top:10px;color:#fdba74">Erro automático: aconteceu ' + num(c.ocorrencias.vezes) + ' vezes com ' + num(c.ocorrencias.pessoas) + ' pessoa(s). Último: ' + dataHora(c.ocorrencias.ultimo) + '</p>' : '')
     + '<div class="msgs"><div class="msg"><small>' + esc(c.nome || 'Cliente') + ' · ' + dataHora(c.criado_em) + '</small>' + esc(c.mensagem) + (c.anexos ? '\n\n📎 ' + c.anexos + ' anexo(s): chegaram no e-mail da empresa.' : '') + '</div>'
     + (c.msgs || []).map((m) => '<div class="msg' + (m.autor === 'admin' ? ' adm' : '') + '"><small>' + (m.autor === 'admin' ? 'Você (equipe)' : esc(c.nome || 'Cliente')) + ' · ' + dataHora(m.criado_em) + '</small>' + esc(m.texto) + '</div>').join('') + '</div>'
-    + (c.status !== 'finalizado' ? '<div style="margin-top:auto"><textarea id="sp-txt" maxlength="4000" placeholder="Escreva a resposta para o cliente (vai no app e no e-mail dele)"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><button class="bt pri" data-resp="' + c.id + '" id="sp-bt"><span class="mi">send</span>Responder</button></div></div>' : '');
+    + (c.status !== 'finalizado' ? '<div style="margin-top:auto"><textarea id="sp-txt" maxlength="4000" placeholder="Escreva a resposta (Enter envia · Shift+Enter pula linha)"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><button class="bt pri" data-resp="' + c.id + '" id="sp-bt"><span class="mi">send</span>Responder</button></div></div>' : '');
+  const t2 = $('sp-txt'); if (t2) { t2.value = rasc; if (foco || !sóMostrar) { t2.focus(); t2.setSelectionRange(rasc.length, rasc.length); } }
+  const ms2 = box.querySelector('.msgs'); if (ms2 && noFim) ms2.scrollTop = ms2.scrollHeight;
 }
 async function responder(id) {
   const t = ($('sp-txt').value || '').trim(); if (t.length < 2) return toast('Escreva a resposta.', true);
   const b = $('sp-bt'); b.disabled = true; b.innerHTML = '<span class="mi">hourglass_top</span>Enviando…';
   const r = await api('POST', '/functions/v1/suporte', { acao: 'responder', chamado: id, texto: t });
   b.disabled = false; b.innerHTML = '<span class="mi">send</span>Responder';
-  if (r.status === 200 && r.json && r.json.ok) { toast(r.json.email ? 'Resposta enviada no app e no e-mail do cliente.' : 'Resposta salva no app (o e-mail não saiu).'); suporte(true); }
+  if (r.status === 200 && r.json && r.json.ok) { const ta = $('sp-txt'); if (ta) ta.value = ''; toast(r.json.email ? 'Resposta enviada no app e no e-mail do cliente.' : 'Resposta salva no app (o e-mail não saiu).'); suporte(true); }
   else toast((r.json && r.json.msg) || erroTxt(r), true);
 }
 async function finalizar(id) {
@@ -372,7 +396,7 @@ async function resolverErro(id, v) {
 
 /* ═══════════ MISSÕES E INSÍGNIAS ═══════════ */
 const ICONES = ['flag', 'route', 'local_shipping', 'delivery_dining', 'local_taxi', 'two_wheeler', 'directions_car', 'local_fire_department', 'bolt', 'rocket_launch', 'emoji_events', 'military_tech', 'workspace_premium', 'star', 'diamond', 'whatshot', 'speed', 'timer', 'schedule', 'calendar_month', 'today', 'nights_stay', 'wb_sunny', 'savings', 'payments', 'paid', 'attach_money', 'volunteer_activism', 'favorite', 'thumb_up', 'groups', 'person_add', 'handshake', 'sports_mma', 'map', 'explore', 'place', 'local_gas_station', 'eco', 'build', 'verified', 'shield', 'auto_awesome', 'celebration', 'pets', 'coffee', 'restaurant', 'trending_up', 'insights', 'stars'];
-const TIPOS = { rotas: ['Rotas feitas (iFood/InDrive)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'] };
+const TIPOS = { rotas: ['Rotas feitas (iFood/InDrive)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'], assistente: ['Dias com o assistente de rotas ligado', 'dias'] };
 const DIFS = { facil: ['Fácil', COR.verde], media: ['Média', COR.azul], dificil: ['Difícil', '#fb7185'] };
 const RARS = { comum: ['Comum', '#9ca3af'], rara: ['Rara', COR.azul], epica: ['Épica', '#c084fc'], lendaria: ['Lendária', COR.ouro] };
 let jogo = { missoes: [], insignias: [] };
@@ -381,7 +405,49 @@ async function carregarJogo() {
   if (r.status !== 200) { falhou(r); return false; }
   jogo = r.json || { missoes: [], insignias: [] }; return true;
 }
-const hex = (i, g) => '<div class="hex' + (g ? ' g' : '') + '" style="background:linear-gradient(160deg,' + esc(i.cor2 || '#fbbf24') + ',' + esc(i.cor1 || '#b45309') + ')"><span class="mi">' + esc(i.icone || 'military_tech') + '</span></div>';
+const okImg = (u) => /^https:\/\/xzdqvdrwvozoedmjwwhm\.supabase\.co\/storage\/v1\/object\/public\/jogo\//.test(String(u || ''));
+const hex = (i, g) => '<div class="hex' + (g ? ' g' : '') + '" style="background:linear-gradient(160deg,' + esc(i.cor2 || '#fbbf24') + ',' + esc(i.cor1 || '#b45309') + ')">' + (okImg(i.imagem) ? '<img class="ins-img" src="' + esc(i.imagem) + '" alt="">' : '<span class="mi">' + esc(i.icone || 'military_tech') + '</span>') + '</div>';
+const micH = (m, tam) => '<div class="mic" style="' + (tam ? 'width:' + tam + 'px;height:' + tam + 'px;border-radius:' + Math.round(tam * .3) + 'px;margin:0 auto;' : '') + 'background:linear-gradient(135deg,' + esc(m.cor1) + ',' + esc(m.cor2) + ')">' + (okImg(m.imagem) ? '<img class="mis-img" src="' + esc(m.imagem) + '" alt="">' : '<span class="mi"' + (tam ? ' style="font-size:' + Math.round(tam / 2) + 'px"' : '') + '>' + esc(m.icone || 'flag') + '</span>') + '</div>';
+/* imagem da missão/insígnia: reduz para 256 px e envia para a pasta pública "jogo" do Supabase */
+function reduzirImagem(arq) {
+  return new Promise((ok, erro) => {
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const n = 256, c = document.createElement('canvas'); c.width = n; c.height = n; const g = c.getContext('2d');
+      const e = Math.max(n / im.naturalWidth, n / im.naturalHeight), w = im.naturalWidth * e, h = im.naturalHeight * e;
+      g.drawImage(im, (n - w) / 2, (n - h) / 2, w, h);
+      c.toBlob((b) => b ? ok(b) : erro(new Error('não deu para ler a imagem')), 'image/webp', 0.9);
+    }; im.onerror = () => erro(new Error('arquivo não é uma imagem')); im.src = r.result; };
+    r.onerror = () => erro(new Error('não deu para ler o arquivo')); r.readAsDataURL(arq);
+  });
+}
+async function enviarImagem(arq, pasta) {
+  const blob = await reduzirImagem(arq);
+  const t = await token(); if (!t) throw new Error('sessão expirada');
+  const nome = pasta + '/' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) + '.webp';
+  const r = await fetch(URL_SB + '/storage/v1/object/jogo/' + nome, { method: 'POST', headers: { apikey: CHAVE, Authorization: 'Bearer ' + t, 'Content-Type': 'image/webp', 'x-upsert': 'true' }, body: blob });
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || j.error || ('erro ' + r.status)); }
+  return URL_SB + '/storage/v1/object/public/jogo/' + nome;
+}
+function campoImagem(v) {
+  return '<label class="full">Imagem (opcional: aparece no lugar do ícone)<input type="hidden" name="imagem" value="' + esc(v || '') + '"><div class="img-up"><span class="img-pv" id="img-pv">' + (okImg(v) ? '<img src="' + esc(v) + '" alt="">' : '<span class="mi">image</span>') + '</span>'
+    + '<button type="button" class="bt sm" data-imgesc="1"><span class="mi">upload</span>' + (v ? 'Trocar imagem' : 'Enviar imagem') + '</button>' + (v ? '<button type="button" class="bt sm ghost" data-imgtira="1"><span class="mi">close</span>Tirar</button>' : '')
+    + '<input type="file" id="img-arq" accept="image/png,image/jpeg,image/webp,image/gif" hidden><span class="muted small">PNG, JPG ou WEBP · fica quadrada (256 px)</span></div></label>';
+}
+async function trocarImagem(arq) {
+  const f = $('fm'); if (!f || !arq) return;
+  const missao = !!f.querySelector('[name=titulo]');
+  toast('Enviando imagem…');
+  try {
+    const url = await enviarImagem(arq, missao ? 'missoes' : 'insignias');
+    f.querySelector('[name=imagem]').value = url;
+    $('img-pv').innerHTML = '<img src="' + esc(url) + '" alt="">';
+    toast('Imagem enviada. Clique em Salvar para usar.');
+    missao ? prevMissao() : prevInsignia();
+  } catch (e) {
+    toast(/row-level|policy|Unauthorized|403/i.test(String(e.message)) ? 'Falta rodar o SQL 20261121c_jogo_imagens.sql no Supabase.' : 'Não deu para enviar: ' + e.message, true);
+  }
+}
 async function missoes() {
   if (!(await carregarJogo()) || atual !== 'missoes') return;
   const l = jogo.missoes || [];
@@ -390,7 +456,7 @@ async function missoes() {
     + '<div class="grid k3">' + kpi('flag', COR.roxo, 'Missões ativas', num(l.filter((m) => m.ativa).length), num(l.length) + ' no total') + kpi('pending_actions', COR.azul, 'Em andamento agora', num(ac), 'pessoas fazendo alguma missão') + kpi('emoji_events', COR.ouro, 'Missões concluídas', num(co), 'insígnias entregues pelas missões') + '</div>'
     + '<div class="cards mt">' + (l.length ? l.map((m) => {
       const ins = jogo.insignias.find((i) => i.id === m.insignia_id), d = DIFS[m.dificuldade] || DIFS.media, t = TIPOS[m.tipo] || ['', ''];
-      return '<div class="card mcard' + (m.ativa ? '' : ' off') + '"><div class="top2"><div class="mic" style="background:linear-gradient(135deg,' + esc(m.cor1) + ',' + esc(m.cor2) + ')"><span class="mi">' + esc(m.icone) + '</span></div><div><b>' + esc(m.titulo) + '</b><div class="rod" style="margin-top:4px"><span class="chip" style="color:' + d[1] + ';border-color:' + alfa(d[1], .4) + ';background:' + alfa(d[1], .1) + '">' + d[0] + '</span>' + (m.ativa ? '' : '<span class="chip cinza">Desativada</span>') + '</div></div></div>'
+      return '<div class="card mcard' + (m.ativa ? '' : ' off') + '"><div class="top2">' + micH(m) + '<div><b>' + esc(m.titulo) + '</b><div class="rod" style="margin-top:4px"><span class="chip" style="color:' + d[1] + ';border-color:' + alfa(d[1], .4) + ';background:' + alfa(d[1], .1) + '">' + d[0] + '</span>' + (m.ativa ? '' : '<span class="chip cinza">Desativada</span>') + (m.exige_assistente ? '<span class="chip rota"><span class="mi">route</span>Assistente ligado</span>' : '') + '</div></div></div>'
         + '<p>' + esc(m.descricao || '') + '</p>'
         + '<div class="rod small muted"><span class="mi" style="font-size:16px">flag</span>' + num(m.meta, m.meta % 1 ? 1 : 0) + ' ' + t[1] + (m.prazo_dias ? ' · em ' + m.prazo_dias + ' dias' : '') + '</div>'
         + '<div class="rod small">' + (ins ? '<span class="chip pro"><span class="mi">military_tech</span>' + esc(ins.nome) + '</span>' : '<span class="chip cinza">Sem insígnia</span>') + '<span class="chip on">' + num(m.aceitas) + ' fazendo</span><span class="chip rota">' + num(m.concluidas) + ' concluíram</span></div>'
@@ -399,7 +465,7 @@ async function missoes() {
   marcarAtualizado();
 }
 function editorMissao(m) {
-  m = m || { titulo: '', descricao: '', icone: 'flag', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas', meta: 10, prazo_dias: '', insignia_id: '', ativa: true, ordem: (jogo.missoes.length + 1) };
+  m = m || { titulo: '', descricao: '', icone: 'flag', imagem: '', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas', meta: 10, prazo_dias: '', insignia_id: '', exige_assistente: false, ativa: true, ordem: (jogo.missoes.length + 1) };
   abrirModal('<h3><span class="mi">flag</span>' + (m.id ? 'Editar missão' : 'Nova missão') + '</h3><div class="ed"><div class="form" id="fm">'
     + '<label class="full">Título<input name="titulo" maxlength="40" value="' + esc(m.titulo) + '" placeholder="Ex.: Maratonista"></label>'
     + '<label class="full">Descrição (o que a pessoa precisa fazer)<textarea name="descricao" maxlength="400" placeholder="Ex.: Rode 300 km em rotas dentro de 7 dias.">' + esc(m.descricao) + '</textarea></label>'
@@ -409,7 +475,9 @@ function editorMissao(m) {
     + '<label>Dificuldade<select name="dificuldade">' + Object.keys(DIFS).map((k) => '<option value="' + k + '"' + (m.dificuldade === k ? ' selected' : '') + '>' + DIFS[k][0] + '</option>').join('') + '</select></label>'
     + '<label>Insígnia que ganha<select name="insignia_id"><option value="">Nenhuma</option>' + jogo.insignias.map((i) => '<option value="' + i.id + '"' + (Number(m.insignia_id) === i.id ? ' selected' : '') + '>' + esc(i.nome) + (i.ativa ? '' : ' (desativada)') + '</option>').join('') + '</select></label>'
     + '<label>Ordem no app<input name="ordem" type="number" value="' + esc(m.ordem) + '"></label>'
+    + '<label class="full chk"><input name="exige_assistente" type="checkbox"' + (m.exige_assistente ? ' checked' : '') + '><span><b>Só conta com o assistente de rotas ativo</b><small>Para aceitar, o assistente precisa estar ligado, e só contam as rotas que o assistente registrou sozinho (rotas lançadas à mão não contam).</small></span></label>'
     + '<div class="cores full"><label>Cor 1<input name="cor1" type="color" value="' + esc(m.cor1) + '"></label><label>Cor 2<input name="cor2" type="color" value="' + esc(m.cor2) + '"></label><label style="display:flex;align-items:center;gap:8px;padding-top:22px"><input name="ativa" type="checkbox"' + (m.ativa ? ' checked' : '') + '>Ativa no app</label></div>'
+    + campoImagem(m.imagem)
     + '<label class="full">Ícone<input type="hidden" name="icone" value="' + esc(m.icone) + '"><div class="icones" id="icones">' + ICONES.map((i) => '<button type="button" data-ico="' + i + '" class="' + (m.icone === i ? 'on' : '') + '" title="' + i + '"><span class="mi">' + i + '</span></button>').join('') + '</div></label>'
     + '</div><div><p class="muted small" style="margin-bottom:8px">COMO FICA NO APP</p><div class="prev" id="prev"></div></div></div>'
     + '<div class="acoes"><button class="bt ghost" data-fechar="1">Cancelar</button><button class="bt pri" data-msalvar="' + (m.id || '') + '"><span class="mi">check</span>Salvar missão</button></div>');
@@ -418,9 +486,9 @@ function editorMissao(m) {
 function lerForm() { const o = {}; $('fm').querySelectorAll('[name]').forEach((e) => { o[e.name] = e.type === 'checkbox' ? e.checked : e.value; }); return o; }
 function prevMissao() {
   const f = lerForm(), d = DIFS[f.dificuldade] || DIFS.media, ins = jogo.insignias.find((i) => i.id === Number(f.insignia_id)), t = TIPOS[f.tipo] || ['', ''];
-  $('prev').innerHTML = '<div class="mic" style="width:80px;height:80px;border-radius:24px;margin:0 auto;background:linear-gradient(135deg,' + esc(f.cor1) + ',' + esc(f.cor2) + ')"><span class="mi" style="font-size:40px">' + esc(f.icone) + '</span></div>'
+  $('prev').innerHTML = micH(f, 80)
     + '<b>' + esc(f.titulo || 'Título da missão') + '</b><p>' + esc(f.descricao || 'Descrição da missão') + '</p>'
-    + '<div class="rod" style="justify-content:center;display:flex;gap:6px;flex-wrap:wrap;margin-top:12px"><span class="chip" style="color:' + d[1] + ';border-color:' + alfa(d[1], .4) + '">' + d[0] + '</span><span class="chip cinza">Meta: ' + esc(f.meta || 0) + ' ' + t[1] + '</span>' + (f.prazo_dias ? '<span class="chip cinza">' + esc(f.prazo_dias) + ' dias</span>' : '') + '</div>'
+    + '<div class="rod" style="justify-content:center;display:flex;gap:6px;flex-wrap:wrap;margin-top:12px"><span class="chip" style="color:' + d[1] + ';border-color:' + alfa(d[1], .4) + '">' + d[0] + '</span><span class="chip cinza">Meta: ' + esc(f.meta || 0) + ' ' + t[1] + '</span>' + (f.prazo_dias ? '<span class="chip cinza">' + esc(f.prazo_dias) + ' dias</span>' : '') + (f.exige_assistente ? '<span class="chip rota">Assistente ligado</span>' : '') + '</div>'
     + (ins ? '<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px;border-radius:14px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.25);text-align:left">' + hex(ins).replace('class="hex"', 'class="hex" style="width:44px;height:48px;background:linear-gradient(160deg,' + esc(ins.cor2) + ',' + esc(ins.cor1) + ')"') + '<div><small style="color:' + (RARS[ins.raridade] || RARS.comum)[1] + ';font-weight:800;font-size:10px">INSÍGNIA ' + (RARS[ins.raridade] || RARS.comum)[0].toUpperCase() + '</small><b style="font-size:14px;margin:0">' + esc(ins.nome) + '</b></div></div>' : '')
     + '<div style="margin-top:14px;height:42px;border-radius:13px;background:linear-gradient(135deg,#6d28d9,#a78bfa);display:flex;align-items:center;justify-content:center;font-weight:800">Aceitar missão</div>';
 }
@@ -457,13 +525,14 @@ async function insignias() {
   marcarAtualizado();
 }
 function editorInsignia(i) {
-  i = i || { nome: '', descricao: '', icone: 'military_tech', cor1: '#b45309', cor2: '#fbbf24', raridade: 'comum', ativa: true, ordem: (jogo.insignias.length + 1) };
+  i = i || { nome: '', descricao: '', icone: 'military_tech', imagem: '', cor1: '#b45309', cor2: '#fbbf24', raridade: 'comum', ativa: true, ordem: (jogo.insignias.length + 1) };
   abrirModal('<h3><span class="mi">military_tech</span>' + (i.id ? 'Editar insígnia' : 'Nova insígnia') + '</h3><div class="ed"><div class="form" id="fm">'
     + '<label class="full">Nome<input name="nome" maxlength="40" value="' + esc(i.nome) + '" placeholder="Ex.: Rei da estrada"></label>'
     + '<label class="full">Descrição<textarea name="descricao" maxlength="300" placeholder="Ex.: Rodou 1.000 km em um mês.">' + esc(i.descricao) + '</textarea></label>'
     + '<label>Raridade<select name="raridade">' + Object.keys(RARS).map((k) => '<option value="' + k + '"' + (i.raridade === k ? ' selected' : '') + '>' + RARS[k][0] + '</option>').join('') + '</select></label>'
     + '<label>Ordem no Perfil<input name="ordem" type="number" value="' + esc(i.ordem) + '"></label>'
     + '<div class="cores full"><label>Cor de baixo<input name="cor1" type="color" value="' + esc(i.cor1) + '"></label><label>Cor de cima<input name="cor2" type="color" value="' + esc(i.cor2) + '"></label><label style="display:flex;align-items:center;gap:8px;padding-top:22px"><input name="ativa" type="checkbox"' + (i.ativa ? ' checked' : '') + '>Ativa</label></div>'
+    + campoImagem(i.imagem)
     + '<label class="full">Ícone<input type="hidden" name="icone" value="' + esc(i.icone) + '"><div class="icones" id="icones">' + ICONES.map((x) => '<button type="button" data-ico="' + x + '" class="' + (i.icone === x ? 'on' : '') + '" title="' + x + '"><span class="mi">' + x + '</span></button>').join('') + '</div></label>'
     + '</div><div><p class="muted small" style="margin-bottom:8px">COMO FICA NO PERFIL</p><div class="prev" id="prev" style="background:radial-gradient(260px 160px at 50% 0%,rgba(250,204,21,.18),transparent),linear-gradient(180deg,#1a160a,#0b1410 70%);border-color:rgba(250,204,21,.35)"></div></div></div>'
     + '<div class="acoes"><button class="bt ghost" data-fechar="1">Cancelar</button><button class="bt pri" data-isalvar="' + (i.id || '') + '"><span class="mi">check</span>Salvar insígnia</button></div>');
@@ -732,6 +801,8 @@ document.addEventListener('click', (e) => {
   if (d.isalvar !== undefined) return salvarInsignia(d.isalvar);
   if (d.ico) { const f = $('fm'); f.querySelector('[name=icone]').value = d.ico; document.querySelectorAll('#icones button').forEach((b) => b.classList.toggle('on', b === t)); return $('prev') && ($('fm').querySelector('[name=titulo]') ? prevMissao() : prevInsignia()); }
   if (d.fechar) return fecharModal();
+  if (d.imgesc) return $('img-arq') && $('img-arq').click();
+  if (d.imgtira) { const f = $('fm'); f.querySelector('[name=imagem]').value = ''; $('img-pv').innerHTML = '<span class="mi">image</span>'; t.remove(); return f.querySelector('[name=titulo]') ? prevMissao() : prevInsignia(); }
   if (d.vdias) { venDias = Number(d.vdias); return vendas(); }
   if (d.a === 'upd') { if (!temApp) return toast('A atualização automática funciona no programa instalado.'); toast('Procurando atualização…'); window.prismoApp.checar().then((e) => { if (e.fase === 'atualizado') toast('Você já está na versão mais nova (' + e.atual + ').'); else if (e.fase === 'erro') toast('Não consegui procurar agora: ' + (e.erro || ''), true); }); return; }
   if (d.a === 'instalar') return window.prismoApp && window.prismoApp.instalar();
@@ -761,7 +832,12 @@ document.addEventListener('input', (e) => {
   }
   if (e.target.closest && e.target.closest('#fm')) { if ($('fm').querySelector('[name=titulo]')) prevMissao(); else prevInsignia(); }
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('modal').hidden) fecharModal(); });
+document.addEventListener('change', (e) => { if (e.target.id === 'img-arq' && e.target.files && e.target.files[0]) { trocarImagem(e.target.files[0]); e.target.value = ''; } });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('modal').hidden) fecharModal();
+  /* chat do suporte: Enter envia, Shift+Enter pula linha */
+  if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'sp-txt') { e.preventDefault(); const b = $('sp-bt'); if (b && !b.disabled) responder(Number(b.dataset.resp)); }
+});
 
 function iniciar() {
   $('login').hidden = true; $('app').hidden = false;
