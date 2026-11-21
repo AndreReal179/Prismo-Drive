@@ -83,14 +83,17 @@ object Notificacoes {
         )
         if (acao != null) runCatching { b.addAction(Notification.Action.Builder(null, acao, pi).build()) }
 
-        // visual igual à prévia do app: carro verde + "Prismo Drive", título em negrito e mensagem em itálico
+        // v2.3 · visual profissional: marca da Prismo no ícone pequeno, logo do app ao lado,
+        // título em negrito e a mensagem em texto normal (igual à prévia do Prismo Admin)
         val tituloF = android.text.SpannableString(titulo).apply {
             setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        val textoF = android.text.SpannableString(texto).apply {
-            setSpan(android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), 0, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val textoF: CharSequence = texto
+        runCatching {
+            val logo = android.graphics.BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher)
+            if (logo != null) b.setLargeIcon(logo)
         }
-        b.setSmallIcon(R.drawable.ic_stat_carro)
+        b.setSmallIcon(R.drawable.ic_stat_prismo)
             .setContentTitle(tituloF)
             .setContentText(textoF)
             .setStyle(Notification.BigTextStyle().setBigContentTitle(tituloF).bigText(textoF))

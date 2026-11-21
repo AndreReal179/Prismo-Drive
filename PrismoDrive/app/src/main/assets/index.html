@@ -1035,6 +1035,8 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .pg-ins small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pg-cel{display:inline-block;animation:pgCel 1.2s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 10px 30px rgba(250,204,21,.45))}
 @keyframes pgCel{0%{transform:scale(.3) rotate(-25deg);opacity:0}60%{transform:scale(1.12) rotate(6deg);opacity:1}100%{transform:none}}
+.pg-ass{position:absolute;top:8px;left:8px;width:20px;height:20px;border-radius:50%;background:rgba(22,163,74,.25);border:1px solid rgba(74,222,128,.5);display:flex;align-items:center;justify-content:center}
+.pg-ass .material-icons{font-size:12px;color:#4ade80}
 /* v2.1.8 · gorjeta, parar rota e fechamento do turno */
 .pd-act.gj{color:#1a1200!important;border-color:#e3b341!important;background:linear-gradient(135deg,#d29922,#f2cc60)!important;}
 .tl-bonus.gj .material-icons,.tl-bonus.gj b{color:#e3b341;}
@@ -8833,13 +8835,34 @@ window.PrismoConta=(function(){
   }
   function chDesenharMeus(){
     var box=$c('sp-meus');if(!box)return;
-    var lista=ler(K_SUP_MEUS)||[];
-    if(!lista.length){box.innerHTML='<small style="color:#8b949e">Você ainda não abriu nenhum chamado.</small>';return;}
+    /* v2.3 · o chamado fica na lista até a equipe finalizar; finalizado, ele sai */
+    var todos=ler(K_SUP_MEUS)||[],lista=todos.filter(function(c){return c.status!=='finalizado';});
+    var fin=todos.length-lista.length;
+    if(!lista.length){box.innerHTML='<small style="color:#8b949e">'+(fin?'Nenhum chamado aberto. Os '+fin+' que você abriu já foram finalizados.':'Você ainda não abriu nenhum chamado.')+'</small>';return;}
+    /* guarda o que está sendo digitado (a lista se atualiza sozinha enquanto a conversa está aberta) */
+    var rasc={},foco=document.activeElement&&/^ch-txt-/.test(document.activeElement.id||'')?document.activeElement.id:'';
+    box.querySelectorAll('textarea[id^="ch-txt-"]').forEach(function(t){rasc[t.id]=t.value;});
+    var thr=box.querySelector('.ch-card.aberto .ch-thread'),noFim=!thr||thr.scrollHeight-thr.scrollTop-thr.clientHeight<40;
     box.innerHTML=lista.map(function(c){var novo=chNaoVisto(c),ab=chAberto===c.id;
       return '<div class="ch-card'+(novo?' novo':'')+(ab?' aberto':'')+'"><button type="button" class="ch-head" onclick="PrismoConta.chAbrir('+c.id+')"><div class="ch-t"><b>'+esc(c.assunto)+(novo?'<span class="ch-novo">Nova resposta</span>':'')+'</b><small>Protocolo nº '+c.id+' · '+chData(c.criado_em)+'</small></div>'+chChip(c.status)+'</button>'
-        +(ab?chThread(c,false)+(c.status!=='finalizado'?'<div class="ch-resp"><textarea id="ch-txt-'+c.id+'" class="pa-in an-in an-txt" rows="2" maxlength="4000" placeholder="Escreva mais detalhes ou responda a equipe"></textarea><button type="button" class="pa-bt verde" onclick="PrismoConta.chResponder('+c.id+')"><span class="material-icons">send</span>Enviar</button></div>':'<p class="ch-fim"><span class="material-icons">task_alt</span>Chamado finalizado'+(c.finalizado_em?' em '+chData(c.finalizado_em):'')+'. Precisa de mais ajuda? Abra um novo chamado.</p>'):'')
+        +(ab?chThread(c,false)+(c.status!=='finalizado'?'<div class="ch-resp"><textarea id="ch-txt-'+c.id+'" class="pa-in an-in an-txt" rows="2" maxlength="4000" placeholder="Escreva sua mensagem (Enter envia)"></textarea><button type="button" class="pa-bt verde" onclick="PrismoConta.chResponder('+c.id+')"><span class="material-icons">send</span>Enviar</button></div>':'<p class="ch-fim"><span class="material-icons">task_alt</span>Chamado finalizado'+(c.finalizado_em?' em '+chData(c.finalizado_em):'')+'. Precisa de mais ajuda? Abra um novo chamado.</p>'):'')
         +'</div>';}).join('');
+    Object.keys(rasc).forEach(function(k){var t=$c(k);if(t)t.value=rasc[k];});
+    if(foco){var f=$c(foco);if(f){f.focus();try{f.setSelectionRange(f.value.length,f.value.length);}catch(e){}}}
+    var thr2=box.querySelector('.ch-card.aberto .ch-thread');if(thr2&&noFim)thr2.scrollTop=thr2.scrollHeight;
   }
+  /* Enter envia a mensagem do chat (Shift+Enter pula linha) */
+  document.addEventListener('keydown',function(e){
+    var t=e.target;if(e.key!=='Enter'||e.shiftKey||!t||!/^ch-txt-\d+$/.test(t.id||''))return;
+    e.preventDefault();chResponder(Number(t.id.slice(7)));
+  });
+  /* conversa aberta: confere a cada 5 s se a equipe respondeu (sem precisar atualizar) */
+  setInterval(function(){
+    if(!logado()||document.hidden)return;
+    var box=$c('sp-meus');if(!box||!box.offsetParent)return;
+    var l=(ler(K_SUP_MEUS)||[]).filter(function(c){return c.status!=='finalizado';});if(!l.length)return;
+    supMeus(true);
+  },5000);
   function chAbrir(id){
     chAberto=chAberto===id?null:id;chDesenharMeus();
     var c=(ler(K_SUP_MEUS)||[]).filter(function(x){return x.id===id;})[0];
@@ -8849,7 +8872,8 @@ window.PrismoConta=(function(){
   }
   function chResponder(id){
     var t=(($c('ch-txt-'+id)||{}).value||'').trim();if(t.length<2){toast('Escreva a mensagem.');return;}
-    rpc('chamado_responder',{chamado:id,texto:t}).then(function(r){if(r.status===200){toast('Mensagem enviada. Status: Aguardando responsável.');supMeus(true);}else toast(msgErro(r));});
+    var ta=$c('ch-txt-'+id);if(ta){ta.value='';}
+    rpc('chamado_responder',{chamado:id,texto:t}).then(function(r){if(r.status===200){toast('Mensagem enviada');supMeus(true);}else{if(ta&&!ta.value)ta.value=t;toast(msgErro(r));}});
   }
   function supNotificar(id,t,b){try{var n=nat();if(n&&n.notificadoRecente&&n.notificadoRecente(id,6*3600e3))return;if(n&&n.notificar)n.notificar(id,t,b);}catch(e){}}
   /* cliente: baixa os chamados e avisa de respostas (insistente até ver) e de finalização (uma vez) */
@@ -8858,7 +8882,12 @@ window.PrismoConta=(function(){
     var ult=Number(ler('prismo_sup_em'))||0;if(!forcar&&Date.now()-ult<5*60000){chDesenharMeus();return;}
     rpc('meus_chamados').then(function(r){
       if(r.status!==200||!Array.isArray(r.json))return;
-      gravar('prismo_sup_em',Date.now());gravar(K_SUP_MEUS,r.json);
+      var igual=JSON.stringify(ler(K_SUP_MEUS)||[])===JSON.stringify(r.json);
+      gravar('prismo_sup_em',Date.now());
+      if(igual)return;
+      gravar(K_SUP_MEUS,r.json);
+      /* resposta nova chegou com a conversa aberta: já conta como vista */
+      if(chAberto){var ca=r.json.filter(function(x){return x.id===chAberto;})[0];if(ca&&chNaoVisto(ca)&&$c('sp-meus')&&$c('sp-meus').offsetParent){rpc('chamado_visto',{chamado:chAberto});ca.cliente_visto_em=new Date().toISOString();gravar(K_SUP_MEUS,r.json);}}
       var av=ler(K_SUP_AVISADOS)||{},mudou=false;
       r.json.forEach(function(c){
         var k=String(c.id),antes=av[k]||'';
@@ -9016,6 +9045,14 @@ window.PrismoConta=(function(){
       if(b){b.disabled=false;b.innerHTML='<span class="material-icons">send</span>Enviar mensagem';}
       if(r.status===200&&r.json&&r.json.ok){
         sup.anexos=[];sup.cat='duvida';
+        if(r.json.id&&logado()){
+          /* v2.3 · o chamado novo já aparece aberto em "Meus chamados" */
+          chAberto=r.json.id;suporteDesenhar();
+          var bx=$c('acc-sup');if(bx)bx.insertAdjacentHTML('afterbegin','<div class="sp-ok"><span class="material-icons">mark_email_read</span><b>Mensagem enviada!</b><p>Protocolo nº '+r.json.id+'. Status: <b style="color:#facc15">Aguardando responsável</b>. A conversa fica em Meus chamados até a equipe finalizar.</p></div>');
+          supMeus(true);
+          setTimeout(function(){var m=$c('sp-meus');if(m)try{m.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}},400);
+          return;
+        }
         var box=$c('acc-sup');
         if(box)box.innerHTML='<div class="sp-ok"><span class="material-icons">mark_email_read</span><b>Mensagem enviada!</b><p>Recebemos'+(r.json.id?' (protocolo nº '+r.json.id+')':'')+'. Status: <b style="color:#facc15">Aguardando responsável</b>. Vamos responder no app'+(logado()?' (em Meus chamados)':'')+' e no seu e-mail.</p><button type="button" class="pa-bt" onclick="PrismoConta.suporteDesenhar()"><span class="material-icons">edit</span>Escrever outra</button></div>';
         supMeus(true);
@@ -9982,7 +10019,7 @@ window.PrismoPaginas=(function(){
     ['#475569,#94a3b8','help','Em breve','—','Novas missões chegam a cada atualização.']
   ];
   var abaM='disp',MS_K='prismo_missoes';
-  var TIPO_TXT={rotas:['rota','rotas'],km:['km','km'],dias:['dia rodado','dias rodados'],gorjetas:['gorjeta','gorjetas'],ganho:['R$','R$'],turnos:['turno','turnos'],meta:['dia com meta batida','dias com meta batida'],indicacoes:['indicação','indicações']};
+  var TIPO_TXT={rotas:['rota','rotas'],km:['km','km'],dias:['dia rodado','dias rodados'],gorjetas:['gorjeta','gorjetas'],ganho:['R$','R$'],turnos:['turno','turnos'],meta:['dia com meta batida','dias com meta batida'],indicacoes:['indicação','indicações'],assistente:['dia com o assistente ligado','dias com o assistente ligado']};
   var DIF={facil:['Fácil','#4ade80','rgba(74,222,128,.45)','rgba(22,163,74,.12)'],media:['Média','#60a5fa','rgba(96,165,250,.45)','rgba(37,99,235,.12)'],dificil:['Difícil','#fb7185','rgba(251,113,133,.45)','rgba(190,18,60,.12)']};
   var RAR={comum:['Comum','#9ca3af'],rara:['Rara','#60a5fa'],epica:['Épica','#c084fc'],lendaria:['Lendária','#fbbf24']};
   function msDados(){try{return JSON.parse(localStorage.getItem(MS_K)||'null');}catch(e){return null;}}
@@ -9992,6 +10029,8 @@ window.PrismoPaginas=(function(){
   function progressoLocal(m){
     var ini=Number(m.aceita_em)||0,l=[];try{l=tlAppLista();}catch(e){}
     var rotas=l.filter(function(x){return x&&x.app!=='turno'&&Number(x.ts)>=ini;});
+    /* missão "com o assistente de rotas ligado": só contam as rotas que o assistente registrou sozinho */
+    if(m.exige_assistente){rotas=rotas.filter(function(x){return !x.manual&&(x.app==='ifood'||x.app==='indrive');});l=rotas;}
     switch(m.tipo){
       case 'rotas':return rotas.length;
       case 'km':return Math.round(rotas.reduce(function(a,x){return a+(Number(x.km)||0);},0)*10)/10;
@@ -10005,9 +10044,20 @@ window.PrismoPaginas=(function(){
         h.forEach(function(x){if(x&&x.iso&&x.iso>=iniIso)dia[x.iso]=(dia[x.iso]||0)+(Number(x.valor)||0);});
         return Object.keys(dia).filter(function(k){return dia[k]>=meta;}).length;
       case 'indicacoes':return Number(ind().total)||0;
+      case 'assistente':var ad=assistDias(),ii=isoDe(ini);return ad.filter(function(d){return d>=ii;}).length;
     }
     return 0;
   }
+  /* dias em que o assistente de rotas esteve ligado (o app anota quando abre e a cada 2 min aberto) */
+  function assistLigado(){try{var n=window.PrismoNative;return !!(n&&n.rotasEstado&&(JSON.parse(n.rotasEstado()||'{}')||{}).ligado);}catch(e){return false;}}
+  function assistDias(){try{var a=JSON.parse(localStorage.getItem('prismo_assist_dias')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+  function assistAnotar(){
+    if(!assistLigado())return;
+    var h=isoDe(Date.now()),a=assistDias();if(a.indexOf(h)>=0)return;
+    a.push(h);a=a.slice(-400);try{localStorage.setItem('prismo_assist_dias',JSON.stringify(a));}catch(e){}
+  }
+  setTimeout(assistAnotar,3000);setInterval(function(){if(!document.hidden)assistAnotar();},120000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(assistAnotar,800);});
   var msSincronizando=false;
   function missoesSync(mostrar){
     if(!logado()||msSincronizando)return Promise.resolve(msDados());
@@ -10028,10 +10078,13 @@ window.PrismoPaginas=(function(){
       });
     },function(){msSincronizando=false;return msDados();});
   }
+  /* imagem enviada pelo Prismo Admin (só da pasta pública "jogo" do Supabase) */
+  function imgOk(u){return /^https:\/\/xzdqvdrwvozoedmjwwhm\.supabase\.co\/storage\/v1\/object\/public\/jogo\//.test(String(u||''));}
+  function icoMissao(m,tam){return imgOk(m.imagem)?'<img src="'+esc(m.imagem)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">':'<span class="material-icons"'+(tam?' style="font-size:'+tam+'px;color:#fff"':'')+'>'+esc(m.icone||'flag')+'</span>';}
   function hexIns(i,tam,ganha){
     tam=tam||52;var h=Math.round(tam*1.08);
     if(!ganha)return '<div class="pg-hex" style="width:'+tam+'px;height:'+h+'px"><span class="material-icons">lock</span></div>';
-    return '<div class="pg-hex on" style="width:'+tam+'px;height:'+h+'px;background:linear-gradient(160deg,'+esc(i.cor2)+','+esc(i.cor1)+')"><span class="material-icons" style="font-size:'+Math.round(tam*.44)+'px">'+esc(i.icone||'military_tech')+'</span></div>';
+    return '<div class="pg-hex on" style="width:'+tam+'px;height:'+h+'px;background:linear-gradient(160deg,'+esc(i.cor2)+','+esc(i.cor1)+')">'+(imgOk(i.imagem)?'<img src="'+esc(i.imagem)+'" alt="" style="position:relative;width:68%;height:68%;object-fit:cover;border-radius:'+Math.round(tam*.18)+'px">':'<span class="material-icons" style="font-size:'+Math.round(tam*.44)+'px">'+esc(i.icone||'military_tech')+'</span>')+'</div>';
   }
   function celebrar(m,ins){
     toast('🏆 Missão concluída: '+m.titulo);
@@ -10068,7 +10121,7 @@ window.PrismoPaginas=(function(){
       var pc=Math.min(100,Math.round((Number(m.progresso)||0)/Math.max(Number(m.meta)||1,0.01)*100)),df=DIF[m.dificuldade]||DIF.media;
       return '<button class="pg-mc'+(m.status==='aceita'?' and':'')+(m.status==='concluida'?' ok':'')+'" onclick="PrismoPaginas.missao('+m.id+')">'
         +(m.status==='concluida'?'<span class="material-icons lk" style="color:#4ade80">check_circle</span>':(m.status==='falhou'?'<span class="material-icons lk" style="color:#fb7185">replay</span>':(m.insignia?'<span class="material-icons lk" style="color:#fbbf24">military_tech</span>':'')))
-        +'<div class="mi" style="opacity:1;background:linear-gradient(135deg,'+esc(m.cor1)+','+esc(m.cor2)+')"><span class="material-icons">'+esc(m.icone||'flag')+'</span></div><b>'+esc(m.titulo)+'</b>'
+        +'<div class="mi" style="opacity:1;overflow:hidden;background:linear-gradient(135deg,'+esc(m.cor1)+','+esc(m.cor2)+')">'+icoMissao(m)+'</div>'+(m.exige_assistente?'<span class="pg-ass" title="Precisa do assistente de rotas ligado"><span class="material-icons">route</span></span>':'')+'<b>'+esc(m.titulo)+'</b>'
         +(m.status==='aceita'?'<div class="pg-mbar"><i style="width:'+Math.max(4,pc)+'%"></i></div><small>'+pc+'%</small>':'<small style="color:'+df[1]+'">'+df[0]+'</small>')+'</button>';
     }).join('')+'</div>';
     return h;
@@ -10080,12 +10133,14 @@ window.PrismoPaginas=(function(){
     var df=DIF[m.dificuldade]||DIF.media,meta=Number(m.meta)||0,pr=Number(m.progresso)||0,pc=Math.min(100,Math.round(pr/Math.max(meta,0.01)*100));
     var un=TIPO_TXT[m.tipo]||['',''],ganha=m.insignia&&(d.minhas||[]).some(function(x){return x.id===m.insignia.id;});
     var prazo='';if(m.status==='aceita'&&m.prazo_dias&&m.aceita_em){var fim=Number(m.aceita_em)+m.prazo_dias*86400000,rest=Math.ceil((fim-Date.now())/86400000);prazo=rest>0?'Faltam '+rest+' dia'+(rest===1?'':'s'):'Prazo acabando';}
-    var h='<div style="text-align:center"><div style="width:84px;height:84px;border-radius:26px;margin:0 auto;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,'+esc(m.cor1)+','+esc(m.cor2)+')"><span class="material-icons" style="font-size:42px;color:#fff">'+esc(m.icone||'flag')+'</span></div>'
+    var h='<div style="text-align:center"><div style="width:84px;height:84px;border-radius:26px;margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,'+esc(m.cor1)+','+esc(m.cor2)+')">'+icoMissao(m,42)+'</div>'
       +'<b style="display:block;font-size:21px;color:#fff;margin-top:12px">'+esc(m.titulo)+'</b>'
       +'<p style="font-size:13px;color:#b9b2d6;line-height:1.55;margin-top:6px">'+esc(m.descricao||'')+'</p>'
       +'<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap"><span class="pg-chip" style="color:'+df[1]+';border-color:'+df[2]+';background:'+df[3]+'"><span class="material-icons">signal_cellular_alt</span>'+df[0]+'</span>'
       +'<span class="pg-chip"><span class="material-icons">flag</span>Meta: '+fmtV(m.tipo,meta)+(m.tipo==='ganho'?'':' '+(meta===1?un[0]:un[1]))+'</span>'
-      +(m.prazo_dias?'<span class="pg-chip"><span class="material-icons">schedule</span>'+m.prazo_dias+' dia'+(m.prazo_dias===1?'':'s')+' para concluir</span>':'')+'</div>';
+      +(m.prazo_dias?'<span class="pg-chip"><span class="material-icons">schedule</span>'+m.prazo_dias+' dia'+(m.prazo_dias===1?'':'s')+' para concluir</span>':'')
+      +(m.exige_assistente?'<span class="pg-chip" style="color:#4ade80;border-color:rgba(74,222,128,.45);background:rgba(22,163,74,.12)"><span class="material-icons">route</span>Com o assistente de rotas ligado</span>':'')+'</div>'
+      +(m.exige_assistente&&m.status!=='concluida'?'<p style="font-size:11.5px;color:#9fd8b0;margin-top:8px;line-height:1.45">Só contam as rotas que o assistente registrou sozinho. '+(assistLigado()?'✅ Seu assistente está ligado.':'⚠️ Seu assistente está desligado: ligue para aceitar e contar.')+'</p>':'');
     if(m.status==='aceita')h+='<div style="margin-top:16px;text-align:left"><div style="display:flex;justify-content:space-between;font-size:12px;color:#c9d1d9;font-weight:700"><span>'+fmtV(m.tipo,pr)+' de '+fmtV(m.tipo,meta)+'</span><span>'+(prazo||pc+'%')+'</span></div><div class="pg-mbar big"><i style="width:'+Math.max(3,pc)+'%"></i></div></div>';
     if(m.insignia)h+='<div style="margin-top:16px;display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.25);text-align:left">'+hexIns(m.insignia,46,true)
       +'<div style="flex:1;min-width:0"><small style="font-size:10px;font-weight:900;letter-spacing:.1em;color:'+((RAR[m.insignia.raridade]||RAR.comum)[1])+'">INSÍGNIA '+((RAR[m.insignia.raridade]||RAR.comum)[0]).toUpperCase()+'</small><b style="display:block;color:#fff;font-size:15px">'+esc(m.insignia.nome)+'</b><small style="font-size:11.5px;color:#9fb0a6">'+(ganha?'Você já tem esta insígnia':'Ganhe ao concluir esta missão')+'</small></div></div>';
@@ -10098,6 +10153,12 @@ window.PrismoPaginas=(function(){
   var ERR_MS={limite_missoes:'Você já tem 5 missões em andamento. Conclua ou desista de uma.',missao_indisponivel:'Esta missão não está mais disponível.',ja_concluida:'Você já concluiu esta missão.'};
   function msBt(t){var b=$p('pg-ms-bt');if(b){b.disabled=true;b.innerHTML=t;}}
   function missaoAceitar(id){
+    var d0=msDados(),m0=d0&&(d0.missoes||[]).filter(function(x){return x.id===id;})[0];
+    if(m0&&m0.exige_assistente&&!assistLigado()){
+      toast('Ligue o assistente de rotas para aceitar esta missão',true);
+      sheet('<div style="text-align:center"><span class="material-icons" style="font-size:44px;color:#4ade80">route</span><b style="display:block;font-size:18px;color:#fff;margin-top:8px">Ligue o assistente de rotas</b><p style="font-size:13px;color:#9fb0a6;margin-top:6px;line-height:1.5">Esta missão só conta com o assistente de rotas ativo. Ligue e volte aqui para aceitar.</p><button class="pg-bt g" style="margin-top:14px" onclick="PrismoPaginas.fecharSheet();try{PrismoRotas.power()}catch(e){}"><span class="material-icons">power_settings_new</span>Ligar o assistente</button></div>');
+      return;
+    }
     msBt('Aceitando…');
     rpc2('missao_aceitar',{p_missao:id}).then(function(r){
       if(r.status===200){toast('Missão aceita! Boa sorte 🚀');fecharSheet();abaM='and';missoesSync().then(function(){desenhar('missoes');});return;}

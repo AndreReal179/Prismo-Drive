@@ -65,3 +65,7 @@
 • 🏅 Conquistas no Perfil: as insígnias ganhas aparecem coloridas; toque para ver como ganhar as que faltam
 • 🧹 Menu mais limpo: tiramos as etiquetas "Novo" de Perfil e Veículo
 • 🛠️ Correção: o app não marca mais "em rota" quando o assistente de rotas está desligado
+• 🔔 Notificações com a cara do Prismo Drive: logo do app e ícone da marca
+• 💬 Suporte em tempo real: a resposta da equipe aparece sozinha na conversa, Enter envia a mensagem e o chamado fica na lista até ser finalizado
+• 🖼️ Missões e insígnias agora podem ter imagem própria
+• 🧭 Missões com o assistente de rotas: algumas só contam com o assistente ligado (e tem missão de dias com o assistente ativo)
