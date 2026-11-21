@@ -69,3 +69,4 @@
 • 💬 Suporte em tempo real: a resposta da equipe aparece sozinha na conversa, Enter envia a mensagem e o chamado fica na lista até ser finalizado
 • 🖼️ Missões e insígnias agora podem ter imagem própria
 • 🧭 Missões com o assistente de rotas: algumas só contam com o assistente ligado (e tem missão de dias com o assistente ativo)
+• 🏅 Insígnias com imagem aparecem inteiras, sem a moldura de hexágono

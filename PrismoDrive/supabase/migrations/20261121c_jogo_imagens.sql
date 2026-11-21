@@ -19,6 +19,9 @@ drop policy if exists "jogo: admin envia" on storage.objects;
 create policy "jogo: admin envia" on storage.objects for insert to authenticated with check (bucket_id = 'jogo' and public.eh_admin());
 drop policy if exists "jogo: admin troca" on storage.objects;
 create policy "jogo: admin troca" on storage.objects for update to authenticated using (bucket_id = 'jogo' and public.eh_admin()) with check (bucket_id = 'jogo' and public.eh_admin());
+-- ler os metadados é preciso para enviar com "substituir se existir" (x-upsert)
+drop policy if exists "jogo: todos veem" on storage.objects;
+create policy "jogo: todos veem" on storage.objects for select to anon, authenticated using (bucket_id = 'jogo');
 drop policy if exists "jogo: admin apaga" on storage.objects;
 create policy "jogo: admin apaga" on storage.objects for delete to authenticated using (bucket_id = 'jogo' and public.eh_admin());
 

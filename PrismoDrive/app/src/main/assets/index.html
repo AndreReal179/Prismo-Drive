@@ -10084,7 +10084,8 @@ window.PrismoPaginas=(function(){
   function hexIns(i,tam,ganha){
     tam=tam||52;var h=Math.round(tam*1.08);
     if(!ganha)return '<div class="pg-hex" style="width:'+tam+'px;height:'+h+'px"><span class="material-icons">lock</span></div>';
-    return '<div class="pg-hex on" style="width:'+tam+'px;height:'+h+'px;background:linear-gradient(160deg,'+esc(i.cor2)+','+esc(i.cor1)+')">'+(imgOk(i.imagem)?'<img src="'+esc(i.imagem)+'" alt="" style="position:relative;width:68%;height:68%;object-fit:cover;border-radius:'+Math.round(tam*.18)+'px">':'<span class="material-icons" style="font-size:'+Math.round(tam*.44)+'px">'+esc(i.icone||'military_tech')+'</span>')+'</div>';
+    if(imgOk(i.imagem))return '<div style="width:'+tam+'px;height:'+tam+'px;margin:0 auto;flex-shrink:0"><img src="'+esc(i.imagem)+'" alt="" style="display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(0,0,0,.4))"></div>';
+    return '<div class="pg-hex on" style="width:'+tam+'px;height:'+h+'px;background:linear-gradient(160deg,'+esc(i.cor2)+','+esc(i.cor1)+')">'+('<span class="material-icons" style="font-size:'+Math.round(tam*.44)+'px">'+esc(i.icone||'military_tech')+'</span>')+'</div>';
   }
   function celebrar(m,ins){
     toast('🏆 Missão concluída: '+m.titulo);
