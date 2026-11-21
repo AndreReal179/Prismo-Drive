@@ -61,3 +61,6 @@
 • 📎 Suporte em tela própria: anexe quantas imagens quiser (cada foto é reduzida sozinha antes de enviar)
 • 🛡️ Administração abre em tela própria dentro do Perfil
 • 👆 Linha do tempo: para ver os detalhes da rota (mapa, paradas e velocidade), agora é só tocar em cima dela. O botão Detalhes saiu
+• 🚀 Missões valendo: aceite uma missão, o app conta o progresso sozinho com as suas rotas e, ao concluir, você ganha uma insígnia
+• 🏅 Conquistas no Perfil: as insígnias ganhas aparecem coloridas; toque para ver como ganhar as que faltam
+• 🧹 Menu mais limpo: tiramos as etiquetas "Novo" de Perfil e Veículo
