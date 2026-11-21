@@ -189,6 +189,13 @@ object RouteAlert {
             else -> SOUND_RES.getOrNull(sound) ?: 0
         }
         if (res == 0) return false
+        // v2.3 · volume de cada toque (Configurações › Notificação no app); a moeda da rota concluída não muda
+        val pct = if (fim == null && sound == 2) 100 else runCatching {
+            val pr = Prefs(ctx)
+            when (sound) { SOM_BOM -> pr.volBom; SOM_RUIM -> pr.volRuim; else -> pr.volMedio }
+        }.getOrDefault(100)
+        if (pct <= 0) return false
+        val ganho = (pct / 100f).let { it * it }   // curva de volume que soa natural
         val afd = ctx.resources.openRawResourceFd(res) ?: return false
         val mp = MediaPlayer()
         try {
@@ -202,10 +209,11 @@ object RouteAlert {
             }
             mp.setOnErrorListener { p, _, _ -> if (tocando === p) tocando = null; p.release(); fim?.invoke(); true }
             mp.prepare()
+            if (pct < 100) runCatching { mp.setVolume(ganho, ganho) }
             // reforço de volume (+12 dB) por cima do volume de alarme
             runCatching {
                 reforco?.release()
-                reforco = LoudnessEnhancer(mp.audioSessionId).apply { setTargetGain(1200); enabled = true }
+                reforco = LoudnessEnhancer(mp.audioSessionId).apply { setTargetGain(if (pct >= 100) 1200 else (1200 * pct / 100)); enabled = true }
             }
             if (fim != null) tocando = mp
             mp.start()

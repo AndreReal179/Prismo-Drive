@@ -86,6 +86,17 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("alertRepetir", true)
         set(v) { sp.edit().putBoolean("alertRepetir", v).apply() }
 
+    /** v2.3 · volume (0..100) de cada toque: ÓTIMO (bom), MÉDIO (o som escolhido) e RUIM. 0 = sem som. */
+    var volBom: Int
+        get() = sp.getInt("volBom", 100)
+        set(v) { sp.edit().putInt("volBom", v.coerceIn(0, 100)).apply() }
+    var volMedio: Int
+        get() = sp.getInt("volMedio", 100)
+        set(v) { sp.edit().putInt("volMedio", v.coerceIn(0, 100)).apply() }
+    var volRuim: Int
+        get() = sp.getInt("volRuim", 100)
+        set(v) { sp.edit().putInt("volRuim", v.coerceIn(0, 100)).apply() }
+
     /** 0 = sem vibração, 1..5 = tipos (ver RouteAlert.VIBES) */
     var alertVibe: Int
         get() = sp.getInt("alertVibe", 2)

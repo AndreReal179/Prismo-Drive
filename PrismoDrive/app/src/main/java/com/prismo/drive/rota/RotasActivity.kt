@@ -539,7 +539,7 @@ class RotasActivity : Activity() {
             step(2, "Ajuste seus valores",
                 "Menu ☰ → Configurações → aba iFood ou InDrive: gasolina, consumo e os R$/km. O quadro \"No mês\" mostra valores de referência."),
             step(3, "Escolha o alerta",
-                "Menu ☰ → Configurações: escolha o som e a vibração que tocam a cada rota nova."),
+                "No Prismo Drive: Menu › Configurações › Notificação. Escolha o som, o volume do bom, normal e ruim e a vibração."),
             step(4, "Abra o app de corridas",
                 "O selo aparece em cada corrida/rota. Na tela de detalhe: toque curto recolhe, toque longo abre o app."),
             step(5, "Acompanhe no Relatório",
@@ -913,34 +913,21 @@ class RotasActivity : Activity() {
         // ───────── geral (vale para os dois)
         body.addView(grupo("Geral"), lp(22))
         body.addView(secao("g_alerta", "🔔", GOLD, "Alerta de rota",
-            if (prefs.alertOn) "Ligado · som ${RouteAlert.SOUNDS.getOrNull(prefs.alertSound) ?: ""}" else "Desligado"
+            if (prefs.alertOn) "Ligado · ajuste no app: Configurações › Notificação" else "Desligado"
         ) { c ->
-            c.addView(switchRow("Avisar a cada rota nova", "Toca mesmo no Não perturbe e no silencioso", prefs.alertOn) {
-                prefs.alertOn = it
-            })
-            c.addView(caps("Som"), lp(16))
-            c.addView(optionGrid(RouteAlert.SOUNDS, prefs.alertSound) { i ->
-                prefs.alertSound = i
-                RouteAlert.play(this, i, 0)
+            // v2.3: os sons (bom, normal e ruim), o volume de cada um e a vibração agora ficam no app
+            c.addView(tx("Os sons de bom, normal e ruim, o volume de cada um e a vibração agora ficam no Prismo Drive: Menu › Configurações › Notificação.", 12.5f, MUTED))
+            c.addView(tx("Abrir Notificação no app  ›", 14f, 0xFF7EE2A0.toInt(), true).apply {
+                setPadding(dp(14), dp(11), dp(14), dp(11))
+                background = rounded(INPUT, 10, LINE)
+                setOnClickListener {
+                    runCatching {
+                        startActivity(android.content.Intent(this@RotasActivity, com.prismo.drive.MainActivity::class.java)
+                            .putExtra(Turno.EXTRA_ACAO, "config_notif")
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                    }
+                }
             }, lp(10))
-            c.addView(caps("Vibração"), lp(18))
-            c.addView(optionGrid(RouteAlert.VIBES, prefs.alertVibe) { i ->
-                prefs.alertVibe = i
-                RouteAlert.play(this, 0, i)
-            }, lp(10))
-            c.addView(switchRow("Som de bom e de ruim", "ÓTIMO toca um som alegre, RUIM um som grave. MÉDIO usa o som escolhido acima", prefs.alertPorNivel) {
-                prefs.alertPorNivel = it
-            }, lp(16))
-            c.addView(switchRow("Volume no máximo", "Sobe o volume de alarme só durante o aviso e depois volta ao que estava", prefs.alertMaximo) {
-                prefs.alertMaximo = it
-            }, lp(10))
-            c.addView(switchRow("Repetir o toque", "Toca de novo 2 s depois de terminar, até a oferta sumir ou você tocar na tela (máx. 90 s)", prefs.alertRepetir) {
-                prefs.alertRepetir = it
-            }, lp(10))
-            c.addView(button("▶  Testar alerta", false) { RouteAlert.play(this, prefs.alertSound, prefs.alertVibe) }, lp(16))
-            c.addView(button("▶  Testar som de bom (ÓTIMO)", false) { RouteAlert.play(this, RouteAlert.SOM_BOM, prefs.alertVibe) }, lp(8))
-            c.addView(button("▶  Testar som de ruim (RUIM)", false) { RouteAlert.play(this, RouteAlert.SOM_RUIM, prefs.alertVibe) }, lp(8))
-            c.addView(tx("O som usa o volume de ALARME do celular, por isso toca mesmo no silencioso.", 11.5f, MUTED), lp(10))
         }, lp(8))
         body.addView(secao("g_calc", "🧮", BLUE, "Cálculo",
             "Velocidade média ${num1(prefs.avgSpeed)} km/h"

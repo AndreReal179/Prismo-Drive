@@ -4,7 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import nodemailer from "npm:nodemailer@6.9.16";
 
 const DESTINO = "prismolabtec@gmail.com";
-const MAX_ARQ = 4, MAX_TOTAL = 7 * 1024 * 1024; // bytes depois de decodificar
+const MAX_ARQ = 60, MAX_TOTAL = 15 * 1024 * 1024; // v2.3: imagens sem limite prático (o app reduz cada foto) // bytes depois de decodificar
 const TIPOS = /^(image\/(png|jpe?g|webp|gif|heic|heif)|application\/pdf|text\/plain|video\/mp4)$/i;
 const CATS: Record<string, string> = { duvida: "Dúvida", problema: "Problema", bug: "🐞 BUG", pagamento: "Pagamento", sugestao: "Sugestão", outro: "Outro" };
 const CORS = {
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     let bin: Uint8Array;
     try { bin = Uint8Array.from(atob(String(a.base64 || "")), (c) => c.charCodeAt(0)); } catch { continue; }
     total += bin.length;
-    if (total > MAX_TOTAL) return resp(413, { erro: "anexos", msg: "Os anexos passaram de 7 MB. Envie arquivos menores." });
+    if (total > MAX_TOTAL) return resp(413, { erro: "anexos", msg: "Os anexos passaram de 15 MB. Envie em duas mensagens." });
     anexos.push({ filename: String(a.nome || "anexo").replace(/[^\w.\- ()À-ú]/g, "_").slice(0, 80), content: bin, contentType: tipo });
   }
 

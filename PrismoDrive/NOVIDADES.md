@@ -54,3 +54,10 @@
 • 🚗 Veículo: nova tela no menu com valor do combustível, consumo, pedir odômetro e manutenção em um só lugar
 • ⛽ Valor do combustível agora é um só para o app e o assistente de rotas (muda no Veículo e vale para os dois)
 • 🧭 Assistente de rotas mudou de lugar: toque na sua foto no menu para Ativar (ou Desligar) o assistente e abrir o Relatório. Um balão avisa toda vez que o menu abre
+• ⭐ Plano: abre uma tela própria mostrando o seu plano e o que muda entre Free e Pro
+• ⚙️ Configurações em tela própria: Ganhos e meta, Notificação, Backup e Segurança
+• 🔊 Sons do assistente de rotas agora ficam em Configurações › Notificação, com volume separado para bom, normal e ruim (e botão para testar cada um)
+• ❓ Ajuda em tela própria: a atualização do app vem em primeiro, o botão Novidades mostra tudo o que mudou na versão, e logo abaixo o Guia do app, Suporte, Termos e Privacidade
+• 📎 Suporte em tela própria: anexe quantas imagens quiser (cada foto é reduzida sozinha antes de enviar)
+• 🛡️ Administração abre em tela própria dentro do Perfil
+• 👆 Linha do tempo: para ver os detalhes da rota (mapa, paradas e velocidade), agora é só tocar em cima dela. O botão Detalhes saiu

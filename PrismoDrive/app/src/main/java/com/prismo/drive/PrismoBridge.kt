@@ -339,6 +339,55 @@ class PrismoBridge(private val activity: Activity) {
         }
     }
 
+    /** v2.3 · Alerta de rota (sons de bom, normal e ruim) agora se ajusta no app: Configurações › Notificação. */
+    @JavascriptInterface
+    fun alertaLer(): String = runCatching {
+        val p = com.prismo.drive.rota.Prefs(activity)
+        val sons = org.json.JSONArray(); com.prismo.drive.rota.RouteAlert.SOUNDS.forEach { sons.put(it) }
+        val vibes = org.json.JSONArray(); com.prismo.drive.rota.RouteAlert.VIBES.forEach { vibes.put(it) }
+        JSONObject().put("on", p.alertOn).put("som", p.alertSound).put("vibe", p.alertVibe)
+            .put("porNivel", p.alertPorNivel).put("maximo", p.alertMaximo).put("repetir", p.alertRepetir)
+            .put("volBom", p.volBom).put("volMedio", p.volMedio).put("volRuim", p.volRuim)
+            .put("sons", sons).put("vibes", vibes).toString()
+    }.getOrDefault("{}")
+
+    @JavascriptInterface
+    fun alertaSalvar(chave: String, valor: String) {
+        runCatching {
+            val p = com.prismo.drive.rota.Prefs(activity)
+            val b = valor == "true" || valor == "1"
+            val n = valor.toDoubleOrNull()?.toInt() ?: 0
+            when (chave) {
+                "on" -> p.alertOn = b
+                "porNivel" -> p.alertPorNivel = b
+                "maximo" -> p.alertMaximo = b
+                "repetir" -> p.alertRepetir = b
+                "som" -> if (n in com.prismo.drive.rota.RouteAlert.SOUNDS.indices) p.alertSound = n
+                "vibe" -> if (n in com.prismo.drive.rota.RouteAlert.VIBES.indices) p.alertVibe = n
+                "volBom" -> p.volBom = n
+                "volMedio" -> p.volMedio = n
+                "volRuim" -> p.volRuim = n
+            }
+        }
+    }
+
+    /** Toca uma vez: tipo = "bom", "ruim", "medio" (som escolhido) ou "vibe". */
+    @JavascriptInterface
+    fun alertaTestar(tipo: String) {
+        main.post {
+            runCatching {
+                val p = com.prismo.drive.rota.Prefs(activity)
+                val A = com.prismo.drive.rota.RouteAlert
+                when (tipo) {
+                    "bom" -> A.play(activity, A.SOM_BOM, 0)
+                    "ruim" -> A.play(activity, A.SOM_RUIM, 0)
+                    "vibe" -> A.play(activity, 0, p.alertVibe)
+                    else -> A.play(activity, p.alertSound, 0)
+                }
+            }
+        }
+    }
+
     /** v2.3 · Veículo: preço da gasolina e consumo usados pelo assistente de rotas (um lugar só: Menu › Veículo). */
     @JavascriptInterface
     fun veiculoLer(): String = runCatching {
