@@ -10065,12 +10065,15 @@ window.PrismoPaginas=(function(){
     return rpc2('missoes_app',{}).then(function(r){
       if(r.status!==200||!r.json){msSincronizando=false;return msDados();}
       var d=r.json;try{localStorage.setItem(MS_K,JSON.stringify(d));}catch(e){}
+      var novaFila=false;
       var env=(d.missoes||[]).filter(function(m){return m.status==='aceita';}).map(function(m){var v=progressoLocal(m);return {m:m,v:v};}).filter(function(x){return x.v>(Number(x.m.progresso)||0);});
       return env.reduce(function(p,x){return p.then(function(){return rpc2('missao_progresso',{p_missao:x.m.id,p_valor:x.v}).then(function(r2){
         var j=r2&&r2.json;if(!j)return;
         x.m.progresso=j.progresso;x.m.status=j.status;
-        if(j.status==='concluida'){celebrar(x.m,j.insignia);if(j.insignia&&j.nova){d.minhas=d.minhas||[];d.minhas.push({id:j.insignia.id,ganha_em:new Date().toISOString()});}}
+        if(j.status==='concluida'){novaFila=true;celebrar(x.m,j.insignia);if(j.insignia&&j.nova){d.minhas=d.minhas||[];d.minhas.push({id:j.insignia.id,ganha_em:new Date().toISOString()});}}
       });});},Promise.resolve()).then(function(){
+        return novaFila?rpc2('missoes_app',{}).then(function(r3){if(r3.status===200&&r3.json){var mi=d.minhas;d=r3.json;if(mi&&(!d.minhas||d.minhas.length<mi.length))d.minhas=mi;}},function(){}):null;
+      }).then(function(){
         try{localStorage.setItem(MS_K,JSON.stringify(d));}catch(e){}
         msSincronizando=false;
         if(aberta==='missoes'||aberta==='perfil')desenhar(aberta);
@@ -10102,10 +10105,10 @@ window.PrismoPaginas=(function(){
   function fmtV(t,v){v=Number(v)||0;return t==='ganho'?'R$ '+num(v,2):(t==='km'?num(v,v%1?1:0):num(v));}
   function missoesHtml(){
     var l=logado(),d=l?msDados():null,lista=d&&Array.isArray(d.missoes)?d.missoes:null;
-    var concl=lista?lista.filter(function(m){return m.status==='concluida';}).length:0,ganhas=d&&d.minhas?d.minhas.length:0;
+    var concl=lista?lista.filter(function(m){return m.status==='concluida';}).length:0,ganhas=d&&d.minhas?d.minhas.length:0,tranc=d&&Number(d.trancadas)||0;
     var h='<div class="pg-head"><button class="pg-ib esc" onclick="PrismoPaginas.fechar()" aria-label="Voltar"><span class="material-icons">arrow_back</span></button><div><b>Missões</b><small>Complete e ganhe insígnias no seu perfil</small></div></div>';
     h+='<div class="pg-hero" style="background:radial-gradient(260px 120px at 85% 0%,rgba(167,139,250,.35),transparent),linear-gradient(135deg,#1e1538,#0b1410 75%);border:1px solid rgba(167,139,250,.35)"><span class="pg-gi" style="background:linear-gradient(135deg,#6d28d9,#a78bfa)"><span class="material-icons">rocket_launch</span></span>'
-      +(lista?'<div style="flex:1"><b>'+concl+' de '+lista.length+' missões concluídas</b><small style="color:#c4b5fd">'+ganhas+' insígnia'+(ganhas===1?'':'s')+' no seu perfil · aceite até 5 ao mesmo tempo</small></div>'
+      +(lista?'<div style="flex:1"><b>'+concl+' de '+(lista.length+tranc)+' missões concluídas</b><small style="color:#c4b5fd">'+ganhas+' insígnia'+(ganhas===1?'':'s')+' no seu perfil · aceite até 5 ao mesmo tempo</small></div>'
              :'<div style="flex:1"><b>'+(l?'Carregando missões…':'Crie sua conta para participar')+'</b><small style="color:#c4b5fd">'+(l?'Precisa de internet na primeira vez':'As missões e insígnias ficam guardadas na sua conta')+'</small></div>')+'</div>';
     if(!l){
       h+='<div style="margin:12px 16px 0"><button class="pg-bt g" onclick="PrismoConta.abrir(\'criar\')"><span class="material-icons">person_add</span>Criar conta grátis</button></div>';
@@ -10117,6 +10120,8 @@ window.PrismoPaginas=(function(){
     lista.forEach(function(m){cont[m.status==='aceita'?'and':(m.status==='concluida'?'conc':'disp')]++;});
     h+='<div class="pg-tabs">'+[['disp','Disponíveis'],['and','Em andamento'],['conc','Concluídas']].map(function(t){return '<button class="'+(abaM===t[0]?'on':'')+'" onclick="PrismoPaginas.abaMissao(\''+t[0]+'\')">'+t[1]+(cont[t[0]]?' · '+cont[t[0]]:'')+'</button>';}).join('')+'</div>';
     var vis=lista.filter(function(m){return abaM==='and'?m.status==='aceita':(abaM==='conc'?m.status==='concluida':(m.status!=='aceita'&&m.status!=='concluida'));});
+    var proxima=(abaM==='disp'&&tranc)?'<div class="pg-mc" style="opacity:.75;border-style:dashed"><span class="material-icons lk">lock</span><div class="mi" style="background:#1b2a22"><span class="material-icons" style="color:#5b6f63">lock</span></div><b>Próxima missão</b><small>Conclua a atual para liberar'+(tranc>1?' ('+tranc+' na fila)':'')+'</small></div>':'';
+    if(!vis.length&&proxima)return h+'<div class="pg-mg">'+proxima+'</div>';
     if(!vis.length)return h+'<div class="pg-vazio"><span class="material-icons">'+(abaM==='and'?'pending_actions':(abaM==='conc'?'emoji_events':'flag'))+'</span>'+(abaM==='and'?'Nenhuma missão em andamento. Escolha uma em Disponíveis.':(abaM==='conc'?'Nenhuma missão concluída ainda.':'Nenhuma missão nova agora. Volte logo!'))+'</div>';
     h+='<div class="pg-mg">'+vis.map(function(m){
       var pc=Math.min(100,Math.round((Number(m.progresso)||0)/Math.max(Number(m.meta)||1,0.01)*100)),df=DIF[m.dificuldade]||DIF.media;
@@ -10124,7 +10129,7 @@ window.PrismoPaginas=(function(){
         +(m.status==='concluida'?'<span class="material-icons lk" style="color:#4ade80">check_circle</span>':(m.status==='falhou'?'<span class="material-icons lk" style="color:#fb7185">replay</span>':(m.insignia?'<span class="material-icons lk" style="color:#fbbf24">military_tech</span>':'')))
         +'<div class="mi" style="opacity:1;overflow:hidden;background:linear-gradient(135deg,'+esc(m.cor1)+','+esc(m.cor2)+')">'+icoMissao(m)+'</div>'+(m.exige_assistente?'<span class="pg-ass" title="Precisa do assistente de rotas ligado"><span class="material-icons">route</span></span>':'')+'<b>'+esc(m.titulo)+'</b>'
         +(m.status==='aceita'?'<div class="pg-mbar"><i style="width:'+Math.max(4,pc)+'%"></i></div><small>'+pc+'%</small>':'<small style="color:'+df[1]+'">'+df[0]+'</small>')+'</button>';
-    }).join('')+'</div>';
+    }).join('')+proxima+'</div>';
     return h;
   }
   function abaMissao(a){abaM=a;desenhar('missoes');}
@@ -10151,7 +10156,7 @@ window.PrismoPaginas=(function(){
       +(m.status==='falhou'?'<p style="font-size:11.5px;color:#fb7185;margin-top:8px">O prazo acabou antes de completar. Aceite de novo para recomeçar.</p>':'<p style="font-size:11.5px;color:#8b7fb5;margin-top:8px">Conta só o que você fizer depois de aceitar.</p>');
     sheet(h+'</div>','linear-gradient(180deg,#1e1538,#0b1410 45%)','rgba(167,139,250,.45)');
   }
-  var ERR_MS={limite_missoes:'Você já tem 5 missões em andamento. Conclua ou desista de uma.',missao_indisponivel:'Esta missão não está mais disponível.',ja_concluida:'Você já concluiu esta missão.'};
+  var ERR_MS={limite_missoes:'Você já tem 5 missões em andamento. Conclua ou desista de uma.',missao_indisponivel:'Esta missão não está mais disponível.',ja_concluida:'Você já concluiu esta missão.',missao_trancada:'Conclua a missão anterior para liberar esta.'};
   function msBt(t){var b=$p('pg-ms-bt');if(b){b.disabled=true;b.innerHTML=t;}}
   function missaoAceitar(id){
     var d0=msDados(),m0=d0&&(d0.missoes||[]).filter(function(x){return x.id===id;})[0];
