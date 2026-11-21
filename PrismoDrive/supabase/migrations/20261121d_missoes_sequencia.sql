@@ -6,6 +6,9 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 alter table public.missoes add column if not exists livre boolean not null default false;
+-- tipo novo: todas as rotas (lançadas à mão e automáticas)
+alter table public.missoes drop constraint if exists missoes_tipo_check;
+alter table public.missoes add constraint missoes_tipo_check check (tipo in ('rotas','rotas_todas','km','dias','gorjetas','ganho','turnos','meta','indicacoes','assistente'));
 
 -- missões que a pessoa pode ver e aceitar agora
 create or replace function public._missoes_liberadas(p_user uuid)

@@ -71,3 +71,4 @@
 • 🧭 Missões com o assistente de rotas: algumas só contam com o assistente ligado (e tem missão de dias com o assistente ativo)
 • 🏅 Insígnias com imagem aparecem inteiras, sem a moldura de hexágono
 • 🚀 Missões em sequência: conclua uma e a próxima aparece. Algumas missões especiais ficam disponíveis a qualquer momento
+• 🧭 Missões de rotas agora também contam as rotas lançadas à mão

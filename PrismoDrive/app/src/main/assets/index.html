@@ -10019,7 +10019,7 @@ window.PrismoPaginas=(function(){
     ['#475569,#94a3b8','help','Em breve','—','Novas missões chegam a cada atualização.']
   ];
   var abaM='disp',MS_K='prismo_missoes';
-  var TIPO_TXT={rotas:['rota','rotas'],km:['km','km'],dias:['dia rodado','dias rodados'],gorjetas:['gorjeta','gorjetas'],ganho:['R$','R$'],turnos:['turno','turnos'],meta:['dia com meta batida','dias com meta batida'],indicacoes:['indicação','indicações'],assistente:['dia com o assistente ligado','dias com o assistente ligado']};
+  var TIPO_TXT={rotas:['rota','rotas'],rotas_todas:['rota','rotas'],km:['km','km'],dias:['dia rodado','dias rodados'],gorjetas:['gorjeta','gorjetas'],ganho:['R$','R$'],turnos:['turno','turnos'],meta:['dia com meta batida','dias com meta batida'],indicacoes:['indicação','indicações'],assistente:['dia com o assistente ligado','dias com o assistente ligado']};
   var DIF={facil:['Fácil','#4ade80','rgba(74,222,128,.45)','rgba(22,163,74,.12)'],media:['Média','#60a5fa','rgba(96,165,250,.45)','rgba(37,99,235,.12)'],dificil:['Difícil','#fb7185','rgba(251,113,133,.45)','rgba(190,18,60,.12)']};
   var RAR={comum:['Comum','#9ca3af'],rara:['Rara','#60a5fa'],epica:['Épica','#c084fc'],lendaria:['Lendária','#fbbf24']};
   function msDados(){try{return JSON.parse(localStorage.getItem(MS_K)||'null');}catch(e){return null;}}
@@ -10033,6 +10033,11 @@ window.PrismoPaginas=(function(){
     if(m.exige_assistente){rotas=rotas.filter(function(x){return !x.manual&&(x.app==='ifood'||x.app==='indrive');});l=rotas;}
     switch(m.tipo){
       case 'rotas':return rotas.length;
+      /* todas as rotas: as do iFood/InDrive e as lançadas à mão pelo botão verde (Salvar Rota) */
+      case 'rotas_todas':
+        if(m.exige_assistente)return rotas.length;
+        var man=0;try{JSON.parse(localStorage.getItem('prismo_rows_v1')||'[]').forEach(function(r){if(r&&String(r[7]).toUpperCase()==='CORRIDA'&&new Date(r[0]).getTime()>=ini)man++;});}catch(e){}
+        return rotas.length+man;
       case 'km':return Math.round(rotas.reduce(function(a,x){return a+(Number(x.km)||0);},0)*10)/10;
       case 'dias':var d={};rotas.forEach(function(x){d[isoDe(x.ts)]=1;});l.filter(function(x){return x&&x.app==='turno'&&Number(x.ts)>=ini;}).forEach(function(x){d[isoDe(x.ts)]=1;});return Object.keys(d).length;
       case 'gorjetas':var g=0;l.forEach(function(x){(Array.isArray(x&&x.gorjetas)?x.gorjetas:[]).forEach(function(y){if(!y.ts||Number(y.ts)>=ini)g++;});});return g;
