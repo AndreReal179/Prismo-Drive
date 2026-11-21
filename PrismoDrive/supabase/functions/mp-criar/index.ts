@@ -9,12 +9,7 @@ function chaveServico(): string {
   return Deno.env.get("SUPABASE_SECRET_KEY") || "";
 }
 
-const PLANOS: Record<string, { nome: string; dias: number; preco: number; parcelas: number }> = {
-  mensal: { nome: "Mensal", dias: 30, preco: 29.9, parcelas: 1 },
-  trimestral: { nome: "Trimestral", dias: 90, preco: 79.9, parcelas: 1 },
-  semestral: { nome: "Semestral", dias: 180, preco: 149.9, parcelas: 3 },
-  anual: { nome: "Anual", dias: 365, preco: 249.9, parcelas: 3 },
-};
+// Os preços ficam na tabela public.planos_config (Prismo Admin › Planos).
 const VOLTA = "https://andrereal179.github.io/Prismo-Drive/pagamento.html";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -39,8 +34,12 @@ Deno.serve(async (req) => {
   let corpo: { plano?: string } = {};
   try { corpo = await req.json(); } catch { /* vazio */ }
   const id = String(corpo.plano || "");
-  const p = PLANOS[id];
-  if (!p) return resp(400, { erro: "plano", msg: "Plano inválido." });
+  // v2.3: preço, dias e parcelas vêm da tabela planos_config (editada no Prismo Admin); o celular só diz qual plano
+  const { data: pc, error: epc } = await adm.from("planos_config").select("nome,dias,preco,parcelas,ativo").eq("id", id).maybeSingle();
+  if (epc) return resp(503, { erro: "planos", msg: "Não deu para carregar os planos. Tente de novo em instantes." });
+  if (!pc || !pc.ativo) return resp(400, { erro: "plano", msg: "Plano indisponível. Atualize a tela de planos." });
+  const p = { nome: String(pc.nome), dias: Number(pc.dias), preco: Number(pc.preco), parcelas: Number(pc.parcelas) || 1 };
+  if (!(p.preco >= 5 && p.preco <= 1000) || !(p.dias > 0)) return resp(400, { erro: "plano", msg: "Plano inválido." });
 
   const { data: perfil } = await adm.from("perfis").select("conta_id,nome,email").eq("id", u.user.id).maybeSingle();
   const contaId = perfil?.conta_id || "";

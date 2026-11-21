@@ -1067,6 +1067,15 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .am-pos{width:28px;text-align:center;font-weight:900;color:#8b949e;font-size:15px;flex-shrink:0}.am-up{color:#4ade80;font-size:12px;font-weight:800}.am-dn{color:#fb7185;font-size:12px;font-weight:800}
 .am-eu{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,#123222,#0f1914);border:1.5px solid #22c55e;box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:2}
 .am-eu .t{flex:1;min-width:0}.am-eu b{display:block;font-size:14.5px;color:#fff}.am-eu small{display:block;font-size:12px;color:#8b949e}.am-eu .pg-ava{width:40px!important;height:40px!important;border-width:0;font-size:17px}
+ #pp-anuncio{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(2,6,4,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+#pp-anuncio.on{opacity:1}#pp-anuncio .pp-box{position:relative;width:100%;max-width:420px;border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#10201a,#0a120e);border:1px solid rgba(74,222,128,.3);box-shadow:0 30px 70px -20px rgba(0,0,0,.8);transform:scale(.94);transition:transform .25s}
+#pp-anuncio.on .pp-box{transform:none}.pp-img{display:block;width:100%;max-height:62vh;object-fit:contain;background:#000}
+.pp-ic{height:120px;display:flex;align-items:center;justify-content:center;background:radial-gradient(200px 100px at 50% 0%,rgba(46,164,79,.45),transparent)}.pp-ic .material-icons{font-size:56px;color:#4ade80}
+.pp-t{padding:16px 18px 20px}.pp-t b{display:block;font-size:18px;color:#fff;font-weight:900}.pp-t p{font-size:14px;color:#c9d1d9;line-height:1.5;margin-top:6px;white-space:pre-line}
+.pp-x{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;z-index:2}
+.pp-x svg{position:absolute;inset:2px;width:36px;height:36px;transform:rotate(-90deg)}.pp-x circle{fill:none;stroke:#4ade80;stroke-width:3;stroke-dasharray:100.5;stroke-dashoffset:0;animation:pp-anel 10s linear forwards}
+.pp-x b{font-size:15px;font-weight:900}.pp-x.ok{background:rgba(0,0,0,.75)}.pp-x.ok svg{display:none}.pp-x .material-icons{font-size:22px}
+@keyframes pp-anel{to{stroke-dashoffset:100.5}}
 .pg-mais{width:56px;height:56px;margin:0 auto;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fbbf24;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.35)}
 .pg-todas{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-top:16px;max-height:52vh;overflow-y:auto}
 .pg-todas button{background:none;border:0;padding:0;text-align:center;min-width:0}
@@ -7051,7 +7060,7 @@ function tlTirarManual(rid){
 <p>Hoje o Prismo Drive <b>não exibe anúncios</b>. <b>Futuramente</b>, o uso sem conta e o plano Free poderão exibir anúncios, por exemplo banners, vídeos curtos ou ofertas de parceiros (oficinas, postos, lojas e serviços para motoristas). O <b>plano Pro continua sem anúncios</b>.</p>
 <p>Os anúncios não vão aparecer por cima de outros apps nem durante o uso do Assistente de rotas. Antes de começar, avisaremos no app e atualizaremos estes termos e a Política de Privacidade, explicando quais empresas de anúncios forem usadas e quais dados elas recebem.</p>
 <h3>9. Planos pagos, preços e pagamento</h3>
-<ul><li><b>Mensal</b> (30 dias): R$ 29,90</li><li><b>Trimestral</b> (90 dias): R$ 79,90</li><li><b>Semestral</b> (180 dias): R$ 149,90, em até 3x no cartão</li><li><b>Anual</b> (365 dias): R$ 249,90, em até 3x no cartão</li></ul>
+<!--PRECOS--><ul><li><b>Mensal</b> (30 dias): R$ 24,90</li><li><b>Trimestral</b> (90 dias): R$ 63,90</li><li><b>Semestral</b> (180 dias): R$ 89,90, em até 3x no cartão</li><li><b>Anual</b> (365 dias): R$ 139,90, em até 3x no cartão</li></ul><!--/PRECOS-->
 <p>O pagamento é feito pelo <b>Mercado Pago</b>, por Pix ou cartão. <b>Não existe renovação automática nem cobrança recorrente</b>: cada compra vale pelos dias do plano escolhido. Se você ainda tem Pro e compra outro plano, <b>os dias se somam</b>.</p>
 <p>O Pro é liberado sozinho quando o Mercado Pago aprova o pagamento (o Pix costuma aprovar na hora; o cartão pode passar por análise). Os preços podem mudar para compras futuras, sem afetar os dias que você já comprou.</p>
 <p>Quando o Pro vence, a conta volta para Free: <b>nenhum dado é apagado</b>, os recursos Pro só ficam bloqueados até você renovar. Para confirmar a validade do Pro, o app usa a hora do servidor e precisa de internet pelo menos uma vez a cada 7 dias.</p>
@@ -8725,16 +8734,34 @@ window.PrismoConta=(function(){
   /* Adquirir plano: vantagens do Free e do Pro, resgatar código e assinar */
   function apToggle(b){var c=b&&b.closest('.ap-card');if(c)c.classList.toggle('aberta');}
   /* Planos Pro (só visual por enquanto: o pagamento pelo Mercado Pago entra depois) */
-  var AP_PLANOS=[
-    {id:'mensal',nome:'Mensal',dias:30,meses:1,preco:29.90},
-    {id:'trimestral',nome:'Trimestral',dias:90,meses:3,preco:79.90},
-    {id:'semestral',nome:'Semestral',dias:180,meses:6,preco:149.90},
-    {id:'anual',nome:'Anual',dias:365,meses:12,preco:249.90,selo:'Melhor oferta'}
-  ];
+  /* v2.3: os preços vêm do servidor (Prismo Admin › Planos). Estes só valem até a primeira conexão. */
+  var AP_PADRAO=[
+    {id:'mensal',nome:'Mensal',dias:30,meses:1,preco:24.90,parcelas:1,ativo:true},
+    {id:'trimestral',nome:'Trimestral',dias:90,meses:3,preco:63.90,parcelas:1,ativo:true},
+    {id:'semestral',nome:'Semestral',dias:180,meses:6,preco:89.90,parcelas:3,ativo:true},
+    {id:'anual',nome:'Anual',dias:365,meses:12,preco:139.90,parcelas:3,selo:'Melhor oferta',ativo:true}
+  ],K_PLANOS='prismo_planos';
+  function apTodos(){var c=ler(K_PLANOS);return Array.isArray(c)&&c.length&&c.every(function(x){return x&&x.id&&Number(x.preco)>0&&Number(x.meses)>0;})?c.map(function(x){return {id:x.id,nome:x.nome,dias:Number(x.dias),meses:Number(x.meses),preco:Number(x.preco),parcelas:Number(x.parcelas)||1,selo:x.selo||'',ativo:x.ativo!==false};}):AP_PADRAO;}
+  var AP_PLANOS=apTodos().filter(function(x){return x.ativo;});
+  function apBase(){var m=apTodos().filter(function(x){return x.id==='mensal';})[0];return m?m.preco:AP_PLANOS[0].preco/AP_PLANOS[0].meses;}
+  function apMinMes(){var m=Infinity;AP_PLANOS.forEach(function(x){m=Math.min(m,x.preco/x.meses);});return m;}
+  var apSyncEm=0;
+  function apSync(){
+    if(Date.now()-apSyncEm<60000)return;apSyncEm=Date.now();
+    (logado()?token():Promise.resolve(null)).then(function(t){return http('POST','/rest/v1/rpc/planos_app',{},t);}).then(function(r){
+      if(r.status!==200||!Array.isArray(r.json)||!r.json.length)return;
+      var antes=JSON.stringify(ler(K_PLANOS));gravar(K_PLANOS,r.json);if(antes===JSON.stringify(r.json))return;
+      AP_PLANOS=apTodos().filter(function(x){return x.ativo;});
+      if(!AP_PLANOS.some(function(x){return x.id===apSel;}))apSel=AP_PLANOS[AP_PLANOS.length-1].id;
+      try{desenharPlano();}catch(e){}
+    },function(){});
+  }
+  /* lista de preços dos Termos, montada com os preços atuais */
+  function apListaTermos(){return '<ul>'+AP_PLANOS.map(function(x){return '<li><b>'+esc(x.nome)+'</b> ('+x.dias+' dias): '+apR(x.preco)+(x.parcelas>1?', em até '+x.parcelas+'x no cartão':'')+'</li>';}).join('')+'</ul>';}
   var apSel='anual';
   function apR(v){return 'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
   function apPlano(){for(var i=0;i<AP_PLANOS.length;i++)if(AP_PLANOS[i].id===apSel)return AP_PLANOS[i];return AP_PLANOS[0];}
-  function apEco(x){var cheio=AP_PLANOS[0].preco*x.meses;return {v:cheio-x.preco,pct:Math.round((1-x.preco/cheio)*100)};}
+  function apEco(x){var cheio=apBase()*x.meses;return {v:cheio-x.preco,pct:Math.round((1-x.preco/cheio)*100)};}
   function apGrade(){
     var pp=plano(),h='<div class="ap-pl-tit"><span class="material-icons">'+((pp==='pro'||pp==='admin')?'autorenew':'sell')+'</span>'+((pp==='pro'||pp==='admin')?'Renovar: escolha por quanto tempo':'Escolha seu plano')+'</div><div class="ap-grade">';
     AP_PLANOS.forEach(function(x){
@@ -9115,6 +9142,7 @@ window.PrismoConta=(function(){
   function termosAbrir(modo,ok,rot,obrigatorio){
     folhaFechar('tm-ov');
     var tpl=document.getElementById('tpl-termos'),corpo=tpl?tpl.innerHTML:'';
+    try{corpo=corpo.replace(/<!--PRECOS-->[\s\S]*?<!--\/PRECOS-->/,apListaTermos());}catch(e){}
     var o=document.createElement('div');o.id='tm-ov';o.className='tm-ov';
     var aceitar=modo==='aceitar';
     o.innerHTML='<div class="tm-sheet" role="dialog" aria-modal="true" aria-label="Termos de uso e condições">'
@@ -9303,8 +9331,9 @@ window.PrismoConta=(function(){
   var K_AVISOS='prismo_avisos',K_AVISOS_EM='prismo_avisos_em';
   function avisosBaixar(forcar){
     var ult=Number(ler(K_AVISOS_EM))||0;if(!forcar&&Date.now()-ult<20*60000)return;
-    (logado()?token():Promise.resolve(null)).then(function(t){return http('GET','/rest/v1/avisos?select=id,titulo,texto,publico,inicio,dias,semana,turnos&order=id.desc&limit=20',null,t);}).then(function(r){
-      if(r.status===200&&Array.isArray(r.json)){gravar(K_AVISOS,r.json);gravar(K_AVISOS_EM,Date.now());try{window.PrismoNotif&&PrismoNotif.reagendar();}catch(e){}}
+    /* v2.3: anúncios com imagem (popup) · os marcados "servidor" chegam por notificação do servidor, o celular não agenda */
+    (logado()?token():Promise.resolve(null)).then(function(t){return http('POST','/rest/v1/rpc/avisos_app',{},t);}).then(function(r){
+      if(r.status===200&&Array.isArray(r.json)){gravar(K_AVISOS,r.json);gravar(K_AVISOS_EM,Date.now());try{window.PrismoNotif&&PrismoNotif.reagendar();}catch(e){}try{window.PrismoPopup&&PrismoPopup.checar();}catch(e){}}
     });
   }
   window.PrismoAnuncios={plano:function(arr,agora){
@@ -9333,6 +9362,7 @@ window.PrismoConta=(function(){
     }catch(e){}
     var av=ler(K_AVISOS)||[],pp=plano(),grupo=pp==='admin'?'pro':pp,HORA={manha:8,tarde:13,noite:19},ORD=['manha','tarde','noite'],n=0;
     av.forEach(function(a){
+      if(a.servidor)return;   /* quem manda esses é o servidor (8h, 13h e 19h) */
       if(a.publico!=='todos'&&a.publico!==grupo)return;
       var ini=String(a.inicio||'').split('-');if(ini.length<3)return;
       for(var d=0;d<a.dias&&d<60;d++){
@@ -9346,6 +9376,64 @@ window.PrismoConta=(function(){
       }
     });
   }};
+
+
+  /* ══ Popup dos anúncios: imagem do Prismo Admin, uma vez por turno (manhã, tarde e noite), fecha depois de 10 s ══ */
+  window.PrismoPopup=(function(){
+    var K_VISTO='prismo_popup_vistos',aberto=null,tent=0,timer=0,podeFechar=false;
+    function turnoAgora(){var h=new Date().getHours();return h<5?'noite':(h<12?'manha':(h<18?'tarde':'noite'));}
+    function hojeIso(){var d=new Date();if(d.getHours()<5)d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+    function vistos(){var v=ler(K_VISTO)||{};return typeof v==='object'?v:{};}
+    function candidato(){
+      var av=ler(K_AVISOS)||[],pp=plano(),grupo=pp==='admin'?'pro':pp,hoje=hojeIso(),tu=turnoAgora(),vs=vistos();
+      var hd=new Date(hoje+'T12:00:00');
+      for(var i=0;i<av.length;i++){var a=av[i];
+        if(!a||!(a.popup||a.imagem))continue;
+        if(a.publico!=='todos'&&a.publico!==grupo)continue;
+        var ini=new Date(String(a.inicio)+'T12:00:00'),fim=new Date(ini.getTime()+(Number(a.dias)||1)*864e5);
+        if(hd<ini||hd>=fim)continue;
+        if((a.semana||[]).indexOf(hd.getDay())<0)continue;
+        if((a.turnos||[]).indexOf(tu)<0)continue;
+        if((vs[a.id]||[]).indexOf(hoje+':'+tu)>=0)continue;
+        return a;}
+      return null;
+    }
+    /* não aparece por cima de nada: odômetro, atualização, novidades, termos, login, menus, janelas e carregamento */
+    function telaLivre(){
+      if(document.hidden)return false;
+      var w=innerWidth,h=innerHeight,el=document.elementFromPoint(w/2,h/2);
+      while(el&&el!==document.body&&el!==document.documentElement){
+        var cs=getComputedStyle(el);
+        if(cs.position==='fixed'&&el.offsetWidth>=w*.6&&el.offsetHeight>=h*.4)return el.classList.contains('pg');
+        el=el.parentElement;}
+      return true;
+    }
+    function checar(){
+      if(aberto)return;clearTimeout(timer);
+      var a=candidato();if(!a){tent=0;return;}
+      if(!telaLivre()){if(++tent<60)timer=setTimeout(checar,2500);return;}   /* espera até 2,5 min a tela ficar livre */
+      tent=0;
+      if(a.imagem){var im=new Image();im.onload=function(){if(!aberto&&telaLivre())mostrar(a);else timer=setTimeout(checar,2500);};im.onerror=function(){mostrar(a,true);};im.src=a.imagem;}
+      else mostrar(a);
+    }
+    function mostrar(a,semImg){
+      var vs=vistos(),k=hojeIso()+':'+turnoAgora();(vs[a.id]=(vs[a.id]||[]).slice(-20)).push(k);gravar(K_VISTO,vs);
+      var d=document.createElement('div');d.id='pp-anuncio';aberto=d;podeFechar=false;
+      d.innerHTML='<div class="pp-box"><button class="pp-x" id="pp-x" aria-label="Fechar" disabled><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16"></circle></svg><b id="pp-n">10</b></button>'
+        +(a.imagem&&!semImg?'<img class="pp-img" src="'+esc(a.imagem)+'" alt="">':'<div class="pp-ic"><span class="material-icons">campaign</span></div>')
+        +'<div class="pp-t"><b>'+esc(a.titulo||'Prismo Drive')+'</b><p>'+esc(a.texto||'')+'</p></div></div>';
+      document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+      var n=10,bx=d.querySelector('#pp-x'),nb=d.querySelector('#pp-n');
+      var iv=setInterval(function(){n--;if(n>0){nb.textContent=n;return;}clearInterval(iv);podeFechar=true;bx.disabled=false;bx.classList.add('ok');nb.innerHTML='<span class="material-icons">close</span>';},1000);
+      bx.onclick=function(){if(podeFechar)fechar();};
+    }
+    function fechar(){var d=aberto;if(!d)return;aberto=null;d.classList.remove('on');setTimeout(function(){d.remove();checar();},250);}
+    /* botão voltar do Android: enquanto o popup está aberto ele não deixa sair; depois dos 10 s fecha o popup */
+    function voltar(){if(!aberto)return false;if(podeFechar)fechar();return true;}
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(checar,1500);});
+    setTimeout(checar,9000);
+    return {checar:checar,voltar:voltar,_teste:function(a){mostrar(a);}};
+  })();
 
   /* v2.1: tabela Free × Pro (Adquirir plano e tela Planos) */
   function tabelaPlanos(){
@@ -9374,6 +9462,7 @@ window.PrismoConta=(function(){
   }
   function desenharPlano(){
     var box=$c('acc-plano');if(!box)return;
+    apSync();
     var p=plano(),l=logado(),c=conta();
     var li2=function(t,n,ads){return '<li class="'+(n?'nao':'')+(ads?' ads':'')+'"><span class="material-icons">'+(ads?'campaign':(n?'block':'check_circle'))+'</span><span>'+t+'</span></li>';};
     var seu='<span class="ap-seu">seu plano</span>';
@@ -9383,7 +9472,7 @@ window.PrismoConta=(function(){
       +'<div class="ap-card pro'+(p==='pro'||p==='admin'?' atual':'')+' aberta"><button type="button" class="ap-head" onclick="PrismoConta.apToggle(this)">'
         +'<span class="ap-ic"><span class="material-icons">workspace_premium</span></span>'
         +'<span class="ap-t"><b>Pro'+(p==='pro'?seu:(p==='admin'?'<span class="ap-seu">liberado</span>':''))+'</b><small>'+(p==='pro'?'Vale até '+dataBr(new Date(c.proAte).toISOString())+' · '+diasPro()+' dia'+(diasPro()===1?'':'s'):'Tudo liberado · sem anúncios')+'</small></span>'
-        +(temPro?'<span class="ap-preco ativo"><small>status</small>Ativo</span>':'<span class="ap-preco"><small>a partir de</small>R$ 29,90<small>/mês</small></span>')+'<span class="material-icons ap-chev">expand_more</span></button>'
+        +(temPro?'<span class="ap-preco ativo"><small>status</small>Ativo</span>':'<span class="ap-preco"><small>a partir de</small>'+apR(apMinMes())+'<small>/mês</small></span>')+'<span class="material-icons ap-chev">expand_more</span></button>'
         +'<div class="ap-body">'
         +apGrade()
         +'<p class="ap-nota">Os dias se somam: se ainda tem Pro e paga outro plano, os dias novos entram depois dos que você já tem. Quando vence, nada é apagado: só volta o cadeado.</p></div></div>';
@@ -9659,6 +9748,7 @@ window.PrismoConta=(function(){
     setInterval(function(){if(logado()&&!document.hidden&&Date.now()-(conta().lido||0)>30*60000)carregarPerfil();},60000);
     setTimeout(verLink,900);
     setTimeout(function(){avisosBaixar(false);},3500);
+    setTimeout(apSync,6000);
     setTimeout(supSync,5000);
     setInterval(function(){if(!document.hidden){avisosBaixar(false);supSync();}},5*60000);
     setTimeout(termosEnviar,7000);

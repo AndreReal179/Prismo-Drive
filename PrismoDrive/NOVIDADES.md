@@ -77,3 +77,5 @@
 • ⚔️ Duelos de 7 dias: desafie um amigo e veja só em % quem está na frente. Contam as rotas automáticas do assistente de rotas e as gorjetas. Cada dia vencido acende um quadradinho
 • 🏆 Ranqueada mundial: a sua colocação no Perfil e a classificação do mês com o pódio e a premiação
 • 🎁 Missões de duelos vencidos, e missões que dão dias de Pro
+• 📣 Avisos da equipe com imagem: aparecem ao abrir o app (uma vez por turno) e chegam como notificação mesmo com o app fechado
+• 💰 Novos preços do Pro: Mensal R$ 24,90, Trimestral R$ 63,90, Semestral R$ 89,90 e Anual R$ 139,90 (R$ 11,66/mês). Promoções aparecem na hora, sem precisar atualizar o app
