@@ -406,7 +406,7 @@ async function carregarJogo() {
   jogo = r.json || { missoes: [], insignias: [] }; return true;
 }
 const okImg = (u) => /^https:\/\/xzdqvdrwvozoedmjwwhm\.supabase\.co\/storage\/v1\/object\/public\/jogo\//.test(String(u || ''));
-const hex = (i, g) => '<div class="hex' + (g ? ' g' : '') + '" style="background:linear-gradient(160deg,' + esc(i.cor2 || '#fbbf24') + ',' + esc(i.cor1 || '#b45309') + ')">' + (okImg(i.imagem) ? '<img class="ins-img" src="' + esc(i.imagem) + '" alt="">' : '<span class="mi">' + esc(i.icone || 'military_tech') + '</span>') + '</div>';
+const hex = (i, g, tam) => okImg(i.imagem) ? '<div class="ins-solta' + (g ? ' g' : '') + '"' + (tam ? ' style="width:' + tam + 'px;height:' + tam + 'px"' : '') + '><img src="' + esc(i.imagem) + '" alt=""></div>' : '<div class="hex' + (g ? ' g' : '') + '" style="background:linear-gradient(160deg,' + esc(i.cor2 || '#fbbf24') + ',' + esc(i.cor1 || '#b45309') + ')">' + (okImg(i.imagem) ? '<img class="ins-img" src="' + esc(i.imagem) + '" alt="">' : '<span class="mi">' + esc(i.icone || 'military_tech') + '</span>') + '</div>';
 const micH = (m, tam) => '<div class="mic" style="' + (tam ? 'width:' + tam + 'px;height:' + tam + 'px;border-radius:' + Math.round(tam * .3) + 'px;margin:0 auto;' : '') + 'background:linear-gradient(135deg,' + esc(m.cor1) + ',' + esc(m.cor2) + ')">' + (okImg(m.imagem) ? '<img class="mis-img" src="' + esc(m.imagem) + '" alt="">' : '<span class="mi"' + (tam ? ' style="font-size:' + Math.round(tam / 2) + 'px"' : '') + '>' + esc(m.icone || 'flag') + '</span>') + '</div>';
 /* imagem da missão/insígnia: reduz para 256 px e envia para a pasta pública "jogo" do Supabase */
 function reduzirImagem(arq) {
@@ -445,7 +445,7 @@ async function trocarImagem(arq) {
     toast('Imagem enviada. Clique em Salvar para usar.');
     missao ? prevMissao() : prevInsignia();
   } catch (e) {
-    toast(/row-level|policy|Unauthorized|403/i.test(String(e.message)) ? 'Falta rodar o SQL 20261121c_jogo_imagens.sql no Supabase.' : 'Não deu para enviar: ' + e.message, true);
+    toast('Não deu para enviar a imagem: ' + e.message, true);
   }
 }
 async function missoes() {
@@ -489,7 +489,7 @@ function prevMissao() {
   $('prev').innerHTML = micH(f, 80)
     + '<b>' + esc(f.titulo || 'Título da missão') + '</b><p>' + esc(f.descricao || 'Descrição da missão') + '</p>'
     + '<div class="rod" style="justify-content:center;display:flex;gap:6px;flex-wrap:wrap;margin-top:12px"><span class="chip" style="color:' + d[1] + ';border-color:' + alfa(d[1], .4) + '">' + d[0] + '</span><span class="chip cinza">Meta: ' + esc(f.meta || 0) + ' ' + t[1] + '</span>' + (f.prazo_dias ? '<span class="chip cinza">' + esc(f.prazo_dias) + ' dias</span>' : '') + (f.exige_assistente ? '<span class="chip rota">Assistente ligado</span>' : '') + '</div>'
-    + (ins ? '<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px;border-radius:14px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.25);text-align:left">' + hex(ins).replace('class="hex"', 'class="hex" style="width:44px;height:48px;background:linear-gradient(160deg,' + esc(ins.cor2) + ',' + esc(ins.cor1) + ')"') + '<div><small style="color:' + (RARS[ins.raridade] || RARS.comum)[1] + ';font-weight:800;font-size:10px">INSÍGNIA ' + (RARS[ins.raridade] || RARS.comum)[0].toUpperCase() + '</small><b style="font-size:14px;margin:0">' + esc(ins.nome) + '</b></div></div>' : '')
+    + (ins ? '<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px;border-radius:14px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.25);text-align:left">' + (okImg(ins.imagem) ? hex(ins, false, 44) : hex(ins).replace('class="hex"', 'class="hex" style="width:44px;height:48px;background:linear-gradient(160deg,' + esc(ins.cor2) + ',' + esc(ins.cor1) + ')"')) + '<div><small style="color:' + (RARS[ins.raridade] || RARS.comum)[1] + ';font-weight:800;font-size:10px">INSÍGNIA ' + (RARS[ins.raridade] || RARS.comum)[0].toUpperCase() + '</small><b style="font-size:14px;margin:0">' + esc(ins.nome) + '</b></div></div>' : '')
     + '<div style="margin-top:14px;height:42px;border-radius:13px;background:linear-gradient(135deg,#6d28d9,#a78bfa);display:flex;align-items:center;justify-content:center;font-weight:800">Aceitar missão</div>';
 }
 async function salvarMissao(id) {
