@@ -113,7 +113,8 @@ const PAGINAS = {
   notificacoes: ['Notificações', 'Envie avisos no celular dos motoristas, na hora ou agendados', notificacoes],
   codigos: ['Códigos Pro', 'Gere códigos de dias de Pro para presentear ou vender', codigos],
   backups: ['Backups', 'Cópias de segurança do banco de dados', backups],
-  historico: ['Histórico de ações', 'Tudo o que foi feito pelos administradores', historico]
+  historico: ['Histórico de ações', 'Tudo o que foi feito pelos administradores', historico],
+  ranqueada: ['Ranqueada', 'Classificação mundial do mês, prêmios e pausa', ranqueada]
 };
 let atual = 'painel', timer = 0;
 const graficos = [];
@@ -396,7 +397,7 @@ async function resolverErro(id, v) {
 
 /* ═══════════ MISSÕES E INSÍGNIAS ═══════════ */
 const ICONES = ['flag', 'route', 'local_shipping', 'delivery_dining', 'local_taxi', 'two_wheeler', 'directions_car', 'local_fire_department', 'bolt', 'rocket_launch', 'emoji_events', 'military_tech', 'workspace_premium', 'star', 'diamond', 'whatshot', 'speed', 'timer', 'schedule', 'calendar_month', 'today', 'nights_stay', 'wb_sunny', 'savings', 'payments', 'paid', 'attach_money', 'volunteer_activism', 'favorite', 'thumb_up', 'groups', 'person_add', 'handshake', 'sports_mma', 'map', 'explore', 'place', 'local_gas_station', 'eco', 'build', 'verified', 'shield', 'auto_awesome', 'celebration', 'pets', 'coffee', 'restaurant', 'trending_up', 'insights', 'stars'];
-const TIPOS = { rotas_todas: ['Rotas feitas (todas: lançadas à mão e automáticas)', 'rotas'], rotas: ['Rotas feitas só no iFood/InDrive (automáticas)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'], assistente: ['Dias com o assistente de rotas ligado', 'dias'] };
+const TIPOS = { rotas_todas: ['Rotas feitas (todas: lançadas à mão e automáticas)', 'rotas'], rotas: ['Rotas feitas só no iFood/InDrive (automáticas)', 'rotas'], km: ['Km rodados em rotas', 'km'], dias: ['Dias diferentes rodando', 'dias'], gorjetas: ['Gorjetas registradas', 'gorjetas'], ganho: ['Faturamento das rotas (R$)', 'R$'], turnos: ['Turnos finalizados', 'turnos'], meta: ['Dias com a meta diária batida', 'dias'], indicacoes: ['Indicações confirmadas (total)', 'indicações'], duelos: ['Duelos vencidos (contra qualquer amigo)', 'vitórias'], assistente: ['Dias com o assistente de rotas ligado', 'dias'] };
 const DIFS = { facil: ['Fácil', COR.verde], media: ['Média', COR.azul], dificil: ['Difícil', '#fb7185'] };
 const RARS = { comum: ['Comum', '#9ca3af'], rara: ['Rara', COR.azul], epica: ['Épica', '#c084fc'], lendaria: ['Lendária', COR.ouro] };
 let jogo = { missoes: [], insignias: [] };
@@ -465,7 +466,7 @@ async function missoes() {
   marcarAtualizado();
 }
 function editorMissao(m) {
-  m = m || { titulo: '', descricao: '', icone: 'flag', imagem: '', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas_todas', meta: 10, prazo_dias: '', insignia_id: '', exige_assistente: false, livre: false, ativa: true, ordem: (jogo.missoes.length + 1) };
+  m = m || { titulo: '', descricao: '', icone: 'flag', imagem: '', cor1: '#6d28d9', cor2: '#a78bfa', dificuldade: 'media', tipo: 'rotas_todas', meta: 10, prazo_dias: '', insignia_id: '', exige_assistente: false, livre: false, premio_dias: 0, ativa: true, ordem: (jogo.missoes.length + 1) };
   abrirModal('<h3><span class="mi">flag</span>' + (m.id ? 'Editar missão' : 'Nova missão') + '</h3><div class="ed"><div class="form" id="fm">'
     + '<label class="full">Título<input name="titulo" maxlength="40" value="' + esc(m.titulo) + '" placeholder="Ex.: Maratonista"></label>'
     + '<label class="full">Descrição (o que a pessoa precisa fazer)<textarea name="descricao" maxlength="400" placeholder="Ex.: Rode 300 km em rotas dentro de 7 dias.">' + esc(m.descricao) + '</textarea></label>'
@@ -475,6 +476,7 @@ function editorMissao(m) {
     + '<label>Dificuldade<select name="dificuldade">' + Object.keys(DIFS).map((k) => '<option value="' + k + '"' + (m.dificuldade === k ? ' selected' : '') + '>' + DIFS[k][0] + '</option>').join('') + '</select></label>'
     + '<label>Insígnia que ganha<select name="insignia_id"><option value="">Nenhuma</option>' + jogo.insignias.map((i) => '<option value="' + i.id + '"' + (Number(m.insignia_id) === i.id ? ' selected' : '') + '>' + esc(i.nome) + (i.ativa ? '' : ' (desativada)') + '</option>').join('') + '</select></label>'
     + '<label>Ordem na fila<input name="ordem" type="number" value="' + esc(m.ordem) + '"></label>'
+    + '<label>Prêmio em dias de Pro<input name="premio_dias" type="number" min="0" max="365" value="' + esc(m.premio_dias || 0) + '" placeholder="0 = só a insígnia"></label>'
     + '<label class="full chk"><input name="exige_assistente" type="checkbox"' + (m.exige_assistente ? ' checked' : '') + '><span><b>Só conta com o assistente de rotas ativo</b><small>Para aceitar, o assistente precisa estar ligado, e só contam as rotas que o assistente registrou sozinho (rotas lançadas à mão não contam).</small></span></label>'
     + '<label class="full chk"><input name="livre" type="checkbox"' + (m.livre ? ' checked' : '') + '><span><b>Mostrar a qualquer momento</b><small>Fica fora da fila: aparece sempre. Sem marcar, a missão entra na fila pela ordem e só aparece quando a pessoa concluir a anterior.</small></span></label>'
     + '<div class="cores full"><label>Cor 1<input name="cor1" type="color" value="' + esc(m.cor1) + '"></label><label>Cor 2<input name="cor2" type="color" value="' + esc(m.cor2) + '"></label><label style="display:flex;align-items:center;gap:8px;padding-top:22px"><input name="ativa" type="checkbox"' + (m.ativa ? ' checked' : '') + '>Ativa no app</label></div>'
@@ -724,7 +726,7 @@ async function backupAgora() {
 }
 
 /* ═══════════ HISTÓRICO ═══════════ */
-const ACOES = { dar_pro: 'Deu dias de Pro', tornar_free: 'Tirou o Pro', anunciar: 'Publicou anúncio', notificar: 'Enviou notificação', agendar_notificacao: 'Agendou notificação', gerar_codigos: 'Gerou códigos', encerrar_aviso: 'Encerrou anúncio' };
+const ACOES = { ranking: 'Mudou a ranqueada', dar_pro: 'Deu dias de Pro', tornar_free: 'Tirou o Pro', anunciar: 'Publicou anúncio', notificar: 'Enviou notificação', agendar_notificacao: 'Agendou notificação', gerar_codigos: 'Gerou códigos', encerrar_aviso: 'Encerrou anúncio' };
 async function historico() {
   const r = await rpc('admin_historico', { p_limite: 150 });
   if (atual !== 'historico') return;
@@ -736,6 +738,48 @@ async function historico() {
       return '<tr><td class="muted" style="white-space:nowrap">' + dataHora(quando(x)) + '</td><td>' + esc(x.admin_nome || '—') + '</td><td><b>' + esc(ACOES[x.acao] || x.acao || '—') + '</b></td><td class="idf">' + (x.conta_id ? idFmt(x.conta_id) : '—') + '</td><td>' + (d ? '<pre class="js">' + esc(String(d)) + '</pre>' : '<span class="muted">—</span>') + '</td></tr>'; }).join('')
       : '<tr><td colspan="5"><div class="vazio"><span class="mi">history</span>Nada registrado ainda.</div></td></tr>') + '</tbody></table></div>';
   marcarAtualizado();
+}
+
+
+/* ═══════════ RANQUEADA ═══════════ */
+let rkEd = null;   // prêmios sendo editados (sobrevive à atualização automática)
+const MESES_L = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const mesNome = (m) => { const s = String(m || ''); return s ? MESES_L[Number(s.slice(5, 7)) - 1] + ' de ' + s.slice(0, 4) : '—'; };
+async function ranqueada() {
+  const r = await rpc('admin_ranking');
+  if (atual !== 'ranqueada') return;
+  if (r.status !== 200) return falhou(r);
+  const d = r.json || {}, cfg = d.config || {}, top = d.top || [], temps = d.temporadas || [], du = d.duelos || {};
+  if (!rkEd) rkEd = (cfg.premios || []).map((p) => ({ pos: p.pos, texto: p.texto, dias: p.dias || 0 }));
+  const COR_P = { 1: '#fbbf24', 2: '#cbd5e1', 3: '#d97706' };
+  $('conteudo').innerHTML = '<div class="grid k4">'
+    + kpi(cfg.pausado ? 'pause_circle' : 'play_circle', cfg.pausado ? COR.lar : COR.verde, 'Situação', cfg.pausado ? 'Pausada' : 'No ar', cfg.pausado ? 'o app mostra "temporariamente indisponível"' : 'temporada de ' + mesNome(d.mes))
+    + kpi('groups', COR.roxo, 'Participantes', num(d.total || 0), 'com rotas no mês')
+    + kpi('sports_mma', COR.azul, 'Duelos', num(du.ativos || 0) + ' ativos', num(du.convites || 0) + ' convites · ' + num(du.encerrados || 0) + ' encerrados')
+    + kpi('diversity_3', COR.verde, 'Amizades', num(d.amizades || 0), 'pares de amigos') + '</div>'
+    + '<div class="grid g21 mt"><div class="card"><h3><span class="mi">leaderboard</span>Classificação de ' + mesNome(d.mes) + '</h3>'
+    + '<table class="tab"><thead><tr><th>#</th><th>MOTORISTA</th><th>ID</th><th>ROTAS</th></tr></thead><tbody>'
+    + (top.length ? top.map((x) => '<tr><td><b style="color:' + (COR_P[x.pos] || 'inherit') + '">' + x.pos + 'º</b></td><td><b>' + esc(x.nome) + '</b><div class="muted small">' + esc(x.email || '') + '</div></td><td class="idf">' + idFmt(x.conta_id) + '</td><td><b>' + num(x.rotas) + '</b></td></tr>').join('')
+      : '<tr><td colspan="4"><div class="vazio"><span class="mi">emoji_events</span>Ninguém pontuou ainda neste mês.</div></td></tr>') + '</tbody></table>'
+    + '<p class="muted small mt">Conta 1 ponto por rota automática do assistente de rotas (iFood e InDrive) no mês. Rotas lançadas à mão não contam.</p></div>'
+    + '<div><div class="card"><h3><span class="mi">' + (cfg.pausado ? 'pause' : 'play_arrow') + '</span>Ranqueada no app</h3>'
+    + '<p class="muted small">' + (cfg.pausado ? 'Pausada: o app mostra "Sistema temporariamente indisponível" e ninguém recebe prêmio enquanto estiver assim.' : 'No ar: todos veem a classificação e o pódio. No dia 1º, às 00:05, o mês fecha e os prêmios em dias de Pro são entregues sozinhos.') + '</p>'
+    + '<button class="bt ' + (cfg.pausado ? 'pri' : '') + ' mt" data-rkpausa="' + (cfg.pausado ? '0' : '1') + '"><span class="mi">' + (cfg.pausado ? 'play_arrow' : 'pause') + '</span>' + (cfg.pausado ? 'Retomar a ranqueada' : 'Pausar a ranqueada') + '</button></div>'
+    + '<div class="card mt"><h3><span class="mi">workspace_premium</span>Premiação</h3><div id="rkp">'
+    + rkEd.map((p, i) => '<div class="rkp-l"><b style="color:' + (COR_P[p.pos] || '#c9d1d9') + '">' + p.pos + 'º</b><input data-rki="' + i + '" data-rkc="texto" value="' + esc(p.texto) + '" placeholder="Prêmio (aparece no app)" maxlength="60"><label class="rkp-d"><input data-rki="' + i + '" data-rkc="dias" type="number" min="0" max="365" value="' + esc(p.dias) + '"><span>dias Pro</span></label><button class="bt ghost sm" data-rkdel="' + i + '" title="Tirar"><span class="mi">close</span></button></div>').join('')
+    + '</div><div style="display:flex;gap:8px;margin-top:10px">' + (rkEd.length < 10 ? '<button class="bt sm" data-rkadd="1"><span class="mi">add</span>Posição</button>' : '') + '<span class="esp" style="flex:1"></span><button class="bt pri" data-rksalvar="1"><span class="mi">save</span>Salvar prêmios</button></div>'
+    + '<p class="muted small mt">O texto aparece no pódio do app. "Dias Pro" é entregue sozinho ao fechar o mês (0 = só reconhecimento). Administradores não recebem dias.</p></div></div></div>'
+    + '<div class="card mt"><h3><span class="mi">history</span>Temporadas encerradas</h3><table class="tab"><thead><tr><th>MÊS</th><th>PARTICIPANTES</th><th>PÓDIO</th><th>PRÊMIOS ENTREGUES</th></tr></thead><tbody>'
+    + (temps.length ? temps.map((t) => '<tr><td><b>' + esc(mesNome(t.mes)) + '</b></td><td>' + num(t.participantes) + '</td><td>' + (t.top || []).slice(0, 3).map((x) => x.pos + 'º ' + esc(x.nome) + ' (' + num(x.rotas) + ')').join('<br>') + '</td><td>' + ((t.premios || []).map((x) => x.pos + 'º: ' + esc(x.texto || '') + (x.dias ? ' (+' + x.dias + ' dias)' : '')).join('<br>') || '<span class="muted">nenhum</span>') + '</td></tr>').join('')
+      : '<tr><td colspan="4"><div class="vazio">A primeira temporada fecha no dia 1º do próximo mês.</div></td></tr>') + '</tbody></table></div>';
+  marcarAtualizado();
+}
+async function rkSalvar(pausado, comPremios) {
+  if (pausado !== null && !confirm(pausado ? 'Pausar a ranqueada? O app vai mostrar "Sistema temporariamente indisponível" e ninguém recebe prêmio enquanto estiver pausada.' : 'Retomar a ranqueada?')) return;
+  const premios = comPremios ? rkEd.map((p, i) => ({ pos: i + 1, texto: String(p.texto || '').trim(), dias: Number(p.dias) || 0 })) : null;
+  if (premios && premios.some((p) => !p.texto)) return toast('Escreva o prêmio de cada posição (ou tire a posição).', true);
+  const r = await rpc('admin_ranking_salvar', { p_pausado: pausado, p_premios: premios });
+  if (r.status === 200) { toast(pausado === null ? 'Prêmios salvos' : (pausado ? 'Ranqueada pausada' : 'Ranqueada no ar')); if (comPremios) rkEd = null; ranqueada(); } else toast(erroTxt(r), true);
 }
 
 /* ═══════════ ATUALIZAÇÃO DO PROGRAMA ═══════════ */
@@ -823,8 +867,13 @@ document.addEventListener('click', (e) => {
   if (d.cgerar) return gerarCodigos();
   if (d.ccopiar) { navigator.clipboard.writeText(codGerados.join('\n')).then(() => toast('Códigos copiados')); return; }
   if (d.bagora) return backupAgora();
+  if (d.rkpausa) return rkSalvar(d.rkpausa === '1', false);
+  if (d.rksalvar) return rkSalvar(null, true);
+  if (d.rkadd) { rkEd.push({ pos: rkEd.length + 1, texto: '', dias: 0 }); return ranqueada(); }
+  if (d.rkdel) { rkEd.splice(Number(d.rkdel), 1); rkEd.forEach((p, i) => { p.pos = i + 1; }); return ranqueada(); }
 });
 document.addEventListener('input', (e) => {
+  if (e.target.dataset && e.target.dataset.rki !== undefined && rkEd) { const p = rkEd[Number(e.target.dataset.rki)]; if (p) p[e.target.dataset.rkc] = e.target.dataset.rkc === 'dias' ? (Number(e.target.value) || 0) : e.target.value; return; }
   if (e.target.id === 'us-busca') { clearTimeout(tBusca); tBusca = setTimeout(() => { us.busca = e.target.value.trim(); us.pag = 0; usuarios(true); }, 350); return; }
   if (e.target.closest && e.target.closest('#nf')) {
     lerNf(); const pt = $('pv-t'), px = $('pv-x'), c = $('nf-cont');
