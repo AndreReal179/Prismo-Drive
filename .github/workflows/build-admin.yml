@@ -1,0 +1,66 @@
+name: Gerar Prismo Admin (Windows)
+
+# Programa de administração do Prismo Drive (.exe). Roda sozinho quando a pasta PrismoAdmin muda,
+# ou à mão em Actions › "Gerar Prismo Admin (Windows)" › Run workflow.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'PrismoAdmin/**'
+      - '.github/workflows/build-admin.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gerar-admin
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: PrismoAdmin
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Versão do programa
+        run: |
+          V="1.0.${{ github.run_number }}"
+          echo "VERSAO=$V" >> $GITHUB_ENV
+          npm version "$V" --no-git-tag-version --allow-same-version
+
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+
+      - name: Gerar instalador .exe
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Guardar o instalador (Actions › Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PrismoAdmin-${{ env.VERSAO }}
+          path: PrismoAdmin/dist/*.exe
+          retention-days: 30
+
+      # Release separado, marcado como pré-lançamento e NUNCA como "latest":
+      # assim o atualizador do APK (que lê releases/latest) não confunde com o app.
+      - name: Publicar em Releases (admin-v...)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "admin-v${VERSAO}" dist/*.exe \
+            --prerelease --latest=false \
+            --title "Prismo Admin ${VERSAO} (programa do administrador)" \
+            --notes "Programa de administração do Prismo Drive para Windows. Baixe o PrismoAdmin-Setup-${VERSAO}.exe, instale e entre com a conta de administrador (e-mail e senha). Não é o app dos motoristas."
