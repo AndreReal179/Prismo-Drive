@@ -21,15 +21,31 @@
   "build": {
     "appId": "com.prismo.admin",
     "productName": "Prismo Admin",
-    "files": ["main.js", "renderer/**/*", "node_modules/chart.js/dist/chart.umd.js", "package.json"],
-    "directories": { "output": "dist", "buildResources": "build" },
-    "win": { "target": ["nsis"], "icon": "build/icon.ico", "artifactName": "PrismoAdmin-Setup-${version}.${ext}" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "node_modules/chart.js/dist/chart.umd.js",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "PrismoAdmin-Setup-${version}.${ext}"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Prismo Admin"
+      "shortcutName": "Prismo Admin",
+      "perMachine": false
     }
   }
 }

@@ -35,18 +35,25 @@
         <p class="nav-t">ATENDIMENTO</p>
         <button data-pg="suporte"><span class="mi">support_agent</span>Suporte<i id="nb-suporte" class="nb"></i></button>
         <button data-pg="erros"><span class="mi">bug_report</span>Erros do app<i id="nb-erros" class="nb"></i></button>
+        <button data-pg="notificacoes"><span class="mi">campaign</span>Notificações<i id="nb-notif" class="nb verde"></i></button>
         <p class="nav-t">JOGO</p>
         <button data-pg="missoes"><span class="mi">flag</span>Missões</button>
         <button data-pg="insignias"><span class="mi">military_tech</span>Insígnias</button>
         <p class="nav-t">DINHEIRO</p>
         <button data-pg="vendas"><span class="mi">payments</span>Vendas do Pro</button>
+        <button data-pg="codigos"><span class="mi">redeem</span>Códigos Pro</button>
+        <p class="nav-t">SISTEMA</p>
+        <button data-pg="backups"><span class="mi">cloud_done</span>Backups</button>
+        <button data-pg="historico"><span class="mi">history</span>Histórico de ações</button>
       </nav>
       <div class="side-foot">
         <div class="me"><span class="mi">admin_panel_settings</span><div><b id="me-email">—</b><small>Administrador</small></div></div>
+        <button class="ver" data-a="upd" id="ver-bt" title="Procurar atualização"><span class="mi">system_update_alt</span><span id="ver-txt">Versão —</span></button>
         <button class="bt ghost" data-a="sair"><span class="mi">logout</span>Sair</button>
       </div>
     </aside>
     <main class="main">
+      <div id="upd" class="upd" hidden></div>
       <header class="top">
         <div><h2 id="pg-titulo">Painel</h2><p id="pg-sub" class="muted"></p></div>
         <div class="top-r"><span id="atualizado" class="muted small"></span><button class="bt ghost" data-a="recarregar" title="Atualizar (F5)"><span class="mi">refresh</span>Atualizar</button></div>

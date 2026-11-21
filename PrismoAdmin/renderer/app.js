@@ -109,7 +109,11 @@ const PAGINAS = {
   erros: ['Erros do app', 'Relatório automático de erros enviado pelos celulares', erros],
   missoes: ['Missões', 'Crie e ajuste as missões que aparecem no app', missoes],
   insignias: ['Insígnias', 'As conquistas que os motoristas ganham nas missões', insignias],
-  vendas: ['Vendas do Pro', 'Pagamentos do Mercado Pago', vendas]
+  vendas: ['Vendas do Pro', 'Pagamentos do Mercado Pago', vendas],
+  notificacoes: ['Notificações', 'Envie avisos no celular dos motoristas, na hora ou agendados', notificacoes],
+  codigos: ['Códigos Pro', 'Gere códigos de dias de Pro para presentear ou vender', codigos],
+  backups: ['Backups', 'Cópias de segurança do banco de dados', backups],
+  historico: ['Histórico de ações', 'Tudo o que foi feito pelos administradores', historico]
 };
 let atual = 'painel', timer = 0;
 const graficos = [];
@@ -279,7 +283,7 @@ async function usuarios(manter) {
       + '<td class="muted">' + data(u.criado_em) + '</td>'
       + '<td>' + (u.em_rota ? '<span class="chip rota">Em rota agora</span>' : (u.online ? '<span class="chip on">Online agora</span>' : '<span class="muted">' + (u.visto_em ? ha(u.visto_em) : 'ainda não') + '</span>')) + '</td>'
       + '<td class="num">' + num(u.rotas) + '</td><td class="num">' + num(u.insignias) + '</td>'
-      + '<td class="num">' + (u.plano === 'admin' ? '' : '<button class="bt sm" data-pro="' + i + '" title="Dar 30 dias de Pro"><span class="mi">add</span>30 dias Pro</button> ' + (u.plano === 'pro' ? '<button class="bt sm verm" data-free="' + i + '" title="Tirar o Pro">Free</button>' : '')) + '</td></tr>').join('')
+      + '<td class="num"><button class="bt sm ghost" data-unotif="' + esc(u.conta_id) + '" title="Mandar notificação só para esta pessoa"><span class="mi">notifications</span></button> ' + (u.plano === 'admin' ? '' : '<button class="bt sm" data-pro="' + i + '" title="Dar 30 dias de Pro"><span class="mi">add</span>30 dias Pro</button> ' + (u.plano === 'pro' ? '<button class="bt sm verm" data-free="' + i + '" title="Tirar o Pro">Free</button>' : '')) + '</td></tr>').join('')
     + '</tbody></table><div class="pag"><span>' + num(us.pag * 50 + 1) + '–' + num(us.pag * 50 + us.lista.length) + ' de ' + num(us.total) + ' contas</span><span><button class="bt sm" data-upag="-1"' + (us.pag ? '' : ' disabled') + '><span class="mi">chevron_left</span>Anterior</button> <button class="bt sm" data-upag="1"' + ((us.pag + 1) * 50 < us.total ? '' : ' disabled') + '>Próxima<span class="mi">chevron_right</span></button></span></div>';
   marcarAtualizado();
 }
@@ -499,6 +503,197 @@ async function vendas() {
   marcarAtualizado();
 }
 
+/* ═══════════ NOTIFICAÇÕES ═══════════ */
+const nt = { aba: 'enviar', publico: 'todos', conta: '', quando: 'agora', titulo: '', texto: '', data: '' };
+const PUBLICOS = { todos: 'Todos', pro: 'Só Pro', free: 'Só Free', usuario: 'Sem conta', conta: 'Uma pessoa (ID)' };
+const STN = { agendada: ['Agendada', 'on'], enviada: ['Enviada', 'rota'], cancelada: ['Cancelada', 'cinza'], erro: ['Erro', 'verm'] };
+function abasNt() { return '<div class="barra"><div class="seg">' + [['enviar', 'Nova notificação'], ['lista', 'Agendadas e enviadas'], ['anuncios', 'Anúncios recorrentes']].map((t) => '<button data-nab="' + t[0] + '" class="' + (nt.aba === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('') + '</div></div>'; }
+function dtLocal(d) { const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+async function notificacoes() {
+  if (nt.aba === 'lista') return notifLista();
+  if (nt.aba === 'anuncios') return anuncios();
+  if (!nt.data) { const d = new Date(Date.now() + 3600e3); d.setMinutes(0); nt.data = dtLocal(d); }
+  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">edit_notifications</span>Escrever notificação</h3><div class="form" id="nf">'
+    + '<label class="full">Título<input name="titulo" maxlength="120" value="' + esc(nt.titulo) + '" placeholder="Ex.: 🎁 Fim de semana com Pro em dobro"></label>'
+    + '<label class="full">Mensagem<textarea name="texto" maxlength="400" placeholder="O que aparece no celular">' + esc(nt.texto) + '</textarea><div class="cont" id="nf-cont">' + nt.texto.length + '/400</div></label>'
+    + '<label class="full">Para quem<div class="opc">' + Object.keys(PUBLICOS).map((k) => '<button type="button" data-npub="' + k + '" class="' + (nt.publico === k ? 'on' : '') + '">' + PUBLICOS[k] + '</button>').join('') + '</div></label>'
+    + (nt.publico === 'conta' ? '<label class="full">ID da pessoa (8 números)<input name="conta" inputmode="numeric" maxlength="9" value="' + esc(nt.conta) + '" placeholder="0000 0000"></label>' : '')
+    + '<label class="full">Quando<div class="opc"><button type="button" data-nqd="agora" class="' + (nt.quando === 'agora' ? 'on' : '') + '"><span class="mi" style="font-size:15px">bolt</span> Enviar agora</button><button type="button" data-nqd="agendar" class="' + (nt.quando === 'agendar' ? 'on' : '') + '"><span class="mi" style="font-size:15px">schedule</span> Agendar</button></div></label>'
+    + (nt.quando === 'agendar' ? '<label class="full">Data e hora (horário de Brasília deste computador)<input name="data" type="datetime-local" value="' + esc(nt.data) + '" min="' + dtLocal(new Date()) + '"></label>' : '')
+    + '</div><div class="acoes" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="bt pri" data-nenviar="1" id="nf-bt"><span class="mi">' + (nt.quando === 'agora' ? 'send' : 'schedule_send') + '</span>' + (nt.quando === 'agora' ? 'Enviar agora' : 'Agendar notificação') + '</button></div></div>'
+    + '<div class="card"><h3><span class="mi">smartphone</span>Como aparece no celular</h3><div class="cel"><div class="barra-st"><span>' + (nt.quando === 'agendar' && nt.data ? new Date(nt.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })) + '</span><span>▲ ◼ 100%</span></div>'
+    + '<div class="notif"><img src="logo.png" alt=""><div style="min-width:0"><div class="napp">Prismo Drive · agora</div><b id="pv-t">' + esc(nt.titulo || 'Título da notificação') + '</b><p id="pv-x">' + esc(nt.texto || 'A mensagem aparece aqui.') + '</p></div></div></div>'
+    + '<p class="muted small" style="margin-top:12px;text-align:center">Chega para quem tem as notificações do Prismo Drive ligadas. "Sem conta" = quem usa o app sem entrar numa conta.</p></div></div>';
+}
+function lerNf() { const f = $('nf'); if (!f) return; f.querySelectorAll('[name]').forEach((e) => { nt[e.name] = e.value; }); }
+async function enviarNotif() {
+  lerNf();
+  if (!nt.titulo.trim()) return toast('Escreva o título.', true);
+  if (nt.texto.trim().length < 2) return toast('Escreva a mensagem.', true);
+  if (nt.publico === 'conta' && !/^\d{8}$/.test(nt.conta.replace(/\D/g, ''))) return toast('Digite o ID da pessoa (8 números).', true);
+  let quando = null;
+  if (nt.quando === 'agendar') { const d = new Date(nt.data); if (!nt.data || isNaN(d)) return toast('Escolha a data e a hora.', true); if (d < Date.now() - 60000) return toast('Escolha uma hora no futuro.', true); quando = d.toISOString(); }
+  const alvo = nt.publico === 'conta' ? 'o ID ' + nt.conta : PUBLICOS[nt.publico].toLowerCase();
+  if (!confirm((quando ? 'Agendar para ' + new Date(quando).toLocaleString('pt-BR') : 'Enviar AGORA') + ' para ' + alvo + '?\n\n' + nt.titulo + '\n' + nt.texto)) return;
+  const b = $('nf-bt'); b.disabled = true;
+  const r = await rpc('admin_notif_enviar', { p_titulo: nt.titulo.trim(), p_texto: nt.texto.trim(), p_publico: nt.publico, p_conta: nt.publico === 'conta' ? nt.conta : null, p_quando: quando });
+  b.disabled = false;
+  if (r.status === 200) {
+    toast(quando ? 'Notificação agendada.' : 'Notificação enviada!');
+    Object.assign(nt, { titulo: '', texto: '', conta: '', aba: 'lista' }); notificacoes();
+  } else {
+    const m = JSON.stringify(r.json || '');
+    toast(m.includes('conta_nao_encontrada') ? 'Nenhuma conta com esse ID.' : erroTxt(r), true);
+  }
+}
+async function notifLista() {
+  const r = await rpc('admin_notif_lista');
+  if (atual !== 'notificacoes') return;
+  if (r.status !== 200) return falhou(r);
+  const l = r.json || [], ag = l.filter((n) => n.status === 'agendada').length;
+  badge('nb-notif', ag);
+  $('conteudo').innerHTML = abasNt() + '<div class="card"><table class="tab"><thead><tr><th>QUANDO</th><th>NOTIFICAÇÃO</th><th>PARA</th><th>SITUAÇÃO</th><th class="num">CELULARES</th><th></th></tr></thead><tbody>'
+    + (l.length ? l.map((n) => '<tr><td class="muted">' + dataHora(n.enviada_em || n.enviar_em) + (n.status === 'agendada' ? '<div class="small" style="color:#93c5fd">' + emQuanto(n.enviar_em) + '</div>' : '') + '</td><td><b>' + esc(n.titulo) + '</b><div class="muted small" style="max-width:420px">' + esc(n.texto) + '</div></td>'
+      + '<td>' + (n.publico === 'conta' ? '<span class="chip on">' + esc(n.nome || 'ID') + ' · ' + idFmt(n.conta_id) + '</span>' : '<span class="chip cinza">' + esc(PUBLICOS[n.publico] || n.publico) + '</span>') + '</td>'
+      + '<td><span class="chip ' + (STN[n.status] || STN.enviada)[1] + '">' + (STN[n.status] || STN.enviada)[0] + '</span>' + (n.erro ? '<div class="small" style="color:#fca5a5;max-width:200px">' + esc(n.erro) + '</div>' : '') + '</td>'
+      + '<td class="num">' + (n.entregues != null ? num(n.entregues) : (n.status === 'enviada' ? (n.publico === 'conta' ? '—' : 'por tópico') : '—')) + '</td>'
+      + '<td class="num">' + (n.status === 'agendada' ? '<button class="bt sm verm" data-ncanc="' + n.id + '">Cancelar</button>' : '<button class="bt sm ghost" data-nrep="' + n.id + '" title="Usar de novo"><span class="mi">content_copy</span></button>') + '</td></tr>').join('')
+      : '<tr><td colspan="6"><div class="vazio"><span class="mi">notifications_none</span>Nenhuma notificação enviada ainda.</div></td></tr>')
+    + '</tbody></table></div><p class="muted small mt">As agendadas saem sozinhas no minuto marcado, mesmo com este programa fechado.</p>';
+  notifLista._l = l;
+  marcarAtualizado();
+}
+function emQuanto(d) { const m = Math.round((new Date(d) - Date.now()) / 60000); if (m <= 0) return 'saindo agora'; if (m < 60) return 'em ' + m + ' min'; if (m < 1440) return 'em ' + Math.round(m / 60) + ' h'; return 'em ' + Math.round(m / 1440) + ' dias'; }
+async function cancelarNotif(id) {
+  if (!confirm('Cancelar esta notificação agendada?')) return;
+  const r = await rpc('admin_notif_cancelar', { p_id: id });
+  if (r.status === 200) { toast('Notificação cancelada'); notifLista(); } else toast(erroTxt(r), true);
+}
+/* anúncios recorrentes (o app agenda no próprio celular: dias da semana e turnos) */
+const an = { publico: 'todos', semana: [0, 1, 2, 3, 4, 5, 6], turnos: ['manha'], dias: 7 };
+const SEM = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], TURN = { manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' };
+async function anuncios() {
+  const r = await rpc('admin_avisos');
+  if (atual !== 'notificacoes') return;
+  if (r.status !== 200) return falhou(r);
+  const l = r.json || [], hj = new Date().toISOString().slice(0, 10);
+  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">campaign</span>Novo anúncio recorrente</h3><p class="muted small" style="margin:-6px 0 12px">Repete nos dias e turnos escolhidos (o próprio celular agenda). Bom para promoções e lembretes de vários dias.</p><div class="form" id="af">'
+    + '<label class="full">Título<input name="titulo" maxlength="60" placeholder="Prismo Drive"></label>'
+    + '<label class="full">Mensagem<textarea name="texto" maxlength="300" placeholder="Ex.: Lembre de lançar as corridas do dia!"></textarea></label>'
+    + '<label>Começa em<input name="inicio" type="date" value="' + hj + '" min="' + hj + '"></label>'
+    + '<label>Por quantos dias<input name="dias" type="number" min="1" max="60" value="' + an.dias + '"></label>'
+    + '<label class="full">Para quem<div class="opc">' + ['todos', 'pro', 'free', 'usuario'].map((k) => '<button type="button" data-apub="' + k + '" class="' + (an.publico === k ? 'on' : '') + '">' + PUBLICOS[k] + '</button>').join('') + '</div></label>'
+    + '<label class="full">Dias da semana<div class="opc">' + SEM.map((d, i) => '<button type="button" data-asem="' + i + '" class="' + (an.semana.includes(i) ? 'on' : '') + '">' + d + '</button>').join('') + '</div></label>'
+    + '<label class="full">Turnos<div class="opc">' + Object.keys(TURN).map((k) => '<button type="button" data-atur="' + k + '" class="' + (an.turnos.includes(k) ? 'on' : '') + '">' + TURN[k] + '</button>').join('') + '</div></label>'
+    + '</div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bt pri" data-apub2="1"><span class="mi">campaign</span>Publicar anúncio</button></div></div>'
+    + '<div class="card"><h3><span class="mi">list</span>Anúncios publicados</h3><div class="grid">' + (l.length ? l.map((a) => {
+      const p = a.inicio.split('-'), fim = new Date(+p[0], +p[1] - 1, +p[2] + a.dias - 1).toISOString().slice(0, 10);
+      const st = !a.ativo ? ['Encerrado', 'cinza'] : (fim < hj ? ['Terminou', 'cinza'] : (a.inicio > hj ? ['Agendado', 'on'] : ['Ativo', 'rota']));
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="display:flex;gap:8px;align-items:center"><span class="chip ' + st[1] + '">' + st[0] + '</span><b style="flex:1">' + esc(a.titulo) + '</b>' + (a.ativo && fim >= hj ? '<button class="bt sm verm" data-aenc="' + a.id + '">Encerrar</button>' : '') + '</div><div class="muted small" style="margin-top:4px">' + esc(a.texto) + '</div><div class="muted small" style="margin-top:4px">' + esc(PUBLICOS[a.publico] || a.publico) + ' · ' + data(a.inicio) + ' por ' + a.dias + ' dias · ' + (a.turnos || []).map((t) => TURN[t] || t).join(', ') + '</div></div>';
+    }).join('') : '<div class="vazio" style="padding:20px">Nenhum anúncio ainda.</div>') + '</div></div></div>';
+  marcarAtualizado();
+}
+async function publicarAnuncio() {
+  const f = {}; $('af').querySelectorAll('[name]').forEach((e) => { f[e.name] = e.value; });
+  if ((f.texto || '').trim().length < 3) return toast('Escreva a mensagem.', true);
+  if (!an.semana.length || !an.turnos.length) return toast('Escolha pelo menos um dia e um turno.', true);
+  const dias = Math.max(1, Math.min(60, Number(f.dias) || 7));
+  const r = await rpc('admin_anunciar', { titulo: (f.titulo || '').trim(), texto: f.texto.trim(), publico: an.publico, inicio: f.inicio, dias, semana: an.semana.slice().sort(), turnos: an.turnos.slice() });
+  if (r.status === 200) { toast('Anúncio publicado.'); anuncios(); } else toast(erroTxt(r), true);
+}
+async function encerrarAnuncio(id) {
+  if (!confirm('Encerrar este anúncio?')) return;
+  const r = await rpc('admin_encerrar_aviso', { aviso: id });
+  if (r.status === 200) { toast('Anúncio encerrado.'); anuncios(); } else toast(erroTxt(r), true);
+}
+
+/* ═══════════ CÓDIGOS PRO ═══════════ */
+let codGerados = [];
+async function codigos() {
+  const r = await rpc('admin_codigos');
+  if (atual !== 'codigos') return;
+  if (r.status !== 200) return falhou(r);
+  const l = Array.isArray(r.json) ? r.json : [], livres = l.filter((c) => !c.usado_em).length;
+  $('conteudo').innerHTML = '<div class="grid g21"><div class="card"><h3><span class="mi">redeem</span>Gerar códigos</h3><div class="form" id="cf">'
+    + '<label>Dias de Pro<select name="dias">' + [7, 30, 90, 180, 365].map((d) => '<option value="' + d + '"' + (d === 30 ? ' selected' : '') + '>' + d + ' dias</option>').join('') + '</select></label>'
+    + '<label>Quantidade<input name="qtd" type="number" min="1" max="50" value="1"></label></div>'
+    + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="bt pri" data-cgerar="1"><span class="mi">add</span>Gerar</button></div>'
+    + (codGerados.length ? '<div class="mt"><p class="muted small" style="margin-bottom:8px">ACABOU DE GERAR</p><div class="codg">' + codGerados.map((c) => '<span>' + esc(c) + '</span>').join('') + '</div><button class="bt sm mt" data-ccopiar="1"><span class="mi">content_copy</span>Copiar todos</button></div>' : '')
+    + '<p class="muted small mt">A pessoa usa em Plano › Resgatar código. Cada código vale uma vez.</p></div>'
+    + '<div class="card"><h3><span class="mi">inventory_2</span>Resumo</h3>' + kpi('confirmation_number', COR.verde, 'Livres', num(livres), 'ainda não usados').replace('class="card kpi"', 'class="kpi"') + '<div class="mt">' + kpi('task_alt', COR.cinza, 'Usados', num(l.length - livres), 'dos últimos ' + l.length).replace('class="card kpi"', 'class="kpi"') + '</div></div></div>'
+    + '<div class="card mt"><h3><span class="mi">receipt_long</span>Últimos códigos</h3><table class="tab"><thead><tr><th>CÓDIGO</th><th>DIAS</th><th>SITUAÇÃO</th><th>CRIADO</th></tr></thead><tbody>'
+    + (l.length ? l.map((c) => '<tr><td><button class="bt ghost sm idf" data-copiar="' + esc(c.codigo) + '">' + esc(c.codigo) + '<span class="mi" style="font-size:14px">content_copy</span></button></td><td>' + c.dias + ' dias</td><td>' + (c.usado_em ? '<span class="chip cinza">Usado ' + (c.usado_conta ? 'por ' + idFmt(c.usado_conta) : '') + ' · ' + data(c.usado_em) + '</span>' : '<span class="chip rota">Livre</span>') + '</td><td class="muted">' + data(c.criado_em) + '</td></tr>').join('')
+      : '<tr><td colspan="4"><div class="vazio">Nenhum código ainda.</div></td></tr>') + '</tbody></table></div>';
+  marcarAtualizado();
+}
+async function gerarCodigos() {
+  const f = {}; $('cf').querySelectorAll('[name]').forEach((e) => { f[e.name] = e.value; });
+  const dias = Number(f.dias), qtd = Math.max(1, Math.min(50, Number(f.qtd) || 1));
+  if (!confirm('Gerar ' + qtd + ' código(s) de ' + dias + ' dias de Pro?')) return;
+  const r = await rpc('admin_gerar_codigos', { dias, qtd });
+  if (r.status === 200) { codGerados = Array.isArray(r.json) ? r.json : []; toast(codGerados.length + ' código(s) gerado(s)'); codigos(); } else toast(erroTxt(r), true);
+}
+
+/* ═══════════ BACKUPS ═══════════ */
+async function backups() {
+  const r = await rpc('admin_backups');
+  if (atual !== 'backups') return;
+  if (r.status !== 200) return falhou(r);
+  const l = Array.isArray(r.json) ? r.json : [], ok = l.filter((b) => !b.erro)[0];
+  $('conteudo').innerHTML = '<div class="barra"><button class="bt pri" data-bagora="1" id="bk-bt"><span class="mi">cloud_upload</span>Fazer cópia agora</button><span class="muted small">Uma cópia sai sozinha todo domingo e vai para o seu e-mail.</span></div>'
+    + '<div class="grid k3">' + kpi('cloud_done', COR.verde, 'Última cópia', ok ? data(ok.criado_em) : '—', ok ? ha(ok.criado_em) : 'nenhuma ainda') + kpi('storage', COR.azul, 'Tamanho', ok && ok.bytes ? num(ok.bytes / 1048576, 2) + ' MB' : '—', 'da última cópia') + kpi('warning', COR.lar, 'Com erro', num(l.filter((b) => b.erro).length), 'nas últimas ' + l.length) + '</div>'
+    + '<div class="card mt"><table class="tab"><thead><tr><th>DATA</th><th>ORIGEM</th><th>TAMANHO</th><th>E-MAIL</th><th>SITUAÇÃO</th></tr></thead><tbody>'
+    + (l.length ? l.map((b) => '<tr><td>' + dataHora(b.criado_em) + '</td><td class="muted">' + esc(b.origem || '—') + '</td><td>' + (b.bytes ? num(b.bytes / 1048576, 2) + ' MB' : '—') + '</td><td>' + (b.email ? '<span class="chip rota">Enviado</span>' : '<span class="chip cinza">Não</span>') + '</td><td>' + (b.erro ? '<span class="chip verm">' + esc(b.erro) + '</span>' : '<span class="chip rota">OK</span>') + '</td></tr>').join('')
+      : '<tr><td colspan="5"><div class="vazio">Nenhuma cópia ainda.</div></td></tr>') + '</tbody></table></div>';
+  marcarAtualizado();
+}
+async function backupAgora() {
+  const b = $('bk-bt'); b.disabled = true;
+  const r = await rpc('admin_backup_agora');
+  if (r.status === 200) { toast('Cópia iniciada. Em até 1 minuto chega no seu e-mail.'); setTimeout(() => { if (atual === 'backups') backups(); }, 25000); } else { b.disabled = false; toast(erroTxt(r), true); }
+}
+
+/* ═══════════ HISTÓRICO ═══════════ */
+const ACOES = { dar_pro: 'Deu dias de Pro', tornar_free: 'Tirou o Pro', anunciar: 'Publicou anúncio', notificar: 'Enviou notificação', agendar_notificacao: 'Agendou notificação', gerar_codigos: 'Gerou códigos', encerrar_aviso: 'Encerrou anúncio' };
+async function historico() {
+  const r = await rpc('admin_historico', { p_limite: 150 });
+  if (atual !== 'historico') return;
+  if (r.status !== 200) return falhou(r);
+  const l = r.json || [];
+  const quando = (x) => x.criado_em || x.em || x.data || x.created_at;
+  $('conteudo').innerHTML = '<div class="card"><table class="tab"><thead><tr><th>QUANDO</th><th>QUEM</th><th>O QUE</th><th>CONTA</th><th>DETALHES</th></tr></thead><tbody>'
+    + (l.length ? l.map((x) => { let d = x.detalhes; if (d && typeof d === 'object') { d = Object.keys(d).filter((k) => !/^(id|criado_por|user_id)$/.test(k) && d[k] != null && d[k] !== '').slice(0, 6).map((k) => k + ': ' + (typeof d[k] === 'object' ? JSON.stringify(d[k]) : d[k])).join('\n'); }
+      return '<tr><td class="muted" style="white-space:nowrap">' + dataHora(quando(x)) + '</td><td>' + esc(x.admin_nome || '—') + '</td><td><b>' + esc(ACOES[x.acao] || x.acao || '—') + '</b></td><td class="idf">' + (x.conta_id ? idFmt(x.conta_id) : '—') + '</td><td>' + (d ? '<pre class="js">' + esc(String(d)) + '</pre>' : '<span class="muted">—</span>') + '</td></tr>'; }).join('')
+      : '<tr><td colspan="5"><div class="vazio"><span class="mi">history</span>Nada registrado ainda.</div></td></tr>') + '</tbody></table></div>';
+  marcarAtualizado();
+}
+
+/* ═══════════ ATUALIZAÇÃO DO PROGRAMA ═══════════ */
+const temApp = !!window.prismoApp;
+function mb(b) { return num((b || 0) / 1048576, 1) + ' MB'; }
+function pintarUpd(e) {
+  const box = $('upd'), vb = $('ver-bt'); if (!box) return;
+  vb.classList.toggle('tem', ['disponivel', 'baixando', 'pronto'].includes(e.fase));
+  $('ver-txt').textContent = 'Versão ' + e.atual + (e.fase === 'verificando' ? ' · procurando…' : (e.fase === 'atualizado' ? ' · em dia' : (e.nova ? ' · nova ' + e.nova : '')));
+  if (e.fase === 'baixando' || e.fase === 'disponivel') {
+    const pc = e.tamanho ? Math.round(e.baixado / e.tamanho * 100) : 0;
+    box.className = 'upd'; box.hidden = false;
+    box.innerHTML = '<span class="mi">downloading</span><div><b>Baixando a versão ' + esc(e.nova) + '</b><small>' + mb(e.baixado) + ' de ' + mb(e.tamanho) + ' · pode continuar usando</small></div><div class="bar"><i style="width:' + pc + '%"></i></div><span class="esp"></span>';
+  } else if (e.fase === 'pronto') {
+    box.className = 'upd'; box.hidden = false;
+    box.innerHTML = '<span class="mi">system_update_alt</span><div><b>Versão ' + esc(e.nova) + ' pronta para instalar</b><small>O programa fecha, atualiza e abre de novo sozinho (leva uns segundos).</small></div><span class="esp"></span><button class="bt pri" data-a="instalar"><span class="mi">restart_alt</span>Reiniciar e atualizar</button>';
+  } else if (e.fase === 'instalando') {
+    box.className = 'upd'; box.hidden = false; box.innerHTML = '<span class="mi">hourglass_top</span><div><b>Atualizando…</b><small>O programa vai abrir de novo em instantes.</small></div>';
+  } else if (e.fase === 'erro' && e.nova) {
+    box.className = 'upd erro'; box.hidden = false;
+    box.innerHTML = '<span class="mi">error</span><div><b>Não deu para baixar a versão ' + esc(e.nova) + '</b><small>' + esc(e.erro || '') + '</small></div><span class="esp"></span><button class="bt" data-a="upd-baixar"><span class="mi">refresh</span>Tentar de novo</button>';
+  } else box.hidden = true;
+}
+if (temApp) {
+  window.prismoApp.aoMudar(pintarUpd);
+  window.prismoApp.versao().then((v) => { $('ver-txt').textContent = 'Versão ' + v; });
+}
+
 /* ═══════════ janela ═══════════ */
 function abrirModal(h) { $('modal-box').innerHTML = h; $('modal').hidden = false; const f = $('modal-box').querySelector('input:not([type=hidden])'); if (f) f.focus(); }
 function fecharModal() { $('modal').hidden = true; $('modal-box').innerHTML = ''; }
@@ -538,9 +733,32 @@ document.addEventListener('click', (e) => {
   if (d.ico) { const f = $('fm'); f.querySelector('[name=icone]').value = d.ico; document.querySelectorAll('#icones button').forEach((b) => b.classList.toggle('on', b === t)); return $('prev') && ($('fm').querySelector('[name=titulo]') ? prevMissao() : prevInsignia()); }
   if (d.fechar) return fecharModal();
   if (d.vdias) { venDias = Number(d.vdias); return vendas(); }
+  if (d.a === 'upd') { if (!temApp) return toast('A atualização automática funciona no programa instalado.'); toast('Procurando atualização…'); window.prismoApp.checar().then((e) => { if (e.fase === 'atualizado') toast('Você já está na versão mais nova (' + e.atual + ').'); else if (e.fase === 'erro') toast('Não consegui procurar agora: ' + (e.erro || ''), true); }); return; }
+  if (d.a === 'instalar') return window.prismoApp && window.prismoApp.instalar();
+  if (d.a === 'upd-baixar') return window.prismoApp && window.prismoApp.baixar();
+  if (d.nab) { lerNf(); nt.aba = d.nab; return notificacoes(); }
+  if (d.npub) { lerNf(); nt.publico = d.npub; return notificacoes(); }
+  if (d.nqd) { lerNf(); nt.quando = d.nqd; return notificacoes(); }
+  if (d.nenviar) return enviarNotif();
+  if (d.ncanc) return cancelarNotif(Number(d.ncanc));
+  if (d.nrep) { const n = (notifLista._l || []).find((x) => x.id === Number(d.nrep)); if (n) Object.assign(nt, { titulo: n.titulo, texto: n.texto, publico: n.publico, conta: n.conta_id || '', aba: 'enviar' }); return notificacoes(); }
+  if (d.unotif) { Object.assign(nt, { publico: 'conta', conta: d.unotif, aba: 'enviar', quando: 'agora' }); return ir('notificacoes'); }
+  if (d.apub) { an.publico = d.apub; document.querySelectorAll('[data-apub]').forEach((b) => b.classList.toggle('on', b === t)); return; }
+  if (d.asem) { const i = Number(d.asem); an.semana = an.semana.includes(i) ? an.semana.filter((x) => x !== i) : an.semana.concat(i); t.classList.toggle('on'); return; }
+  if (d.atur) { an.turnos = an.turnos.includes(d.atur) ? an.turnos.filter((x) => x !== d.atur) : an.turnos.concat(d.atur); t.classList.toggle('on'); return; }
+  if (d.apub2) return publicarAnuncio();
+  if (d.aenc) return encerrarAnuncio(Number(d.aenc));
+  if (d.cgerar) return gerarCodigos();
+  if (d.ccopiar) { navigator.clipboard.writeText(codGerados.join('\n')).then(() => toast('Códigos copiados')); return; }
+  if (d.bagora) return backupAgora();
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'us-busca') { clearTimeout(tBusca); tBusca = setTimeout(() => { us.busca = e.target.value.trim(); us.pag = 0; usuarios(true); }, 350); return; }
+  if (e.target.closest && e.target.closest('#nf')) {
+    lerNf(); const pt = $('pv-t'), px = $('pv-x'), c = $('nf-cont');
+    if (pt) pt.textContent = nt.titulo || 'Título da notificação'; if (px) px.textContent = nt.texto || 'A mensagem aparece aqui.'; if (c) c.textContent = nt.texto.length + '/400';
+    return;
+  }
   if (e.target.closest && e.target.closest('#fm')) { if ($('fm').querySelector('[name=titulo]')) prevMissao(); else prevInsignia(); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('modal').hidden) fecharModal(); });
