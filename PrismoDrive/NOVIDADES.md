@@ -64,3 +64,4 @@
 • 🚀 Missões valendo: aceite uma missão, o app conta o progresso sozinho com as suas rotas e, ao concluir, você ganha uma insígnia
 • 🏅 Conquistas no Perfil: as insígnias ganhas aparecem coloridas; toque para ver como ganhar as que faltam
 • 🧹 Menu mais limpo: tiramos as etiquetas "Novo" de Perfil e Veículo
+• 🛠️ Correção: o app não marca mais "em rota" quando o assistente de rotas está desligado

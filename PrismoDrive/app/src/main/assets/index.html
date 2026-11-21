@@ -9488,7 +9488,19 @@ window.PrismoConta=(function(){
 
   /* v2.3 · programa de administração: quem está com o app aberto (e em rota) e as rotas feitas
      (só o app, o dia e os km: nenhum valor sai do celular) */
-  function emRotaAgora(){try{var n=nat();if(n&&typeof n.rotaAtual==='function'){var a=n.rotaAtual()||'';if(!a||a==='{}'||a==='null')return null;var j={};try{j=JSON.parse(a)||{};}catch(e){}return j.app||'ifood';}}catch(e){}return null;}
+  /* em rota = o assistente (acessibilidade) está ligado E há uma rota do iFood/InDrive em andamento.
+     rotaAtual() sempre devolve um JSON ({"ativo":false} fora de rota): tem que olhar o "ativo". */
+  function emRotaAgora(){
+    try{
+      var n=nat();if(!n||typeof n.rotaAtual!=='function')return null;
+      var lig=false;try{lig=!!(JSON.parse(n.rotasEstado()||'{}')||{}).ligado;}catch(e){}
+      if(!lig)return null;
+      var j={};try{j=JSON.parse(n.rotaAtual()||'{}')||{};}catch(e){}
+      if(j.ativo!==true)return null;
+      return j.app==='indrive'?'indrive':'ifood';
+    }catch(e){}
+    return null;
+  }
   var presUlt=0;
   function presenca(forcar){
     if(!logado())return;
