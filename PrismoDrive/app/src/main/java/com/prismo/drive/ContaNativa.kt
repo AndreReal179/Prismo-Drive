@@ -55,13 +55,16 @@ object ContaNativa {
                     setRequestProperty("Accept", "application/json")
                     if (!cabecalhos.isNullOrBlank()) {
                         val h = JSONObject(cabecalhos)
-                        h.keys().forEach { k -> setRequestProperty(k, h.optString(k)) }
+                        // "X-Corpo-Base64": o corpo vem em base64 e vai como arquivo (foto de perfil)
+                        h.keys().forEach { k -> if (k != "X-Corpo-Base64") setRequestProperty(k, h.optString(k)) }
                     }
                 }
+                val binario = !cabecalhos.isNullOrBlank() && JSONObject(cabecalhos).optString("X-Corpo-Base64") == "1"
                 if (corpo != null && m != "GET") {
                     con.doOutput = true
                     if (con.getRequestProperty("Content-Type") == null) con.setRequestProperty("Content-Type", "application/json")
-                    con.outputStream.use { it.write(corpo.toByteArray(Charsets.UTF_8)) }
+                    val bytes = if (binario) android.util.Base64.decode(corpo, android.util.Base64.DEFAULT) else corpo.toByteArray(Charsets.UTF_8)
+                    con.outputStream.use { it.write(bytes) }
                 }
                 status = con.responseCode
                 val ent = if (status >= 400) con.errorStream else con.inputStream

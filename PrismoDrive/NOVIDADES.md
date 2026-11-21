@@ -73,3 +73,7 @@
 • 🚀 Missões em sequência: conclua uma e a próxima aparece. Algumas missões especiais ficam disponíveis a qualquer momento
 • 🧭 Missões de rotas agora também contam as rotas lançadas à mão
 • 🏅 Conquistas no Perfil só com as imagens, as últimas ganhas primeiro. Ver todas mostra cada insígnia na ordem
+• 🤝 Amigos: adicione pelo ID de 8 números, veja a foto e o nome antes de enviar e abra o perfil do amigo com amigos, duelos, rotas, conquistas e colocação
+• ⚔️ Duelos de 7 dias: desafie um amigo e veja só em % quem está na frente. Contam as rotas automáticas do assistente de rotas e as gorjetas. Cada dia vencido acende um quadradinho
+• 🏆 Ranqueada mundial: a sua colocação no Perfil e a classificação do mês com o pódio e a premiação
+• 🎁 Missões de duelos vencidos, e missões que dão dias de Pro
