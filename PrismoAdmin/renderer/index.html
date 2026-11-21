@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src https://xzdqvdrwvozoedmjwwhm.supabase.co">
+<title>Prismo Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- entrar -->
+  <section id="login" class="login">
+    <div class="login-card">
+      <img src="logo.png" alt="" class="login-logo">
+      <h1>Prismo Admin</h1>
+      <p class="muted">Entre com a sua conta de administrador do Prismo Drive (e-mail e senha).</p>
+      <form id="login-form" autocomplete="on">
+        <label>E-mail<input id="lg-email" type="email" required autocomplete="username" placeholder="voce@email.com"></label>
+        <label>Senha<input id="lg-senha" type="password" required autocomplete="current-password" placeholder="Sua senha"></label>
+        <button type="submit" class="bt pri big" id="lg-bt"><span class="mi">login</span>Entrar</button>
+        <p id="lg-erro" class="erro"></p>
+      </form>
+      <p class="muted small">Só contas com o plano Administrador conseguem ver os dados.</p>
+    </div>
+  </section>
+
+  <!-- programa -->
+  <div id="app" class="app" hidden>
+    <aside class="side">
+      <div class="brand"><img src="logo.png" alt=""><div><b>Prismo Admin</b><small>Prismo Drive</small></div></div>
+      <nav id="nav">
+        <button data-pg="painel" class="on"><span class="mi">space_dashboard</span>Painel</button>
+        <button data-pg="relatorios"><span class="mi">insights</span>Relatórios</button>
+        <button data-pg="online"><span class="mi">sensors</span>Online agora<i id="nb-online" class="nb verde"></i></button>
+        <button data-pg="usuarios"><span class="mi">group</span>Usuários</button>
+        <p class="nav-t">ATENDIMENTO</p>
+        <button data-pg="suporte"><span class="mi">support_agent</span>Suporte<i id="nb-suporte" class="nb"></i></button>
+        <button data-pg="erros"><span class="mi">bug_report</span>Erros do app<i id="nb-erros" class="nb"></i></button>
+        <p class="nav-t">JOGO</p>
+        <button data-pg="missoes"><span class="mi">flag</span>Missões</button>
+        <button data-pg="insignias"><span class="mi">military_tech</span>Insígnias</button>
+        <p class="nav-t">DINHEIRO</p>
+        <button data-pg="vendas"><span class="mi">payments</span>Vendas do Pro</button>
+      </nav>
+      <div class="side-foot">
+        <div class="me"><span class="mi">admin_panel_settings</span><div><b id="me-email">—</b><small>Administrador</small></div></div>
+        <button class="bt ghost" data-a="sair"><span class="mi">logout</span>Sair</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="top">
+        <div><h2 id="pg-titulo">Painel</h2><p id="pg-sub" class="muted"></p></div>
+        <div class="top-r"><span id="atualizado" class="muted small"></span><button class="bt ghost" data-a="recarregar" title="Atualizar (F5)"><span class="mi">refresh</span>Atualizar</button></div>
+      </header>
+      <div id="conteudo" class="conteudo"></div>
+    </main>
+  </div>
+
+  <div id="modal" class="modal" hidden><div class="modal-box" id="modal-box"></div></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

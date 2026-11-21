@@ -1,0 +1,35 @@
+{
+  "name": "prismo-admin",
+  "productName": "Prismo Admin",
+  "version": "1.0.0",
+  "description": "Programa de administração do Prismo Drive",
+  "main": "main.js",
+  "author": "Prismo Lab",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64 --publish never"
+  },
+  "dependencies": {
+    "chart.js": "4.4.4"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.prismo.admin",
+    "productName": "Prismo Admin",
+    "files": ["main.js", "renderer/**/*", "node_modules/chart.js/dist/chart.umd.js", "package.json"],
+    "directories": { "output": "dist", "buildResources": "build" },
+    "win": { "target": ["nsis"], "icon": "build/icon.ico", "artifactName": "PrismoAdmin-Setup-${version}.${ext}" },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Prismo Admin"
+    }
+  }
+}
