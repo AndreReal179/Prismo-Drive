@@ -1106,6 +1106,20 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .tl-bonus.gj .material-icons,.tl-bonus.gj b{color:#e3b341;}
 .tl-bonus.mp .material-icons{color:#f0883e;}
 .tn-res{margin-top:6px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:11px;color:#9fb0c3;font-weight:700;line-height:1.6}
+.tn-grupo{margin-top:6px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(74,222,128,.18);padding:6px 8px 4px;}
+.tn-gh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#9fb0c3;padding:3px 2px 6px;letter-spacing:.2px}
+.tn-gh .material-icons{font-size:16px;color:#4ade80}.tn-gh b{color:#4ade80}
+.tn-ent{display:flex;align-items:center;gap:9px;padding:7px 2px;border-top:1px solid rgba(255,255,255,.05)}
+.tn-ent .n{width:24px;height:24px;border-radius:50%;background:#2ea44f;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tn-ent.fx .n{background:rgba(121,184,255,.15);color:#79b8ff}.tn-ent.fx .n .material-icons{font-size:14px}
+.tn-ent .tx{flex:1;min-width:0}.tn-ent .tx b{display:block;font-size:12.5px;color:#e6edf3}.tn-ent .tx small{font-size:10.5px;color:#8b949e;font-weight:600}
+.tn-ent .v{font-size:13px;color:#4ade80;font-weight:900;white-space:nowrap}.tn-ent.fx .v{color:#79b8ff}
+.tn-ent-x{width:30px;height:30px;border-radius:9px;border:0;background:rgba(248,81,73,.1);color:#ff7b72;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tn-ent-x .material-icons{font-size:17px}
+.tn-tot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.08);padding:8px 2px 4px;font-size:12px;font-weight:800;color:#c9d1d9}
+.tn-tot b{font-size:14px;color:#fff}
+.trk-pin.r{background:#2ea44f;color:#fff;box-shadow:0 0 0 5px rgba(74,222,128,.22);}
+.trk-pin.rs{width:14px;height:14px;background:#4ade80;border-width:2px;}
 .tn-res b{color:#e6edf3}.tn-res .g{color:#4ade80}.tn-res .o{color:#f0883e}.tn-res .r{color:#ff7b72}
 .gj-ov{display:none;position:fixed;inset:0;z-index:100040;background:rgba(0,0,0,.72);align-items:flex-end;justify-content:center}
 .gj-box{width:100%;max-width:480px;background:linear-gradient(180deg,#221a07,#0d1117 38%);border-top:1px solid rgba(227,179,65,.4);border-radius:26px 26px 0 0;padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 20px);animation:csUp .25s ease-out;max-height:88vh;overflow:auto}
@@ -1228,6 +1242,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .trk-dt.p{background:rgba(240,136,62,.14);color:#f0883e;border:1px solid rgba(240,136,62,.4);}
 .trk-dt.p.co{background:rgba(163,113,247,.14);color:#c4a5ff;border-color:rgba(163,113,247,.45);}
 .trk-dt.f{background:rgba(248,81,73,.14);color:#ff7b72;border:1px solid rgba(248,81,73,.4);}
+.trk-dt.r{background:#2ea44f;color:#fff;border:1px solid #4ade80;}
 .trk-tx{flex:1;min-width:0;}.trk-tx b{font-size:13.5px;display:block;color:#e6edf3;}.trk-tx small{font-size:11.5px;color:#8b949e;display:block;margin-top:1px;}
 .trk-h{font-size:12.5px;font-weight:800;color:#c9d1d9;white-space:nowrap;}
 .trk-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 14px 0;}
@@ -2554,7 +2569,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
   <div id="trk-scroll">
     <div class="trk-mw"><div id="trk-mapa"></div>
       <div class="trk-ctl"><button onclick="trkZoom(1)" aria-label="Aproximar"><span class="material-icons">add</span></button><button onclick="trkZoom(-1)" aria-label="Afastar"><span class="material-icons">remove</span></button><button onclick="trkCentro()" aria-label="Centralizar"><span class="material-icons">my_location</span></button></div>
-      <div class="trk-leg"><span><i style="background:#4ade80"></i>Início</span><span><i style="background:#a371f7"></i>Coleta</span><span><i style="background:#f0883e"></i>Entregas</span><span><i style="background:#f85149"></i>Fim</span></div>
+      <div class="trk-leg" id="trk-leg"><span><i style="background:#4ade80"></i>Início</span><span><i style="background:#a371f7"></i>Coleta</span><span><i style="background:#f0883e"></i>Entregas</span><span><i style="background:#f85149"></i>Fim</span></div>
     </div>
     <div class="trk-hero"><div><small>VOCÊ GANHOU</small><b id="trk-ganhou">R$ 0,00</b></div><div class="r"><small>LUCRO ESTIMADO</small><b id="trk-lucro">R$ 0,00</b></div></div>
     <div id="trk-grid"></div>
@@ -2987,7 +3002,7 @@ function tlAppRegistrar(p){
     appKmPendAdd(km);marcarAtividadeKm(it.ts);
   }
   if(p.app==='turno'){it.kmTurno=Number(p.kmTurno)||0;it.kmApps=Number(p.kmApps)||0;it.ini=Number(p.ini)||0;if(v>0)it.partes.push({id:'tn_'+p.id,valor:v});}
-  else if(p.manual){if(v>0)it.partes.push({id:'mp_'+p.id,valor:v});it.manual=true;}
+  else if(p.manual){if(v>0)it.partes.push({id:(p.app==='entrega'?'te_':'mp_')+p.id,valor:v});it.manual=true;}
   else{if(v>0)it.partes.push({id:'if_'+p.id,valor:v});
   if(b>0)it.partes.push({id:'ifb_'+p.id,valor:b});}
   tlAppSalvar(lista);
@@ -3102,7 +3117,7 @@ function resumoMesApps(){
   return r;
 }
 function tlAppSemana(){const ini=_inicioSemanaTs();return tlAppLista().filter(x=>x.ts>=ini);}
-function tlAppHtml(it){
+function tlAppHtml(it,filhos){
   const nomeApp=it.app==='indrive'?'InDrive':(it.app==='turno'?'Turno':(it.app==='entrega'?'Entrega':'iFood'));
   const d=new Date(it.ts),hoje=new Date(),ontem=new Date(Date.now()-86400000);
   const mesmo=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
@@ -3110,7 +3125,9 @@ function tlAppHtml(it){
   const dia=mesmo(d,hoje)?'Hoje':(mesmo(d,ontem)?'Ontem':`${p2(d.getDate())}/${p2(d.getMonth()+1)}`);
   const hora=`${p2(d.getHours())}:${p2(d.getMinutes())}`;
   const dur=fmtDuracaoRota(it.dur);
-  const gj=gjTotal(it),total=(Number(it.valor)||0)+(Number(it.bonus)||0)+gj;
+  filhos=filhos||[];
+  const totFil=filhos.reduce((s,f)=>s+(Number(f.valor)||0)+(Number(f.bonus)||0)+gjTotal(f),0);
+  const gj=gjTotal(it),total=(Number(it.valor)||0)+(Number(it.bonus)||0)+gj+totFil;
   const kmN=Number(it.km)||0,km=kmN.toFixed(1).replace('.',',');
   const selo=kmN>0?(it.fonte==='gps'?'<span class="tl-km gps"><span class="material-icons">gps_fixed</span>GPS</span>':'<span class="tl-km est"><span class="material-icons">straighten</span>ESTIMADO</span>'):'';
   const pctG=Math.round((Number(it.custo)/Math.max(total,0.01))*100);
@@ -3118,6 +3135,7 @@ function tlAppHtml(it){
   const bonus=(it.bonus>0?`<p class="tl-bonus"><span class="material-icons">redeem</span>inclui bônus de ${moeda(it.bonus)}</p>`:'')+(it.app==='turno'&&Number(it.kmApps)>0?`<p class="tl-bonus tn"><span class="material-icons">route</span>${Number(it.kmTurno).toFixed(1).replace('.',',')} km no GPS · ${Number(it.kmApps).toFixed(1).replace('.',',')} km já contados nas rotas dos apps</p>`:'')
     +(it.manual?`<p class="tl-bonus mp"><span class="material-icons">edit_note</span>${it.app==='entrega'?'taxa de entrega lançada no botão do turno':(total>0?'valor lançado à mão (a tela de ganho do iFood não apareceu)':'rota parada sem ganho (o km ficou como gasto)')}</p>`:'')
     +(gj>0?`<p class="tl-bonus gj"><span class="material-icons">volunteer_activism</span>inclui gorjeta de <b>${moeda(gj)}</b></p>`:'')
+    +(it.app==='turno'&&filhos.length?_tnGrupoHtml(it,filhos):'')
     +(it.app==='turno'&&it.res?_tnResumoHtml(it.res):'');
   const trk=_trkTem(it.id);
   return `<div class="hist-item pd-item tl-app ${it.app==='indrive'?'indrive':(it.app==='turno'?'turno':'ifood')}${trk?' tl-tap':''}"${trk?` onclick="tlTocarRota(event,'${escaparHtml(it.id)}')" role="button" aria-label="Ver detalhes da rota"`:''}>`
@@ -3161,9 +3179,13 @@ function abrirTrajeto(id){
   const it=tlAppLista().find(x=>String(x.id)===String(id));
   const n=_trkNat();let t=null;try{t=n?JSON.parse(n.trajeto(String(id))||'null'):null;}catch(e){t=null;}
   if(!it||!t||!t.pts||t.pts.length<2)return showToast('Esta rota não tem trajeto gravado',true);
-  _trkAtual={id:String(id),it,t};
-  const nomeApp=it.app==='indrive'?'InDrive':(it.app==='turno'?'Turno':'iFood');
-  const total=(Number(it.valor)||0)+(Number(it.bonus)||0),custo=Number(it.custo)||0,litros=Number(it.litros)||0;
+  /* v2.3: no turno, cada rota feita dentro dele (taxa de entrega, iFood, InDrive) vira trecho verde; o resto é vermelho */
+  const rotas=it.app==='turno'?tlAppLista().filter(x=>x&&x.app!=='turno'&&x.ts>=Number(it.ini||t.ini)&&x.ts<=Number(it.ts)+60000)
+    .map(x=>({ini:Number(x.ts)-(Number(x.dur)||0),fim:Number(x.ts),valor:(Number(x.valor)||0)+(Number(x.bonus)||0)+gjTotal(x),app:x.app,km:Number(x.km)||0})).sort((a,b)=>a.ini-b.ini):[];
+  _trkAtual={id:String(id),it,t,rotas};
+  const nomeApp=it.app==='indrive'?'InDrive':(it.app==='turno'?'Turno':(it.app==='entrega'?'Entrega':'iFood'));
+  const totEnt=it.app==='turno'?_tnEntregas(it).reduce((s,f)=>s+(Number(f.valor)||0)+(Number(f.bonus)||0)+gjTotal(f),0):0;
+  const total=(Number(it.valor)||0)+(Number(it.bonus)||0)+totEnt,custo=Number(it.custo)||0,litros=Number(it.litros)||0;
   const km=Number(it.km)||Number(t.km)||0,kmTxt=km.toFixed(1).replace('.',',');
   const dur=Number(it.dur)||Math.max(0,t.fim-t.ini),h=dur/3600000;
   const vel=h>0?Math.round(km/h):0,rkm=km>0?total/km:0,lucro=total-custo;
@@ -3176,15 +3198,20 @@ function abrirTrajeto(id){
   const g=(ic,cl,lb,v)=>`<div class="trk-g ${cl}"><span class="material-icons">${ic}</span><small>${lb}</small><b>${v}</b></div>`;
   $('trk-grid').innerHTML=g('straighten','','Distância',kmTxt+' km')+g('schedule','','Tempo',_trkDur(dur))+g('speed','','Vel. média',vel+' km/h')
     +g('payments','gr','R$ por km',km>0?moeda(rkm):'—')+g('local_gas_station','or','Combustível',custo>0?moeda(custo):'—')+g('water_drop','or','Litros',litros>0?litros.toFixed(2).replace('.',',')+' L':'—');
+  const nomeRota=r=>r.app==='entrega'?'Entrega':(r.app==='indrive'?'InDrive':'iFood');
+  const meio=rotas.length?rotas.map((r,i)=>({c:'r',ic:String(i+1),t:'Rota '+(i+1)+' · '+nomeRota(r)+' · '+moeda(r.valor),h:r.fim,ll:_trkPontoEm(t.pts,r.fim)}))
+    :paradas.map((p,i)=>({c:'p'+(p[4]==='coleta'?' co':''),ic:String(i+1),t:_trkNomePar(paradas,i),h:p[2],ll:[p[0],p[1]]}));
   const linhas=[{c:'i',ic:'<span class="material-icons">trip_origin</span>',t:'Início',h:t.ini,ll:t.pts[0]}]
-    .concat(paradas.map((p,i)=>({c:'p'+(p[4]==='coleta'?' co':''),ic:String(i+1),t:_trkNomePar(paradas,i),h:p[2],ll:[p[0],p[1]]})))
+    .concat(meio)
     .concat([{c:'f',ic:'<span class="material-icons">flag</span>',t:'Fim',h:t.fim,ll:t.pts[t.pts.length-1]}]);
   $('trk-lista').innerHTML=linhas.map((l,i)=>`<div class="trk-st"><div class="trk-dt ${l.c}">${l.ic}</div><div class="trk-tx"><b>${l.t}</b><small id="trk-end-${i}">${_trkNat()&&_trkNat().enderecos?'Buscando endereço…':''}</small></div><span class="trk-h">${_trkHora(l.h)}</span></div>`).join('');
-  $('trk-npar').innerText=paradas.length?paradas.length+' parada'+(paradas.length>1?'s':''):'sem paradas';
+  try{$('trk-leg').innerHTML=rotas.length?'<span><i style="background:#4ade80"></i>Em rota</span><span><i style="background:#f85149"></i>Sem rota</span><span><i style="background:#2ea44f"></i>Fim de cada rota</span>'
+    :'<span><i style="background:#4ade80"></i>Início</span><span><i style="background:#a371f7"></i>Coleta</span><span><i style="background:#f0883e"></i>Entregas</span><span><i style="background:#f85149"></i>Fim</span>';}catch(e){}
+  $('trk-npar').innerText=rotas.length?rotas.length+(rotas.length>1?' rotas':' rota'):(paradas.length?paradas.length+' parada'+(paradas.length>1?'s':''):'sem paradas');
   const m=$('modal-trajeto');m.classList.add('on');document.body.appendChild(m);
   try{history.pushState({trajeto:1},'');}catch(e){}
   _trkEnderecos(linhas.map(l=>l.ll));
-  _trkLeaflet().then(()=>_trkDesenhar(t,paradas)).catch(()=>{$('trk-mapa').innerHTML='<div class="trk-off"><span class="material-icons">map</span>Não foi possível carregar o mapa</div>';});
+  _trkLeaflet().then(()=>_trkDesenhar(t,rotas.length?[]:paradas,rotas)).catch(()=>{$('trk-mapa').innerHTML='<div class="trk-off"><span class="material-icons">map</span>Não foi possível carregar o mapa</div>';});
 }
 /* v2.1.8: paradas marcadas pela tela "NO LOCAL" do iFood → "Coleta", "Entrega 1", "Entrega 2"…
    (trajetos antigos, sem marcação: "Parado X min") */
@@ -3222,7 +3249,9 @@ function _trkEnderecos(lls){
   };
   proximo();
 }
-function _trkDesenhar(t,paradas){
+/* ponto do trajeto mais perto de um horário */
+function _trkPontoEm(pts,ts){let m=pts[0],d=Infinity;for(const p of pts){const x=Math.abs((Number(p[2])||0)-ts);if(x<d){d=x;m=p;}}return [m[0],m[1]];}
+function _trkDesenhar(t,paradas,rotas){
   if(_trkMapa){try{_trkMapa.remove();}catch(e){}_trkMapa=null;}
   const el=$('trk-mapa');el.innerHTML='';
   const ll=t.pts.map(p=>[p[0],p[1]]);
@@ -3230,9 +3259,28 @@ function _trkDesenhar(t,paradas){
   _trkMapa=mp;
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(mp);
   mp.attributionControl.setPrefix(false);
+  const ic=(h,c,tm)=>L.divIcon({className:'trk-mk',html:`<div class="trk-pin ${c}">${h}</div>`,iconSize:[tm||26,tm||26],iconAnchor:[(tm||26)/2,(tm||26)/2]});
+  if(rotas&&rotas.length){
+    /* turno: trecho verde = em rota · vermelho = rodando sem rota */
+    const emRota=ts=>rotas.some(r=>ts>=r.ini&&ts<=r.fim);
+    let pedaco=[ll[0]],cor=null;
+    const fechar=()=>{if(pedaco.length>1){L.polyline(pedaco,{color:cor?'#4ade80':'#f85149',weight:10,opacity:.22,lineCap:'round',lineJoin:'round'}).addTo(mp);
+      L.polyline(pedaco,{color:cor?'#4ade80':'#f85149',weight:4.5,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(mp);}};
+    for(let i=1;i<t.pts.length;i++){
+      const meio=((Number(t.pts[i-1][2])||0)+(Number(t.pts[i][2])||0))/2,c=emRota(meio);
+      if(cor===null)cor=c;
+      if(c!==cor){fechar();pedaco=[ll[i-1]];cor=c;}
+      pedaco.push(ll[i]);
+    }
+    fechar();
+    rotas.forEach((r,i)=>{
+      L.marker(_trkPontoEm(t.pts,r.ini),{icon:ic('','rs',14),interactive:false}).addTo(mp);
+      L.marker(_trkPontoEm(t.pts,r.fim),{icon:ic(String(i+1),'r'),interactive:false}).addTo(mp);
+    });
+  }else{
   L.polyline(ll,{color:'#4ade80',weight:11,opacity:.25,lineCap:'round',lineJoin:'round'}).addTo(mp);
   L.polyline(ll,{color:'#4ade80',weight:4.5,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(mp);
-  const ic=(h,c)=>L.divIcon({className:'trk-mk',html:`<div class="trk-pin ${c}">${h}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  }
   paradas.forEach((p,i)=>L.marker([p[0],p[1]],{icon:ic(String(i+1),'p'+(p[4]==='coleta'?' co':'')),interactive:false}).addTo(mp));
   L.marker(ll[0],{icon:ic('','i'),interactive:false}).addTo(mp);
   L.marker(ll[ll.length-1],{icon:ic('<span class="material-icons">flag</span>','f'),interactive:false}).addTo(mp);
@@ -3280,18 +3328,49 @@ function apagarTrajeto(){
   });
   try{$('modal-confirmar').style.zIndex='100060';}catch(e){}
 }
+/* v2.3 · tira uma rota da Linha do tempo: o valor sai do Faturamento do dia e da Carteira */
+function _tlTirarItem(lista,it){
+  (it.partes||[]).forEach(pt=>{
+    diariaTirar(pt.id,pt.valor,it.ts);
+    /* taxas de entrega gravadas antes da correção ficaram com o id "mp_"; na Diária o id é "te_" */
+    if(it.app==='entrega'&&String(pt.id).indexOf('mp_')===0)diariaTirar('te_'+String(pt.id).slice(3),pt.valor,it.ts);
+  });
+  if(it.app==='turno')try{tnGastosEstornar(it.ini?Number(it.ini).toString(36):'');}catch(e){}
+  if(Number(it.km)>0){try{deslocAplicar(_isoLocal(new Date(it.ts)),'rota',-Number(it.km),it.cons,it.preco);}catch(e){}appKmPendAdd(-Number(it.km));}
+  try{const n=window.PrismoNative;if(n&&n.trajetoApagar)n.trajetoApagar(String(it.id));}catch(e){}
+  return lista.filter(x=>x.id!==it.id);
+}
+/* v2.3 · correção (uma vez): taxas de entrega já excluídas da Linha do tempo que ficaram no Faturamento do dia */
+setTimeout(function(){
+  try{
+    if(localStorage.getItem('prismo_te_fix1'))return;
+    const ids=new Set();tlAppLista().forEach(it=>(it.partes||[]).forEach(pt=>ids.add(String(pt.id).replace(/^mp_/,'te_'))));
+    getDiariaEntries().filter(e=>e&&String(e.id).indexOf('te_')===0&&!ids.has(String(e.id))).forEach(e=>removerDiariaEntry(e.id));
+    localStorage.setItem('prismo_te_fix1','1');
+  }catch(e){}
+},6000);
+/* taxas de entrega lançadas dentro de um turno já fechado (ficam agrupadas no card do turno) */
+function _tnEntregas(tn,lista){
+  if(!tn||tn.app!=='turno'||!(Number(tn.ini)>0))return [];
+  return (lista||tlAppLista()).filter(x=>x&&x.app==='entrega'&&x.ts>=Number(tn.ini)&&x.ts<=Number(tn.ts)+60000).sort((a,b)=>a.ts-b.ts);
+}
 function excluirRotaApp(id){
-  abrirConfirmacao((String(id).indexOf('turno_')===0?'Excluir este turno?':'Excluir esta rota?')+' O valor sai do faturamento e da carteira.',()=>{
-    const lista=tlAppLista(),it=lista.find(x=>x.id===id);if(!it)return;
-    (it.partes||[]).forEach(pt=>diariaTirar(pt.id,pt.valor,it.ts));
-    if(it.app==='turno')try{tnGastosEstornar(it.ini?Number(it.ini).toString(36):'');}catch(e){}
-    if(Number(it.km)>0){try{deslocAplicar(_isoLocal(new Date(it.ts)),'rota',-Number(it.km),it.cons,it.preco);}catch(e){}appKmPendAdd(-Number(it.km));}
-    tlAppSalvar(lista.filter(x=>x.id!==id));
-    try{const n=window.PrismoNative;if(n&&n.trajetoApagar)n.trajetoApagar(String(id));}catch(e){}
+  const l0=tlAppLista(),it0=l0.find(x=>x.id===id);if(!it0)return;
+  const filhos=_tnEntregas(it0,l0);
+  const msg=it0.app==='turno'?(filhos.length?'Excluir este turno e as '+filhos.length+(filhos.length===1?' taxa de entrega':' taxas de entrega')+' dele?':'Excluir este turno?')
+    :(it0.app==='entrega'?'Excluir esta taxa de entrega?':'Excluir esta rota?');
+  abrirConfirmacao(msg+' O valor sai do faturamento e da carteira.',()=>{
+    let lista=tlAppLista();const it=lista.find(x=>x.id===id);if(!it)return;
+    _tnEntregas(it,lista).forEach(f=>{lista=_tlTirarItem(lista,f);});
+    lista=_tlTirarItem(lista,it);
+    tlAppSalvar(lista);
     try{atualizarPainelSilencioso();}catch(e){}
     try{renderizarHistorico(ultimoHistoricoCache||[]);}catch(e){}
     try{atualizarFaturamentoDia();}catch(e){}
-    showToast('Rota excluída');
+    try{PrismoTurno.render();}catch(e){}
+    try{atualizarWidgetNativo();}catch(e){}
+    try{const ts=$('top-saldo-carteira');if(ts)ts.innerText=moeda(saldoCarteiraReal());}catch(e){}
+    showToast(it0.app==='turno'?'Turno excluído':(it0.app==='entrega'?'Taxa de entrega excluída':'Rota excluída'));
   });
 }
 function renderizarHistorico(historico){
@@ -3303,10 +3382,13 @@ function renderizarHistorico(historico){
   const rotuloData=d=>{try{if(d===dataBROffset(0))return 'Hoje';if(d===dataBROffset(1))return 'Ontem';}catch(e){}return d;};
   const tsData=(d,h)=>{const p=String(d||'').split('/'),hm=String(h||'').match(/^(\d{1,2}):(\d{2})/);const x=new Date(+p[2],(+p[1]||1)-1,+p[0]||1,hm?+hm[1]:23,hm?+hm[2]:59,59);return isNaN(x.getTime())?0:x.getTime();};
   const blocos=historico.map((item,i)=>({k:tsData(item.data,item.hora)-i,item}));
-  apps.forEach(it=>blocos.push({k:it.ts,app:it}));
+  /* v2.3: taxas de entrega de um turno já fechado aparecem dentro do card do turno */
+  const dentro=new Set();let todas=[];try{todas=tlAppLista();}catch(e){}
+  apps.forEach(it=>{if(it.app==='turno')_tnEntregas(it,todas).forEach(f=>dentro.add(f.id));});
+  apps.forEach(it=>{if(!dentro.has(it.id))blocos.push({k:it.ts,app:it});});
   blocos.sort((a,b)=>b.k-a.k);
   cont.innerHTML=blocos.map(bl=>{
-    if(bl.app)return tlAppHtml(bl.app);
+    if(bl.app)return tlAppHtml(bl.app,bl.app.app==='turno'?_tnEntregas(bl.app,todas):null);
     const item=bl.item;
     const tipo=String(item.tipo||'').toUpperCase();
     if(tipo==='ODO_DIA'){const fo=odoForaMapa()[String(Number(item.km)||'')];const foTxt=fo&&fo.km>0?`<p class="tl-fora"><span class="material-icons">wrong_location</span>Fora de rota${fo.rot?' ('+escaparHtml(fo.rot)+')':''}: ${Number(fo.km).toFixed(1).replace('.',',')} km · ${moeda(fo.custo)}</p>`:'';return `<div class="hist-item pd-item"><div class="pd-row odo"><div class="pd-node"><span class="material-icons">speed</span></div><div class="pd-txt"><p class="pd-title">Odômetro do dia</p><p class="pd-meta2">${escaparHtml(rotuloData(item.data))}</p>${foTxt}</div><p class="pd-amt">${item.km?Number(item.km).toLocaleString('pt-BR')+' km':'—'}</p></div></div>`;}
@@ -6902,7 +6984,7 @@ window.PrismoTurno=(function(){
     var t2={c:c,ganhos:t.ganhos,gorj:t.gorj,gastos:t.gastos,gastosLucro:t.gastosLucro};t2.lucro=r2(t2.ganhos+t2.gorj-c.custoTotal-t2.gastosLucro);
     try{
       var lista=tlAppLista(),it=lista.find(function(x){return x.id==='turno_'+id;});
-      if(it){it.valor=r2(valorItem);it.partes=partes;it.res={kmRota:r2(c.kmRota),kmFora:r2(c.km),custoFora:r2(c.custo),custo:r2(c.custoTotal),apps:r2(F.autoV),ganhos:t2.ganhos,gorj:t2.gorj,gastos:t2.gastos,gastosLucro:t2.gastosLucro,lucro:t2.lucro};tlAppSalvar(lista);}
+      if(it){it.valor=r2(valorItem);it.partes=partes;it.res={kmRota:r2(c.kmRota),kmFora:r2(c.km),custoFora:r2(c.custo),custo:r2(c.custoTotal),apps:r2(F.autoV),ganhos:t2.ganhos,gorj:t2.gorj,gastos:t2.gastos,gastosLucro:t2.gastosLucro,lucro:t2.lucro,itens:F.ganhos.map(function(g){return {nome:g.nome,valor:r2(g.valor)};})};tlAppSalvar(lista);}
     }catch(e){}
     try{atualizarPainelSilencioso();}catch(e){}
     try{renderizarHistorico(ultimoHistoricoCache||[]);}catch(e){}
@@ -6957,6 +7039,19 @@ function tnGastosEstornar(id){
   localStorage.setItem('fin_extrato',JSON.stringify(ext.filter(x=>!(x&&x.turnoId===id))));
   const s=parseFloat(localStorage.getItem('fin_saldo')||'0')||0;
   localStorage.setItem('fin_saldo',String(Math.round((s+tot)*100)/100));
+}
+/* v2.3 · dentro do card do turno: cada taxa de entrega (com hora, km e lixeira) e o fixo do turno */
+function _tnGrupoHtml(it,filhos){
+  const p2=n=>String(n).padStart(2,'0'),hm=ts=>{const d=new Date(ts);return p2(d.getHours())+':'+p2(d.getMinutes());};
+  const k=v=>(Number(v)||0).toFixed(1).replace('.',',');
+  const totFil=filhos.reduce((s,f)=>s+(Number(f.valor)||0)+(Number(f.bonus)||0)+gjTotal(f),0);
+  const itens=(it.res&&Array.isArray(it.res.itens)&&it.res.itens.length)?it.res.itens:((Number(it.valor)||0)>0?[{nome:'Fixo do turno',valor:Number(it.valor)}]:[]);
+  const linhas=filhos.map((f,i)=>{const v=(Number(f.valor)||0)+(Number(f.bonus)||0)+gjTotal(f),ini=Number(f.ts)-(Number(f.dur)||0);
+    return `<div class="tn-ent"><span class="n">${i+1}</span><div class="tx"><b>Entrega ${i+1}</b><small>${hm(ini)} → ${hm(f.ts)}${Number(f.km)>0?' · '+k(f.km)+' km':''}${gjTotal(f)>0?' · gorjeta '+moeda(gjTotal(f)):''}</small></div><b class="v">${moeda(v)}</b>`
+      +`<button class="tn-ent-x" onclick="excluirRotaApp('${escaparHtml(f.id)}')" aria-label="Excluir entrega ${i+1}"><span class="material-icons">delete_outline</span></button></div>`;}).join('');
+  const fixos=itens.map(x=>`<div class="tn-ent fx"><span class="n"><span class="material-icons">push_pin</span></span><div class="tx"><b>${escaparHtml(String(x.nome||'Fixo do turno').replace(/ \(turno\)$/,''))}</b><small>valor fixo do turno</small></div><b class="v">${moeda(x.valor)}</b></div>`).join('');
+  return `<div class="tn-grupo"><div class="tn-gh"><span class="material-icons">delivery_dining</span>${filhos.length} ${filhos.length===1?'entrega':'entregas'} · <b>${moeda(totFil)}</b></div>${linhas}${fixos}`
+    +`<div class="tn-tot"><span>Total do turno</span><b>${moeda(totFil+(Number(it.valor)||0)+gjTotal(it))}</b></div></div>`;
 }
 function _tnResumoHtml(r){
   const k=v=>(Number(v)||0).toFixed(1).replace('.',',');
