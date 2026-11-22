@@ -81,3 +81,4 @@
 • 💰 Novos preços do Pro: Mensal R$ 24,90, Trimestral R$ 63,90, Semestral R$ 89,90 e Anual R$ 139,90 (R$ 11,66/mês). Promoções aparecem na hora, sem precisar atualizar o app
 • 🔔 Notificações com visual mais limpo: só a marca da Prismo, o título e a mensagem
 • 🛵 Turno com botão flutuante: km em vermelho sem rota e verde em rota. Toque, coloque a taxa de entrega e finalize a rota ao chegar no cliente, sem sair do iFood. O app pede a localização e o botão flutuante antes de começar
+• 📍 Turno agrupado na linha do tempo: cada taxa de entrega e o fixo dentro do card do turno; no mapa, verde em rota e vermelho sem rota
