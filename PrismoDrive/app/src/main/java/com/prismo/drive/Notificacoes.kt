@@ -83,16 +83,12 @@ object Notificacoes {
         )
         if (acao != null) runCatching { b.addAction(Notification.Action.Builder(null, acao, pi).build()) }
 
-        // v2.3 · visual profissional: marca da Prismo no ícone pequeno, logo do app ao lado,
-        // título em negrito e a mensagem em texto normal (igual à prévia do Prismo Admin)
+        // v2.3 · visual limpo igual à prévia do Prismo Admin: só a marca da Prismo no círculo verde,
+        // sem o logo grande à direita; título em negrito e a mensagem em texto normal (igual à prévia do Prismo Admin)
         val tituloF = android.text.SpannableString(titulo).apply {
             setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         val textoF: CharSequence = texto
-        runCatching {
-            val logo = android.graphics.BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher)
-            if (logo != null) b.setLargeIcon(logo)
-        }
         b.setSmallIcon(R.drawable.ic_stat_prismo)
             .setContentTitle(tituloF)
             .setContentText(textoF)

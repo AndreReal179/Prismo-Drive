@@ -287,6 +287,9 @@ class MainActivity : Activity() {
                 "try{window.dispatchEvent(new CustomEvent('prismo-turno',{detail:'$r'}));}catch(e){}", null
             )
         }
+        if (requestCode == PrismoBridge.REQ_LOC_PERM) {
+            web.evaluateJavascript("try{window.dispatchEvent(new Event('prismo-turno-perm'));}catch(e){}", null)
+        }
         if (requestCode == PrismoBridge.REQ_NOTIF) {
             // Avisa a página para atualizar o status das notificações, se ela tiver o gancho.
             web.evaluateJavascript(
@@ -456,6 +459,7 @@ class MainActivity : Activity() {
  function el(i){return document.getElementById(i);}
  function vis(e){if(!e)return false;if(e.classList&&e.classList.contains('hidden'))return false;return getComputedStyle(e).display!=='none';}
  if(window.PrismoPopup&&PrismoPopup.voltar())return '1';
+ if(window.PrismoTurno&&PrismoTurno.voltar&&PrismoTurno.voltar())return '1';
  var pcv=window.PrismoConta?PrismoConta.voltar():false;
  if(pcv==='min')return '0';
  if(pcv)return '1';

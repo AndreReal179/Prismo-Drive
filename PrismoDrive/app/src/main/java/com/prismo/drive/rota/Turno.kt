@@ -76,6 +76,9 @@ object Turno {
             // v2.1.8: rota do iFood em andamento agora (o km dela é "em rota", não "fora de rota")
             .put("emRota", e.ativo && IfoodSaldo.emAndamento(ctx))
             .put("kmRota", if (e.ativo && IfoodSaldo.emAndamento(ctx)) Math.round(KmGps.kmArquivo(ctx) * 100) / 100.0 else 0.0)
+            // v2.3: rota com taxa de entrega aberta no botão flutuante
+            .put("entrega", if (e.ativo) TurnoRota.json(ctx) ?: JSONObject.NULL else JSONObject.NULL)
+            .put("bolha", TurnoBolha.podeMostrar(ctx))
             .toString()
     }
 
@@ -83,6 +86,7 @@ object Turno {
     fun iniciar(ctx: Context): Boolean {
         if (!KmGps.temPermissao(ctx)) return false
         runCatching { arqFim(ctx).delete() }
+        TurnoRota.cancelar(ctx)
         val o = JSONObject().put("ativo", true).put("ini", System.currentTimeMillis()).put("km", 0.0).put("pontos", 0)
         runCatching { arq(ctx).writeText(o.toString()) }
         cache = null
@@ -92,6 +96,7 @@ object Turno {
 
     /** Encerra: para o GPS e devolve o que foi medido ({ini, fim, km, pontos, dur}). */
     fun finalizar(ctx: Context): String {
+        runCatching { if (TurnoRota.ativa(ctx)) TurnoRota.finalizar(ctx) }   // rota aberta entra antes de fechar o turno
         runCatching { arqFim(ctx).writeText("1") }     // o serviço para de gravar pontos
         val e = estado(ctx)
         TurnoService.parar(ctx)
@@ -170,6 +175,7 @@ class TurnoService : Service() {
     private var rejeitados = 0
     private var ultNotif = -1.0
     private val handler = Handler(Looper.getMainLooper())
+    private var bolha: TurnoBolha? = null
 
     // ── turno esquecido aberto ──
     private val TURNO_LONGO = 10 * 3600_000L        // aberto há mais de 10 h
@@ -222,6 +228,8 @@ class TurnoService : Service() {
         }.isSuccess
         if (!ok) { stopSelf(); return START_NOT_STICKY }
         ligarGps()
+        // v2.3: botão flutuante do turno (km vermelho sem rota / verde em rota)
+        if (bolha == null) runCatching { bolha = TurnoBolha(this).also { it.iniciar() } }
         handler.removeCallbacks(verificar)
         handler.postDelayed(verificar, 60_000L)
         return START_STICKY       // se o Android derrubar, volta e continua o turno
@@ -301,6 +309,7 @@ class TurnoService : Service() {
     }
 
     private fun pararTudo() {
+        runCatching { bolha?.parar() }; bolha = null
         runCatching { ouvinte?.let { lm?.removeUpdates(it) } }
         ouvinte = null; lm = null
         runCatching { if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) }
@@ -308,6 +317,7 @@ class TurnoService : Service() {
     }
 
     override fun onDestroy() {
+        runCatching { bolha?.parar() }; bolha = null
         runCatching { ouvinte?.let { lm?.removeUpdates(it) } }
         ouvinte = null; lm = null
         handler.removeCallbacksAndMessages(null)

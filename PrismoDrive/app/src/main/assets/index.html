@@ -683,6 +683,21 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
 .tf-bt button{flex:1;height:50px;border-radius:15px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border:0;}
 .tf-b2{background:#21262d;color:#c9d1d9;}
 .tf-b1{background:linear-gradient(135deg,#1A7A3A,#2EA44F);color:#fff;}
+/* v2.3 · permissões do turno */
+#tp-ov{display:none;position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center;}
+#tp-ov.on{display:flex;}
+.tp-box{width:100%;max-width:480px;background:#161b22;border-top:1px solid #30363d;border-radius:24px 24px 0 0;padding:12px 18px calc(22px + env(safe-area-inset-bottom));animation:csUp .26s ease-out;}
+.tp-grab{width:40px;height:5px;border-radius:3px;background:#30363d;margin:0 auto 12px;}
+.tp-box h3{font-size:19px;font-weight:800;color:#fff;margin:0;}
+.tp-box>p{font-size:13px;color:#9aa4ae;margin:6px 0 4px;line-height:1.45;}
+.tp-pm{display:flex;align-items:center;gap:12px;background:#0d1117;border:1px solid #30363d;border-radius:14px;padding:12px;margin-top:10px;}
+.tp-pm .ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tp-pm b{font-size:14px;display:block;color:#fff;}.tp-pm small{font-size:11.5px;color:#8b949e;}
+.tp-st{margin-left:auto;font-size:12px;font-weight:800;padding:7px 11px;border-radius:9px;white-space:nowrap;border:0;font-family:inherit;}
+.tp-st.ok{background:rgba(46,164,79,.18);color:#4ade80;}.tp-st.no{background:#2ea44f;color:#fff;cursor:pointer;}
+.tp-go{width:100%;height:50px;border:0;border-radius:14px;margin-top:14px;font-size:15px;font-weight:800;color:#fff;background:linear-gradient(90deg,#1a7a3a,#2ea44f);font-family:inherit;}
+.tp-go:disabled{opacity:.45;}
+.tp-nt{font-size:11px;color:#8b949e;text-align:center;margin-top:10px;}
 /* configuração do odômetro */
 /* ── Configurações: seções que expandem ── */
 .cf-sec{border-radius:16px;background:linear-gradient(170deg,#10161c,#0d1117);border:1px solid rgba(255,255,255,.07);overflow:hidden;transition:border-color .2s;}
@@ -3088,7 +3103,7 @@ function resumoMesApps(){
 }
 function tlAppSemana(){const ini=_inicioSemanaTs();return tlAppLista().filter(x=>x.ts>=ini);}
 function tlAppHtml(it){
-  const nomeApp=it.app==='indrive'?'InDrive':(it.app==='turno'?'Turno':'iFood');
+  const nomeApp=it.app==='indrive'?'InDrive':(it.app==='turno'?'Turno':(it.app==='entrega'?'Entrega':'iFood'));
   const d=new Date(it.ts),hoje=new Date(),ontem=new Date(Date.now()-86400000);
   const mesmo=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
   const p2=n=>String(n).padStart(2,'0');
@@ -3101,7 +3116,7 @@ function tlAppHtml(it){
   const pctG=Math.round((Number(it.custo)/Math.max(total,0.01))*100);
   const comb=kmN>0&&Number(it.custo)>0?`<div class="tl-comb"><div class="tl-comb-l"><span class="material-icons">local_gas_station</span><b>${moeda(it.custo)}</b><span>· ${(Number(it.litros)||0).toFixed(2).replace('.',',')} L</span></div><span class="tl-comb-p">${pctG}% do ganho</span><div class="tl-comb-bar"><i style="width:${Math.max(4,Math.min(100,pctG))}%"></i></div></div>`:'';
   const bonus=(it.bonus>0?`<p class="tl-bonus"><span class="material-icons">redeem</span>inclui bônus de ${moeda(it.bonus)}</p>`:'')+(it.app==='turno'&&Number(it.kmApps)>0?`<p class="tl-bonus tn"><span class="material-icons">route</span>${Number(it.kmTurno).toFixed(1).replace('.',',')} km no GPS · ${Number(it.kmApps).toFixed(1).replace('.',',')} km já contados nas rotas dos apps</p>`:'')
-    +(it.manual?`<p class="tl-bonus mp"><span class="material-icons">edit_note</span>${total>0?'valor lançado à mão (a tela de ganho do iFood não apareceu)':'rota parada sem ganho (o km ficou como gasto)'}</p>`:'')
+    +(it.manual?`<p class="tl-bonus mp"><span class="material-icons">edit_note</span>${it.app==='entrega'?'taxa de entrega lançada no botão do turno':(total>0?'valor lançado à mão (a tela de ganho do iFood não apareceu)':'rota parada sem ganho (o km ficou como gasto)')}</p>`:'')
     +(gj>0?`<p class="tl-bonus gj"><span class="material-icons">volunteer_activism</span>inclui gorjeta de <b>${moeda(gj)}</b></p>`:'')
     +(it.app==='turno'&&it.res?_tnResumoHtml(it.res):'');
   const trk=_trkTem(it.id);
@@ -3424,8 +3439,8 @@ function carteiraDiaria(e,sinal){
       if(ext.some(x=>x&&x.diariaId===e.id))return;
       const d=new Date(e.criadoEm),p=n=>String(n).padStart(2,'0');
       const o=String(e.origem||'');
-      const desc=e.desc||(o==='ifood'?'Recebimento iFood':(o==='ifood_bonus'?'Bônus iFood (promoção)':(o==='ifood_manual'?'Rota iFood (lançada à mão)':(o==='gorjeta'?'Gorjeta':(o==='turno'?'Turno':'Diária')))));
-      const cat=o==='gorjeta'?'Gorjeta':(o.indexOf('ifood')===0?'iFood':(o==='turno'?'Turno':''));
+      const desc=e.desc||(o==='ifood'?'Recebimento iFood':(o==='ifood_bonus'?'Bônus iFood (promoção)':(o==='ifood_manual'?'Rota iFood (lançada à mão)':(o==='gorjeta'?'Gorjeta':(o==='turno'?'Turno':(o==='entrega'?'Taxa de entrega':'Diária'))))));
+      const cat=o==='gorjeta'?'Gorjeta':(o.indexOf('ifood')===0?'iFood':(o==='turno'?'Turno':(o==='entrega'?'Entrega':'')));
       /* v2.1.8: valor negativo (ajuste para menos no fechamento do turno) entra como saída */
       ext.push({id:'dia_'+e.id,debtId:null,desc:desc,cat:cat,valor:Math.abs(v),ts:e.criadoEm,mes:d.getFullYear()+'-'+p(d.getMonth()+1),tipo:v<0?'saida':'entrada',diariaId:e.id});
     }else{
@@ -3465,7 +3480,7 @@ function renderDiariaLista(){
   const total=lista.reduce((a,e)=>a+(Number(e.valor)||0),0);
   if(totalEl)totalEl.innerText=moeda(total);
   if(!lista.length){cont.innerHTML='<p class="pr-dia-vazio">Nenhum lançamento diário ainda hoje.</p>';return;}
-  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${e.origem==='ifood'||e.origem==='ifood_manual'?'iFood · ':(e.origem==='ifood_bonus'?'Bônus iFood · ':(e.origem==='gorjeta'?'Gorjeta · ':''))}${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
+  cont.innerHTML=lista.slice().reverse().map(e=>`<div class="pr-dia-i"><div><p class="a">${e.origem==='ifood'||e.origem==='ifood_manual'?'iFood · ':(e.origem==='ifood_bonus'?'Bônus iFood · ':(e.origem==='entrega'?'Entrega · ':'')+(e.origem==='gorjeta'?'Gorjeta · ':''))}${moeda(e.valor)}${e.km>0?' · '+Number(e.km).toFixed(1)+' km':''}</p><p class="t">${fmtTempoRestante(e.criadoEm)}</p></div><button onclick="removerDiariaEntry('${e.id}')" aria-label="Remover"><span class="material-icons">close</span></button></div>`).join('');
 }
 function getTotalDiariaValor(){
   /* Faturamento do dia: só o que é de HOJE (zera à meia-noite). A Carteira continua com tudo. */
@@ -6190,7 +6205,7 @@ window.PrismoIfood=(function(){
     try{
       var fila=[];try{fila=JSON.parse(n.ifoodPendentes()||'[]');}catch(e){fila=[];}
       if(!Array.isArray(fila)||!fila.length){ocupado=false;try{PrismoParar.checar();}catch(e){}return;}
-      var feitos=[],total=0,hist=[];try{hist=getDiariaHist();}catch(e){}
+      var feitos=[],total=0,ent=0,hist=[];try{hist=getDiariaHist();}catch(e){}
       fila.forEach(function(p){
         if(!p||!p.id)return;
         var ts=Number(p.ts)||Date.now(),iso=_isoLocal(new Date(ts));
@@ -6208,8 +6223,11 @@ window.PrismoIfood=(function(){
           else{try{tlTirarManual(String(p.rota));}catch(e){}}
         }
         var antes=total;
+        if(p.app==='entrega'){lanca('te_'+p.id,p.valor,'entrega');ent+=Math.max(0,total-antes);}   /* v2.3: taxa do botão do turno */
+        else{
         lanca('if_'+p.id,p.valor,'ifood');          /* "Você ganhou: R$ 60,00" */
         lanca('ifb_'+p.id,p.bonus,'ifood_bonus');   /* "+ R$ 8,00" em verde (promoção) */
+        }
         if(total>antes){try{tlAppRegistrar(p);}catch(e){}}
         feitos.push(p.id);
       });
@@ -6219,7 +6237,8 @@ window.PrismoIfood=(function(){
         try{renderizarHistorico(ultimoHistoricoCache||[]);}catch(e){}
         try{renderDiariaLista();}catch(e){}
         try{atualizarFaturamentoDia();}catch(e){}
-        try{showToast('💰 Recebimento iFood: +'+moeda(total)+' no faturamento e na carteira');}catch(e){}
+        try{showToast(ent>=total?'🛵 Taxa de entrega: +'+moeda(total)+' no faturamento e na carteira':'💰 Recebimento iFood: +'+moeda(total)+' no faturamento e na carteira');}catch(e){}
+        try{PrismoTurno.render();}catch(e){}
       }
     }catch(e){console.warn('PrismoIfood',e);}
     ocupado=false;
@@ -6253,7 +6272,7 @@ window.PrismoGanhos=(function(){
       });
       var hist=[];try{hist=getDiariaHist();}catch(e){}
       (hist||[]).forEach(function(h){
-        if(!h||!h.id||/^ifb?_/.test(String(h.id)))return;   /* iFood automático fica de fora */
+        if(!h||!h.id||/^(ifb?|te)_/.test(String(h.id)))return;   /* iFood automático e taxa do botão do turno (o nativo já registrou) ficam de fora */
         if((Number(h.ts)||0)<lim)return;
         var k=h.iso||iso(new Date(h.ts));mapa[k]=(mapa[k]||0)+(Number(h.valor)||0);
       });
@@ -6658,6 +6677,7 @@ function atualizarMiniComparativo(){
 </script>
 
 <div id="turno-chip" onclick="abrirModalCorrida('turno')"><i></i><span class="material-icons">timer</span><span id="turno-chip-txt">Turno · 0,0 km</span></div>
+<div id="tp-ov" onclick="if(event.target===this)PrismoTurno.fecharPerm()"><div class="tp-box" id="tp-box"></div></div>
 <div id="modal-turno-fim" class="tf-ov" onclick="if(event.target===this)PrismoTurno.fecharFim()"><div class="tf-box" id="tf-box"></div></div>
 <div id="modal-gorjeta" class="gj-ov" onclick="if(event.target===this)fecharGorjeta()"><div class="gj-box">
   <div class="gj-grab"></div>
@@ -6692,8 +6712,8 @@ window.PrismoTurno=(function(){
   }
   /* ganhos do turno vindos da Linha do tempo: rotas do iFood/InDrive e gorjetas lançadas nelas */
   function ganhos(ini,fim){
-    var r={ifood:0,nIfood:0,indrive:0,nIndrive:0,gorj:[]};
-    rotasNoTurno(ini,fim).forEach(function(it){var v=(Number(it.valor)||0)+(Number(it.bonus)||0);if(it.app==='indrive'){r.indrive+=v;r.nIndrive++;}else{r.ifood+=v;r.nIfood++;}});
+    var r={ifood:0,nIfood:0,indrive:0,nIndrive:0,nEnt:0,gorj:[]};
+    rotasNoTurno(ini,fim).forEach(function(it){var v=(Number(it.valor)||0)+(Number(it.bonus)||0);if(it.app==='indrive'){r.indrive+=v;r.nIndrive++;}else{r.ifood+=v;r.nIfood++;if(it.app==='entrega')r.nEnt++;}});
     try{tlAppLista().forEach(function(it){if(it.app==='turno')return;gjLista(it).forEach(function(g){if(g.ts>=ini&&g.ts<=fim)r.gorj.push({valor:Number(g.valor)||0,ts:g.ts,rota:it.ts});});});}catch(e){}
     return r;
   }
@@ -6713,7 +6733,7 @@ window.PrismoTurno=(function(){
         $('tn-km-rota').innerText=kmTxt(c.kmRota);$('tn-km-fora').innerText=kmTxt(c.km);
         $('tn-comb').innerText='− '+moeda(c.custo)+' de gasolina';
         var nR=g.nIfood+g.nIndrive;
-        $('tn-rota-sub').innerText=(nR?nR+(nR===1?' corrida concluída':' corridas concluídas'):'nenhuma corrida ainda')+(e.emRota?' · 1 em andamento':'');
+        $('tn-rota-sub').innerText=(nR?nR+(nR===1?' corrida concluída':' corridas concluídas'):'nenhuma corrida ainda')+(e.emRota?' · 1 em andamento':'')+(e.entrega?' · em rota: '+moeda(e.entrega.valor):'');
         $('tn-apps').innerHTML='<span class="if"><span class="material-icons">delivery_dining</span>iFood</span><span class="id"><span class="material-icons">local_taxi</span>InDrive</span>'+(e.emRota?'<span class="now"><span class="material-icons">radar</span>em rota agora</span>':'');
         $('tn-ganho').innerText=moeda(g.ifood+g.indrive+soma(g.gorj));
         $('tn-obs').innerText=e.gps===false?'Sem permissão de localização: o km não está sendo medido.':'Pode fechar o app: o GPS segue medindo. As rotas do iFood entram sozinhas em "Em rota"; o InDrive e outros ganhos você lança ao finalizar.';
@@ -6735,10 +6755,38 @@ window.PrismoTurno=(function(){
     var tot=l.reduce(function(a,it){return a+val(it);},0);
     el.innerHTML='<div class="h"><span>Turnos de hoje · lucro</span><span>'+moeda(tot)+'</span></div>'+l.slice().reverse().map(function(it){return '<div class="i"><span>'+hm(it.ini||it.ts)+'–'+hm(it.ts)+' · '+kmTxt(Number(it.kmTurno)||it.km)+'</span><b>'+moeda(val(it))+'</b></div>';}).join('');
   }
+  /* v2.3 · antes de começar: localização (km pelo GPS) e botão flutuante (aparecer sobre outros apps) */
+  function perms(){var n=nat();if(!n||typeof n.turnoPermissoes!=='function')return {gps:true,bolha:true,velho:true};try{return JSON.parse(n.turnoPermissoes()||'{}');}catch(e){return {gps:true,bolha:true};}}
+  var permAberta=false;
+  function permHtml(p){
+    function item(ok,cor,ico,t,s,acao){return '<div class="tp-pm"><div class="ic" style="background:'+cor+'"><span class="material-icons" style="font-size:20px">'+ico+'</span></div><div style="min-width:0"><b>'+t+'</b><small>'+s+'</small></div>'
+      +(ok?'<span class="tp-st ok">✓ Ativa</span>':'<button class="tp-st no" onclick="PrismoTurno.pedir(\''+acao+'\')">Ativar</button>')+'</div>';}
+    var tudo=p.gps&&p.bolha;
+    return '<div class="tp-grab"></div><h3>'+(tudo?'Tudo pronto para o turno':'Falta pouco para o turno')+'</h3>'
+      +'<p>Para medir os km e mostrar o botão por cima do iFood, o Prismo Drive precisa destas permissões:</p>'
+      +item(p.gps,'rgba(47,129,247,.18);color:#79b8ff','location_on','Localização','Mede os km do turno pelo GPS','gps')
+      +item(p.bolha,'rgba(255,107,107,.18);color:#ff7b72','bubble_chart','Botão flutuante','Mostra os km por cima dos apps','bolha')
+      +'<button class="tp-go" '+(tudo?'':'disabled ')+'onclick="PrismoTurno.iniciarAgora()"><span class="material-icons" style="font-size:19px;vertical-align:-4px">play_arrow</span> Iniciar turno</button>'
+      +'<div class="tp-nt">'+(tudo?'O botão vermelho aparece com os km assim que o turno começar':'O botão libera quando as duas estiverem ativas')+'</div>';
+  }
+  function abrirPerm(p){var b=$('tp-box'),o=$('tp-ov');if(!b||!o)return;b.innerHTML=permHtml(p);o.classList.add('on');permAberta=true;}
+  function fecharPerm(){var o=$('tp-ov');if(o)o.classList.remove('on');permAberta=false;}
+  function redesenharPerm(){if(!permAberta)return;var p=perms();var b=$('tp-box');if(b)b.innerHTML=permHtml(p);}
+  function pedir(q){var n=nat();if(!n)return;try{if(q==='gps')n.turnoPedirGps();else n.turnoPedirBolha();}catch(e){}}
+  window.addEventListener('prismo-turno-perm',function(){setTimeout(redesenharPerm,200);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(redesenharPerm,400);});
   function iniciar(){
     var n=nat();if(!n){showToast('O turno funciona no app instalado no celular',true);return;}
+    var p=perms();
+    if(!p.gps||!p.bolha){abrirPerm(p);return;}
+    iniciarAgora();
+  }
+  function iniciarAgora(){
+    var n=nat();if(!n)return;
+    var p=perms();if(!p.gps||!p.bolha){abrirPerm(p);return;}
+    fecharPerm();
     var r='erro';try{r=n.turnoIniciar();}catch(e){}
-    if(r==='ok'){showToast('▶ Turno iniciado! O GPS está medindo os km');try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
+    if(r==='ok'){showToast('▶ Turno iniciado! Toque no botão vermelho para lançar a taxa de entrega');try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}}
     else if(r==='permissao')showToast('Permita a localização para o GPS medir os km do turno');
     else showToast('Não foi possível iniciar o turno',true);
     render();
@@ -6755,9 +6803,13 @@ window.PrismoTurno=(function(){
   var NOMES_G=['InDrive','Particular','Uber','99','Outro'],NOMES_X=['Pneu','Abastecimento','Manutenção','Alimentação','Outro'];
   function abrirFim(){
     var e=estado();if(!e.ativo){showToast('Nenhum turno em andamento');render();return;}
+    /* v2.3: rota com taxa de entrega ainda aberta → entra no faturamento antes do resumo */
+    if(e.entrega){var n0=nat();var lv=0;try{lv=Number(n0.turnoRotaFechar())||0;}catch(x){}
+      try{PrismoIfood.sincronizar();}catch(x){}
+      if(lv>0)showToast('Rota em andamento finalizada: +'+moeda(lv));e=estado();}
     try{fecharModais();}catch(x){}
     var g=ganhos(e.ini,Date.now()),auto=r2(g.ifood+g.indrive);
-    F={e:e,auto:auto,autoV:auto,autoN:g.nIfood+g.nIndrive,autoNome:g.nIndrive&&!g.nIfood?'InDrive':(g.nIndrive?'iFood e InDrive':'iFood'),
+    F={e:e,auto:auto,autoV:auto,autoN:g.nIfood+g.nIndrive,autoNome:g.nIndrive&&!g.nIfood?'InDrive':(g.nEnt&&g.nEnt===g.nIfood&&!g.nIndrive?'Taxas de entrega':(g.nIndrive?'iFood e InDrive':(g.nEnt?'iFood e entregas':'iFood'))),
        gorjRotas:g.gorj,ganhos:[],gorj:[],gastos:[],form:'',formNome:''};
     desenhar();
     $('modal-turno-fim').style.display='flex';
@@ -6881,7 +6933,7 @@ window.PrismoTurno=(function(){
   document.addEventListener('visibilitychange',function(){if(!document.hidden){render();setTimeout(verAcao,500);}});
   function boot(){render();setTimeout(verAcao,2500);setInterval(function(){if(!timer)render();if(F)previa();},15000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,1500);});else setTimeout(boot,1500);
-  return {render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao,
+  return {pedir:pedir,fecharPerm:fecharPerm,iniciarAgora:iniciarAgora,voltar:function(){if(permAberta){fecharPerm();return true;}return false;},render:render,iniciar:iniciar,botao:botao,abrirFim:abrirFim,fecharFim:fecharFim,confirmar:confirmar,previa:previa,verAcao:verAcao,
     edit:edit,tirar:tirar,form:abrirForm,formNome:formNome,add:add};
 })();
 

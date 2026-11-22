@@ -308,6 +308,45 @@ class PrismoBridge(private val activity: Activity) {
         "erro"
     }
 
+    // ── v2.3 · permissões do turno e rota com taxa de entrega ──
+
+    /** {gps, bolha}: o que falta para o turno (localização e "aparecer sobre outros apps"). */
+    @JavascriptInterface
+    fun turnoPermissoes(): String = try {
+        org.json.JSONObject().put("gps", com.prismo.drive.rota.KmGps.temPermissao(activity))
+            .put("bolha", com.prismo.drive.rota.TurnoBolha.podeMostrar(activity)).toString()
+    } catch (_: Throwable) { "{\"gps\":false,\"bolha\":false}" }
+
+    /** Pede só a localização (a página recebe o evento prismo-turno-perm). */
+    @JavascriptInterface
+    fun turnoPedirGps() {
+        main.post {
+            runCatching {
+                activity.requestPermissions(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), REQ_LOC_PERM)
+            }
+        }
+    }
+
+    /** Abre a tela do Android "Aparecer sobre outros apps" do Prismo Drive. */
+    @JavascriptInterface
+    fun turnoPedirBolha() {
+        main.post {
+            runCatching {
+                activity.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:" + activity.packageName)))
+            }.onFailure {
+                runCatching { activity.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) }
+            }
+        }
+    }
+
+    /** Fecha a rota com taxa de entrega aberta (antes do resumo do turno). Devolve o valor lançado. */
+    @JavascriptInterface
+    fun turnoRotaFechar(): String = try {
+        com.prismo.drive.rota.TurnoRota.finalizar(activity).toString()
+    } catch (_: Throwable) { "0" }
+
     // ── Trajeto da rota (v2.1 · Pro) ──
     /** Dos ids da Linha do tempo, quais têm trajeto gravado. */
     @JavascriptInterface
@@ -531,6 +570,7 @@ class PrismoBridge(private val activity: Activity) {
     companion object {
         const val REQ_NOTIF = 7
         const val REQ_LOC_TURNO = 4202
+        const val REQ_LOC_PERM = 4203
 
         fun pedirPermissaoNotificacao(activity: Activity) {
             try {

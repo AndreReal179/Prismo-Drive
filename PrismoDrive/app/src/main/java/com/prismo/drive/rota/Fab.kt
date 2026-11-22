@@ -894,6 +894,26 @@ class Fab(private val svc: AccessibilityService) {
 
     /** Linha compacta "12,4 km · 1h05  [Finalizar]" (painel do iFood/InDrive durante o turno). */
     private fun turnoLinha(): View {
+        val base = turnoLinhaKm()
+        val bolha = TurnoBolha.atual ?: return base
+        // v2.3: taxa de entrega / finalizar rota também dentro do iFood/InDrive (abre o painel do botão do turno)
+        val emRota = TurnoRota.ativa(svc)
+        val v = TurnoRota.valor(svc)
+        val bt = label(if (emRota) "✓  Finalizar rota · " + String.format(BR, "R$ %,.2f", v) else "🛵  Taxa de entrega", 13.5f, TXT, true).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(11), dp(12), dp(11))
+            background = if (emRota) GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0xFF1A7A3A.toInt(), 0xFF2EA44F.toInt()))
+                .apply { cornerRadius = dpf(12f) } else rounded(SURFACE_HI, 12f, 0x55F85149)
+            setOnClickListener { closeMenu(animate = false); bolha.abrirPainel() }
+        }
+        return LinearLayout(svc).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(base)
+            addView(bt, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
+        }
+    }
+
+    private fun turnoLinhaKm(): View {
         val info = label(Turno.fmtKm(turno?.km ?: 0.0) + " · " + turnoDuracao(), 14f, TXT, true)
         val fim = label("Finalizar", 12.5f, 0xFFFFFFFF.toInt(), true).apply {
             gravity = Gravity.CENTER

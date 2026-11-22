@@ -416,8 +416,44 @@ object IfoodSaldo {
                     .put("km", km).put("kmFonte", kmFonte).toString())
             }
         }
+        // v2.3: a tela de ganho do iFood apareceu com uma taxa de entrega aberta no turno → vale o valor lido
+        // do iFood; a taxa digitada é descartada para a mesma corrida não contar duas vezes
+        if (!parada) runCatching {
+            if (TurnoRota.ativa(ctx)) {
+                val digitado = TurnoRota.valor(ctx)
+                TurnoRota.cancelar(ctx)
+                com.prismo.drive.Notificacoes.mostrar(ctx, 9205, "Rota do iFood lançada sozinha",
+                    "Entrou o valor do iFood (" + String.format(java.util.Locale("pt", "BR"), "R$ %.2f", valor + bonus) +
+                    "). A taxa digitada (" + String.format(java.util.Locale("pt", "BR"), "R$ %.2f", digitado) + ") foi descartada para não contar duas vezes.")
+            }
+        }
         avisarApp(ctx)
         // widget da tela inicial: soma a rota na hora, mesmo com o app fechado
+        runCatching { com.prismo.drive.WidgetUtil.atualizarTodos(ctx) }
+    }
+
+    /**
+     * v2.3 · Rota do turno finalizada no botão flutuante (taxa de entrega digitada pelo motorista).
+     * Entra na mesma fila: a tela lança como "Taxa de entrega" (lançada à mão: não conta em duelo/ranqueada).
+     */
+    fun enfileirarEntrega(ctx: Context, valor: Double, ini: Long, dur: Long, km: Double) {
+        if (valor <= 0) return
+        runCatching {
+            comTrava(ctx) {
+                val agora = System.currentTimeMillis()
+                val fFila = File(dir(ctx), ARQ_FILA)
+                val fila = lerJson(fFila)?.let { runCatching { JSONArray(it) }.getOrNull() } ?: JSONArray()
+                fila.put(JSONObject()
+                    .put("id", agora.toString(36) + (Math.random() * 1e6).toLong().toString(36))
+                    .put("valor", valor).put("bonus", 0.0).put("ts", agora)
+                    .put("rota", "te" + (if (ini > 0) ini else agora).toString(36))
+                    .put("app", "entrega").put("manual", true)
+                    .put("dur", dur).put("km", Math.round(km * 100) / 100.0).put("kmFonte", if (km > 0) "gps" else ""))
+                gravar(fFila, fila.toString())
+                Ganhos.registrarIfood(ctx, agora, valor)
+            }
+        }
+        avisarApp(ctx)
         runCatching { com.prismo.drive.WidgetUtil.atualizarTodos(ctx) }
     }
 

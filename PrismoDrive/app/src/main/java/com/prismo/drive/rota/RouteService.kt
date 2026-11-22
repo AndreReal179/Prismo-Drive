@@ -58,7 +58,9 @@ class RouteService : AccessibilityService() {
                 val noApp = appDeCorrida(lastPkg, rides)
                 fab.turno = turno
                 fab.foraDoApp = !noApp
-                fab.setVisible(rides.isEmpty() || noApp || turno != null)
+                // v2.3: o botão do turno (vermelho/verde) cuida dos km fora do iFood/InDrive; dentro deles fica este
+                if (turno != null && noApp) TurnoBolha.marcarFab()
+                fab.setVisible(noApp || (rides.isEmpty() && turno == null) || (turno != null && !TurnoBolha.visivel()))
                 if (turno != null) fab.tickTurno()
             } catch (_: Throwable) {
             }
