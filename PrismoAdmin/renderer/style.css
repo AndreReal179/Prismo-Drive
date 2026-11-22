@@ -211,11 +211,13 @@ nav button.on .mi{color:var(--verde)}
 /* notificações */
 .cel{width:100%;max-width:340px;margin:0 auto;border-radius:30px;padding:16px 14px 22px;background:linear-gradient(180deg,#1b2733,#0c1218);border:1px solid #2b3a48;box-shadow:0 20px 50px -20px #000}
 .cel .barra-st{display:flex;justify-content:space-between;font-size:11px;color:#9fb3c8;padding:0 8px 12px}
-.notif{background:rgba(255,255,255,.08);border-radius:18px;padding:12px 14px;display:flex;gap:10px;backdrop-filter:blur(6px)}
-.notif img{width:22px;height:22px;border-radius:6px;flex-shrink:0;margin-top:2px}
-.notif .napp{font-size:11px;color:#9fb3c8}
-.notif b{display:block;font-size:14px;margin-top:2px;word-break:break-word}
-.notif p{font-size:13px;color:#d3dde6;margin-top:2px;white-space:pre-wrap;word-break:break-word}
+.notif{background:#1f1d1d;border-radius:26px;padding:16px 18px 18px;display:flex;gap:12px;font-family:Roboto,"Segoe UI",system-ui,sans-serif}
+.notif .nic{width:26px;height:26px;border-radius:50%;background:#3FB950;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif .nic img{width:17px;height:17px;filter:brightness(0);opacity:.6}
+.notif .napp{font-size:12px;color:#c9c4c4;line-height:26px}
+.notif .napp i{font-style:normal;font-size:9px;margin:0 4px;vertical-align:1px}
+.notif b{display:block;font-size:15.5px;font-weight:600;color:#f1eded;margin-top:6px;word-break:break-word}
+.notif p{font-size:14px;color:#cfc9c9;line-height:1.4;margin-top:4px;white-space:pre-wrap;word-break:break-word}
 .opc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .opc button{padding:7px 12px;border-radius:10px;border:1px solid var(--line2);background:#0a110d;color:var(--mut);font-weight:700;font-size:12.5px}
 .opc button.on{border-color:var(--verde);color:var(--verde);background:rgba(74,222,128,.08)}
