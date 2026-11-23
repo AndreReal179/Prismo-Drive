@@ -82,3 +82,5 @@
 • 🔔 Notificações com visual mais limpo: só a marca da Prismo, o título e a mensagem
 • 🛵 Turno com botão flutuante: km em vermelho sem rota e verde em rota. Toque, coloque a taxa de entrega e finalize a rota ao chegar no cliente, sem sair do iFood. O app pede a localização e o botão flutuante antes de começar
 • 📍 Turno agrupado na linha do tempo: cada taxa de entrega e o fixo dentro do card do turno; no mapa, verde em rota e vermelho sem rota
+• 📣 Popups dos avisos com botão (abre um link ou uma tela do app) e tempo para fechar escolhido pela equipe; vários popups aparecem um depois do outro
+• ⚠️ Aviso na tela inicial quando falta alguma permissão (notificações, localização, botão flutuante ou bateria), com o botão Ativar em cada uma
