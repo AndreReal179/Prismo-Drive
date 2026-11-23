@@ -308,6 +308,47 @@ class PrismoBridge(private val activity: Activity) {
         "erro"
     }
 
+    // ── v2.3 · aviso de permissões na tela inicial (sem contar a acessibilidade) ──
+
+    /** {notif, gps, gpsSempre, bolha, bateria}: true = ligada. */
+    @JavascriptInterface
+    fun permissoesApp(): String = try {
+        val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val pm = activity.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        org.json.JSONObject()
+            .put("notif", nm.areNotificationsEnabled())
+            .put("gps", com.prismo.drive.rota.KmGps.temPermissao(activity))
+            .put("gpsSempre", com.prismo.drive.rota.KmGps.temPermissao(activity) && com.prismo.drive.rota.KmGps.temSempre(activity))
+            .put("bolha", com.prismo.drive.rota.TurnoBolha.podeMostrar(activity))
+            .put("bateria", android.os.Build.VERSION.SDK_INT < 23 || pm.isIgnoringBatteryOptimizations(activity.packageName))
+            .toString()
+    } catch (_: Throwable) { "{}" }
+
+    /** Leva para o lugar certo do Android para ligar cada uma. */
+    @JavascriptInterface
+    fun permissaoAbrir(qual: String) {
+        main.post {
+            runCatching {
+                when (qual) {
+                    "notif" -> pedirPermissaoNotificacao(activity)
+                    "gps" -> activity.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), REQ_LOC_PERM)
+                    "gpsSempre" -> {
+                        if (!com.prismo.drive.rota.KmGps.temPermissao(activity))
+                            activity.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), REQ_LOC_PERM)
+                        else  // Android 11+: "Permitir o tempo todo" só pela tela de permissões do app
+                            activity.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                android.net.Uri.parse("package:" + activity.packageName)))
+                    }
+                    "bolha" -> turnoPedirBolha()
+                    "bateria" -> activity.startActivity(android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                }
+            }.onFailure {
+                runCatching { activity.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    android.net.Uri.parse("package:" + activity.packageName))) }
+            }
+        }
+    }
+
     // ── v2.3 · permissões do turno e rota com taxa de entrega ──
 
     /** {gps, bolha}: o que falta para o turno (localização e "aparecer sobre outros apps"). */
