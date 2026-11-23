@@ -28,9 +28,41 @@ function ava(nome, id) {
 }
 const chipPlano = (p) => '<span class="chip ' + (p || 'free') + '">' + ({ admin: '<span class="mi">shield</span>Admin', pro: '<span class="mi">workspace_premium</span>Pro', free: 'Free' }[p] || 'Free') + '</span>';
 
+/* avisos rápidos no canto: verde = deu certo · vermelho = erro · azul = em andamento (…) */
 function toast(t, ruim) {
-  const e = $('toast'); e.textContent = t; e.className = 'toast' + (ruim ? ' ruim' : ''); e.hidden = false;
-  clearTimeout(toast._t); toast._t = setTimeout(() => { e.hidden = true; }, 3500);
+  const e = $('toast'); if (!e) return;
+  const and = !ruim && /…$/.test(String(t));
+  const ic = ruim ? 'error' : (and ? 'hourglass_top' : 'check_circle');
+  e.className = 'toast' + (ruim ? ' ruim' : (and ? ' and' : ''));
+  e.innerHTML = '<span class="mi tic">' + ic + '</span><span class="tt">' + esc(String(t)) + '</span><button class="tx" aria-label="Fechar"><span class="mi">close</span></button><i class="tbar"></i>';
+  e.hidden = false; void e.offsetWidth; e.classList.add('on');
+  const dur = ruim ? 6000 : 3500; e.querySelector('.tbar').style.animationDuration = dur + 'ms';
+  const fechar = () => { e.classList.remove('on'); clearTimeout(toast._h); toast._h = setTimeout(() => { e.hidden = true; }, 220); };
+  e.querySelector('.tx').onclick = fechar;
+  clearTimeout(toast._t); clearTimeout(toast._h); toast._t = setTimeout(fechar, dur);
+}
+
+/* janela de confirmação bonita (no lugar da caixa padrão do Windows)
+   confirmar({ titulo, msg, lista: [...], ok: 'Texto do botão', tipo: 'perigo' | 'ok' | 'info', icone }) → Promise<true|false> */
+function confirmar(o) {
+  if (typeof o === 'string') o = { msg: o };
+  const tipo = o.tipo || 'info', icone = o.icone || { perigo: 'warning', ok: 'check_circle', info: 'help' }[tipo] || 'help';
+  return new Promise((res) => {
+    const ant = document.getElementById('dlg'); if (ant) ant.remove();
+    const d = document.createElement('div'); d.id = 'dlg'; d.className = 'dlg ' + tipo;
+    d.innerHTML = '<div class="dlg-box" role="dialog" aria-modal="true"><div class="dlg-ic"><span class="mi">' + icone + '</span></div>'
+      + '<h3>' + esc(o.titulo || 'Confirmar') + '</h3>' + (o.msg ? '<p>' + esc(o.msg) + '</p>' : '')
+      + (o.lista && o.lista.length ? '<ul>' + o.lista.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '')
+      + (o.extra ? '<div class="dlg-ex">' + o.extra + '</div>' : '')
+      + '<div class="dlg-bt"><button class="bt" data-dlg="0">' + esc(o.cancelar || 'Cancelar') + '</button><button class="bt ' + (tipo === 'perigo' ? 'verm' : 'pri') + '" data-dlg="1">' + esc(o.ok || 'Confirmar') + '</button></div></div>';
+    document.body.appendChild(d);
+    const foco = document.activeElement;
+    requestAnimationFrame(() => { d.classList.add('on'); const b = d.querySelector('[data-dlg="1"]'); if (b) b.focus(); });
+    const fim = (v) => { document.removeEventListener('keydown', tecla, true); d.classList.remove('on'); setTimeout(() => { d.remove(); try { foco && foco.focus(); } catch (e) {} }, 180); res(v); };
+    const tecla = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fim(false); } else if (e.key === 'Enter' && document.activeElement && document.activeElement.dataset.dlg !== '0') { e.preventDefault(); e.stopPropagation(); fim(true); } };
+    document.addEventListener('keydown', tecla, true);
+    d.addEventListener('click', (e) => { const b = e.target.closest('[data-dlg]'); if (b) { e.stopPropagation(); fim(b.dataset.dlg === '1'); } else if (e.target === d) fim(false); });
+  });
 }
 
 /* ═══════════ sessão ═══════════ */
@@ -300,13 +332,13 @@ async function usuarios(manter) {
 }
 async function darPro(i) {
   const u = us.lista[i]; if (!u) return;
-  if (!confirm('Dar 30 dias de Pro para ' + (u.nome || u.conta_id) + '?')) return;
+  if (!(await confirmar({ titulo: 'Dar 30 dias de Pro', msg: (u.nome || u.conta_id) + ' ganha 30 dias de Pro. Se já tiver Pro, os dias se somam.', ok: 'Dar 30 dias', tipo: 'ok', icone: 'workspace_premium' }))) return;
   const r = await rpc('admin_dar_pro', { conta: u.conta_id, dias: 30 });
   if (r.status === 200) { toast('30 dias de Pro liberados para ' + (u.nome || u.conta_id)); usuarios(true); } else toast(erroTxt(r), true);
 }
 async function tirarPro(i) {
   const u = us.lista[i]; if (!u) return;
-  if (!confirm('Tirar o Pro de ' + (u.nome || u.conta_id) + ' (volta para o Free)?')) return;
+  if (!(await confirmar({ titulo: 'Tirar o Pro', msg: (u.nome || u.conta_id) + ' volta para o Free na hora.', ok: 'Tirar o Pro', tipo: 'perigo', icone: 'person_remove' }))) return;
   const r = await rpc('admin_tornar_free', { conta: u.conta_id });
   if (r.status === 200) { toast('Conta voltou para o Free'); usuarios(true); } else toast(erroTxt(r), true);
 }
@@ -368,7 +400,7 @@ async function responder(id) {
   else toast((r.json && r.json.msg) || erroTxt(r), true);
 }
 async function finalizar(id) {
-  if (!confirm('Finalizar o chamado #' + id + '?')) return;
+  if (!(await confirmar({ titulo: 'Finalizar o chamado #' + id, msg: 'A pessoa vê o chamado como resolvido. Se ela responder, ele abre de novo.', ok: 'Finalizar', tipo: 'ok', icone: 'task_alt' }))) return;
   const r = await rpc('admin_chamado_finalizar', { chamado: id });
   if (r.status === 200) { toast('Chamado finalizado.'); sp.sel = null; suporte(true); } else toast(erroTxt(r), true);
 }
@@ -511,7 +543,7 @@ async function ativarMissao(id) {
 }
 async function apagarMissao(id) {
   const m = jogo.missoes.find((x) => x.id === id); if (!m) return;
-  if (!confirm('Apagar a missão "' + m.titulo + '"? Quem já ganhou a insígnia continua com ela.')) return;
+  if (!(await confirmar({ titulo: 'Apagar a missão', msg: '"' + m.titulo + '" sai do app. Quem já ganhou a insígnia continua com ela.', ok: 'Apagar', tipo: 'perigo', icone: 'delete' }))) return;
   const r = await rpc('admin_missao_apagar', { p_id: id });
   if (r.status === 200) { toast('Missão apagada'); missoes(); } else toast(erroTxt(r), true);
 }
@@ -554,7 +586,7 @@ async function salvarInsignia(id) {
 }
 async function apagarInsignia(id) {
   const i = jogo.insignias.find((x) => x.id === id); if (!i) return;
-  if (!confirm('Apagar a insígnia "' + i.nome + '"? Se alguém já ganhou, ela só fica desativada.')) return;
+  if (!(await confirmar({ titulo: 'Apagar a insígnia', msg: '"' + i.nome + '" sai do app. Se alguém já ganhou, ela só fica desativada.', ok: 'Apagar', tipo: 'perigo', icone: 'delete' }))) return;
   const r = await rpc('admin_insignia_apagar', { p_id: id });
   if (r.status === 200) { toast(r.json && r.json.desativada ? 'Já foi ganha por alguém: ficou desativada' : 'Insígnia apagada'); insignias(); } else toast(erroTxt(r), true);
 }
@@ -607,7 +639,7 @@ async function enviarNotif() {
   let quando = null;
   if (nt.quando === 'agendar') { const d = new Date(nt.data); if (!nt.data || isNaN(d)) return toast('Escolha a data e a hora.', true); if (d < Date.now() - 60000) return toast('Escolha uma hora no futuro.', true); quando = d.toISOString(); }
   const alvo = nt.publico === 'conta' ? 'o ID ' + nt.conta : PUBLICOS[nt.publico].toLowerCase();
-  if (!confirm((quando ? 'Agendar para ' + new Date(quando).toLocaleString('pt-BR') : 'Enviar AGORA') + ' para ' + alvo + '?\n\n' + nt.titulo + '\n' + nt.texto)) return;
+  if (!(await confirmar({ titulo: quando ? 'Agendar notificação' : 'Enviar notificação agora', msg: (quando ? 'Sai em ' + new Date(quando).toLocaleString('pt-BR') : 'Sai agora') + ' para ' + alvo + '.', extra: '<div class="dlg-nt"><b>' + esc(nt.titulo || 'Prismo Drive') + '</b><span>' + esc(nt.texto) + '</span></div>', ok: quando ? 'Agendar' : 'Enviar agora', tipo: 'ok', icone: quando ? 'schedule_send' : 'send' }))) return;
   const b = $('nf-bt'); b.disabled = true;
   const r = await rpc('admin_notif_enviar', { p_titulo: nt.titulo.trim(), p_texto: nt.texto.trim(), p_publico: nt.publico, p_conta: nt.publico === 'conta' ? nt.conta : null, p_quando: quando });
   b.disabled = false;
@@ -638,12 +670,14 @@ async function notifLista() {
 }
 function emQuanto(d) { const m = Math.round((new Date(d) - Date.now()) / 60000); if (m <= 0) return 'saindo agora'; if (m < 60) return 'em ' + m + ' min'; if (m < 1440) return 'em ' + Math.round(m / 60) + ' h'; return 'em ' + Math.round(m / 1440) + ' dias'; }
 async function cancelarNotif(id) {
-  if (!confirm('Cancelar esta notificação agendada?')) return;
+  if (!(await confirmar({ titulo: 'Cancelar notificação', msg: 'A notificação agendada não vai mais sair.', ok: 'Cancelar notificação', cancelar: 'Voltar', tipo: 'perigo', icone: 'notifications_off' }))) return;
   const r = await rpc('admin_notif_cancelar', { p_id: id });
   if (r.status === 200) { toast('Notificação cancelada'); notifLista(); } else toast(erroTxt(r), true);
 }
 /* anúncios recorrentes (o app agenda no próprio celular: dias da semana e turnos) */
-const an = { publico: 'todos', semana: [0, 1, 2, 3, 4, 5, 6], turnos: ['manha', 'tarde', 'noite'], dias: 5, titulo: '', texto: '', inicio: '', imagem: '', popup: true };
+const an = { publico: 'todos', semana: [0, 1, 2, 3, 4, 5, 6], turnos: ['manha', 'tarde', 'noite'], dias: 5, titulo: '', texto: '', inicio: '', imagem: '', popup: true, fechar_seg: 10, botao_texto: '', botao_acao: 'app', botao_link: '', botao_tela: 'plano' };
+/* telas do app que o botão do popup pode abrir (a mesma lista está no servidor e no app) */
+const AN_TELAS = { plano: 'Planos (assinar o Pro)', missoes: 'Missões', amigos: 'Amigos e duelos', ranking: 'Ranqueada', perfil: 'Perfil', veiculo: 'Veículo e manutenção', turno: 'Iniciar turno', notificacoes: 'Configurar notificações', novidades: 'Novidades do app', ajuda: 'Ajuda', suporte: 'Suporte' };
 const SEM = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], TURN = { manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' };
 async function anuncios() {
   const r = await rpc('admin_avisos');
@@ -651,7 +685,7 @@ async function anuncios() {
   if (r.status !== 200) return falhou(r);
   const l = r.json || [], hj = new Date().toISOString().slice(0, 10);
   if (!an.inicio || an.inicio < hj) an.inicio = hj;
-  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">campaign</span>Novo anúncio</h3><p class="muted small" style="margin:-6px 0 12px">O servidor manda a notificação nos turnos escolhidos (8h, 13h e 19h), mesmo com o app fechado. Com imagem, quem abrir o app no turno vê o popup (fecha depois de 10 segundos), sem atrapalhar o odômetro, a atualização ou outras janelas.</p>'
+  $('conteudo').innerHTML = abasNt() + '<div class="grid g21"><div class="card"><h3><span class="mi">campaign</span>Novo anúncio</h3><p class="muted small" style="margin:-6px 0 12px">O servidor manda a notificação nos turnos escolhidos (8h, 13h e 19h), mesmo com o app fechado. Quem abrir o app no turno vê o popup, sem atrapalhar o odômetro, a atualização ou outras janelas. Com vários popups valendo, ao fechar um já abre o próximo.</p>'
     + '<div class="grid" style="grid-template-columns:1fr 230px;gap:18px;align-items:start"><div class="form" id="af">'
     + '<label class="full">Título<input name="titulo" maxlength="60" placeholder="Prismo Drive" value="' + esc(an.titulo) + '"></label>'
     + '<label class="full">Mensagem<textarea name="texto" maxlength="300" placeholder="Ex.: Pro Anual com 53% OFF só até domingo!">' + esc(an.texto) + '</textarea></label>'
@@ -659,6 +693,11 @@ async function anuncios() {
     + '<button type="button" class="bt sm" data-anesc="1"><span class="mi">upload</span>' + (an.imagem ? 'Trocar imagem' : 'Enviar imagem') + '</button>' + (an.imagem ? '<button type="button" class="bt sm ghost" data-antira="1"><span class="mi">close</span>Tirar</button>' : '')
     + '<input type="file" id="an-arq" accept="image/png,image/jpeg,image/webp" hidden><span class="muted small">PNG, JPG ou WEBP · em pé ou quadrada fica melhor</span></div></label>'
     + '<label class="full chk"><input name="popup" type="checkbox"' + (an.popup ? ' checked' : '') + '><span><b>Mostrar popup ao abrir o app</b><small>Uma vez em cada turno escolhido, enquanto o anúncio estiver valendo. Sem imagem, o popup mostra só o título e a mensagem.</small></span></label>'
+    + '<label class="full">Fechar liberado depois de<div style="display:flex;align-items:center;gap:8px"><input name="fechar_seg" type="number" min="0" max="120" value="' + an.fechar_seg + '" style="width:90px"><span class="muted small">segundos (0 = fecha na hora)</span></div></label>'
+    + '<label class="full">Botão no popup (opcional)<input name="botao_texto" maxlength="30" placeholder="Ex.: Saiba mais" value="' + esc(an.botao_texto) + '"></label>'
+    + ('<label class="full">Ao tocar no botão<div class="opc">' + [['app', 'Abrir uma tela do app'], ['link', 'Abrir um link']].map(([k, t]) => '<button type="button" data-abta="' + k + '" class="' + (an.botao_acao === k ? 'on' : '') + '">' + t + '</button>').join('') + '</div></label>'
+      + (an.botao_acao === 'link' ? '<label class="full">Link (começa com https://)<input name="botao_link" maxlength="500" placeholder="https://..." value="' + esc(an.botao_link) + '"></label>'
+        : '<label class="full">Tela do app<select name="botao_tela">' + Object.keys(AN_TELAS).map((k) => '<option value="' + k + '"' + (an.botao_tela === k ? ' selected' : '') + '>' + AN_TELAS[k] + '</option>').join('') + '</select></label>'))
     + '<label>Começa em<input name="inicio" type="date" value="' + esc(an.inicio) + '" min="' + hj + '"></label>'
     + '<label>Por quantos dias<input name="dias" type="number" min="1" max="60" value="' + an.dias + '"></label>'
     + '<label class="full">Para quem<div class="opc">' + ['todos', 'pro', 'free', 'usuario'].map((k) => '<button type="button" data-apub="' + k + '" class="' + (an.publico === k ? 'on' : '') + '">' + PUBLICOS[k] + '</button>').join('') + '</div></label>'
@@ -671,7 +710,7 @@ async function anuncios() {
       const p = a.inicio.split('-'), fim = new Date(+p[0], +p[1] - 1, +p[2] + a.dias - 1).toISOString().slice(0, 10);
       const st = !a.ativo ? ['Encerrado', 'cinza'] : (fim < hj ? ['Terminou', 'cinza'] : (a.inicio > hj ? ['Agendado', 'on'] : ['Ativo', 'rota']));
       return '<div style="padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:10px">' + (okImg(a.imagem) ? '<img src="' + esc(a.imagem) + '" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:10px;flex-shrink:0">' : '')
-        + '<div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:center"><span class="chip ' + st[1] + '">' + st[0] + '</span>' + (a.popup ? '<span class="chip">Popup</span>' : '') + '<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.titulo) + '</b>' + (a.ativo && fim >= hj ? '<button class="bt sm verm" data-aenc="' + a.id + '">Encerrar</button>' : '') + '</div>'
+        + '<div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:center"><span class="chip ' + st[1] + '">' + st[0] + '</span>' + (a.popup ? '<span class="chip">Popup · ' + (a.fechar_seg === 0 ? 'fecha na hora' : (a.fechar_seg || 10) + ' s') + '</span>' : '') + (a.botao_texto ? '<span class="chip on" title="' + esc(a.botao_acao === 'link' ? a.botao_alvo : (AN_TELAS[a.botao_alvo] || a.botao_alvo)) + '">Botão: ' + esc(a.botao_texto) + '</span>' : '') + '<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.titulo) + '</b>' + (a.ativo && fim >= hj ? '<button class="bt sm verm" data-aenc="' + a.id + '">Encerrar</button>' : '') + '</div>'
         + '<div class="muted small" style="margin-top:4px">' + esc(a.texto) + '</div><div class="muted small" style="margin-top:4px">' + esc(PUBLICOS[a.publico] || a.publico) + ' · ' + data(a.inicio) + ' até ' + data(fim) + ' · ' + (a.turnos || []).map((t) => TURN[t] || t).join(', ') + (a.servidor ? ' · ' + num(a.envios || 0) + ' envio(s) do servidor' : '') + '</div></div></div>';
     }).join('') : '<div class="vazio" style="padding:20px">Nenhum anúncio ainda.</div>') + '</div></div></div>';
   marcarAtualizado();
@@ -681,10 +720,12 @@ function anResumo() {
   return '<span class="mi" style="font-size:16px;vertical-align:-3px">info</span> ' + (an.turnos.length ? an.turnos.length + 'x ao dia' : 'escolha um turno') + ' por ' + an.dias + ' dia(s)' + (sem < 7 ? ' (só ' + an.semana.map((i) => SEM[i]).join(', ') + ')' : '') + ': até ' + v + ' notificações. Expira e some sozinho depois disso.';
 }
 function anPrevia() {
-  return '<div class="an-pp">' + (okImg(an.imagem) ? '<img src="' + esc(an.imagem) + '" alt="">' : '<div class="an-pp-ic"><span class="mi">campaign</span></div>') + '<span class="an-pp-x">10</span>'
-    + '<div class="an-pp-t"><b>' + esc(an.titulo || 'Prismo Drive') + '</b><p>' + esc(an.texto || 'Sua mensagem aparece aqui.') + '</p></div></div>';
+  const fs = Number(an.fechar_seg) || 0, bt = (an.botao_texto || '').trim();
+  return '<div class="an-pp">' + (okImg(an.imagem) ? '<img src="' + esc(an.imagem) + '" alt="">' : '<div class="an-pp-ic"><span class="mi">campaign</span></div>') + '<span class="an-pp-x' + (fs ? '' : ' ok') + '">' + (fs ? fs : '<span class="mi" style="font-size:15px">close</span>') + '</span>'
+    + '<div class="an-pp-t"><b>' + esc(an.titulo || 'Prismo Drive') + '</b><p>' + esc(an.texto || 'Sua mensagem aparece aqui.') + '</p>'
+    + (bt ? '<div class="an-pp-bt">' + esc(bt) + '<span class="mi">' + (an.botao_acao === 'link' ? 'open_in_new' : 'arrow_forward') + '</span></div>' : '') + '</div></div>';
 }
-function lerAf() { const f = $('af'); if (!f) return; f.querySelectorAll('[name]').forEach((e) => { an[e.name] = e.type === 'checkbox' ? e.checked : (e.name === 'dias' ? Math.max(1, Math.min(60, Number(e.value) || 1)) : e.value); }); const pv = $('an-prev'); if (pv) pv.innerHTML = anPrevia(); const rs = $('an-resumo'); if (rs) rs.innerHTML = anResumo(); }
+function lerAf() { const f = $('af'); if (!f) return; f.querySelectorAll('[name]').forEach((e) => { an[e.name] = e.type === 'checkbox' ? e.checked : (e.name === 'dias' ? Math.max(1, Math.min(60, Number(e.value) || 1)) : (e.name === 'fechar_seg' ? Math.max(0, Math.min(120, Math.round(Number(e.value) || 0))) : e.value)); }); const pv = $('an-prev'); if (pv) pv.innerHTML = anPrevia(); const rs = $('an-resumo'); if (rs) rs.innerHTML = anResumo(); }
 /* imagem do popup: até 1080 px no lado maior, mantém o formato */
 function reduzirFoto(arq) {
   return new Promise((ok, erro) => {
@@ -711,12 +752,15 @@ async function publicarAnuncio() {
   lerAf();
   if ((an.texto || '').trim().length < 3) return toast('Escreva a mensagem.', true);
   if (!an.semana.length || !an.turnos.length) return toast('Escolha pelo menos um dia e um turno.', true);
-  if (!confirm('Publicar o anúncio para ' + (PUBLICOS[an.publico] || an.publico) + '? ' + anResumo().replace(/<[^>]+>/g, '').replace(/^\s*info\s*/, ''))) return;
-  const r = await rpc('admin_anunciar', { titulo: (an.titulo || '').trim(), texto: an.texto.trim(), publico: an.publico, inicio: an.inicio, dias: an.dias, semana: an.semana.slice().sort(), turnos: an.turnos.slice(), imagem: an.imagem || null, popup: !!an.popup });
-  if (r.status === 200) { toast('Anúncio publicado.'); Object.assign(an, { titulo: '', texto: '', imagem: '' }); anuncios(); } else toast(erroTxt(r), true);
+  const bt = (an.botao_texto || '').trim(), alvo = an.botao_acao === 'link' ? (an.botao_link || '').trim() : an.botao_tela;
+  if (bt && an.botao_acao === 'link' && !/^https:\/\/\S+\.\S+/.test(alvo)) return toast('O link do botão precisa começar com https://', true);
+  if (!(await confirmar({ titulo: 'Publicar anúncio', msg: 'Para ' + (PUBLICOS[an.publico] || an.publico) + '. ' + anResumo().replace(/<[^>]+>/g, '').replace(/^\s*info\s*/, ''), extra: '<div class="dlg-pp">' + anPrevia() + '</div>', ok: 'Publicar', tipo: 'ok', icone: 'campaign' }))) return;
+  const r = await rpc('admin_anunciar', { titulo: (an.titulo || '').trim(), texto: an.texto.trim(), publico: an.publico, inicio: an.inicio, dias: an.dias, semana: an.semana.slice().sort(), turnos: an.turnos.slice(), imagem: an.imagem || null, popup: !!an.popup,
+    fechar_seg: an.fechar_seg, botao_texto: bt || null, botao_acao: bt ? an.botao_acao : null, botao_alvo: bt ? alvo : null });
+  if (r.status === 200) { toast('Anúncio publicado.'); Object.assign(an, { titulo: '', texto: '', imagem: '', botao_texto: '', botao_link: '' }); anuncios(); } else toast(erroTxt(r), true);
 }
 async function encerrarAnuncio(id) {
-  if (!confirm('Encerrar este anúncio?')) return;
+  if (!(await confirmar({ titulo: 'Encerrar anúncio', msg: 'Ele para de mandar notificação e de aparecer como popup.', ok: 'Encerrar', tipo: 'perigo', icone: 'campaign' }))) return;
   const r = await rpc('admin_encerrar_aviso', { aviso: id });
   if (r.status === 200) { toast('Anúncio encerrado.'); anuncios(); } else toast(erroTxt(r), true);
 }
@@ -743,7 +787,7 @@ async function codigos() {
 async function gerarCodigos() {
   const f = {}; $('cf').querySelectorAll('[name]').forEach((e) => { f[e.name] = e.value; });
   const dias = Number(f.dias), qtd = Math.max(1, Math.min(50, Number(f.qtd) || 1));
-  if (!confirm('Gerar ' + qtd + ' código(s) de ' + dias + ' dias de Pro?')) return;
+  if (!(await confirmar({ titulo: 'Gerar códigos Pro', msg: qtd + (qtd === 1 ? ' código' : ' códigos') + ' de ' + dias + ' dias de Pro. Cada um vale uma vez.', ok: 'Gerar', tipo: 'ok', icone: 'redeem' }))) return;
   const r = await rpc('admin_gerar_codigos', { dias, qtd });
   if (r.status === 200) { codGerados = Array.isArray(r.json) ? r.json : []; toast(codGerados.length + ' código(s) gerado(s)'); codigos(); } else toast(erroTxt(r), true);
 }
@@ -824,7 +868,7 @@ async function plSalvar() {
   const m = plMudancas(); if (!m.length) return;
   if (plEd.some((x) => !(Number(x.preco) >= 5 && Number(x.preco) <= 1000))) return toast('Cada preço precisa ficar entre R$ 5,00 e R$ 1.000,00.', true);
   if (!plEd.some((x) => x.ativo)) return toast('Deixe pelo menos um plano aparecendo no app.', true);
-  if (!confirm('Salvar estas mudanças? Valem na hora no app e no Mercado Pago.\n\n• ' + m.join('\n• '))) return;
+  if (!(await confirmar({ titulo: 'Salvar preços', msg: 'Valem na hora no app e no Mercado Pago.', lista: m, ok: 'Salvar', tipo: 'ok', icone: 'sell' }))) return;
   const r = await rpc('admin_planos_salvar', { p_planos: plEd.map((x) => ({ id: x.id, preco: Number(x.preco), dias: Number(x.dias), parcelas: Number(x.parcelas), selo: x.selo || '', ativo: !!x.ativo })) });
   if (r.status === 200) { toast('Preços salvos. Já valem no app e no Mercado Pago.'); plEd = null; planos(); } else toast(erroTxt(r), true);
 }
@@ -863,7 +907,7 @@ async function ranqueada() {
   marcarAtualizado();
 }
 async function rkSalvar(pausado, comPremios) {
-  if (pausado !== null && !confirm(pausado ? 'Pausar a ranqueada? O app vai mostrar "Sistema temporariamente indisponível" e ninguém recebe prêmio enquanto estiver pausada.' : 'Retomar a ranqueada?')) return;
+  if (pausado !== null && !(await confirmar(pausado ? { titulo: 'Pausar a ranqueada', msg: 'O app vai mostrar "Sistema temporariamente indisponível" e ninguém recebe prêmio enquanto estiver pausada.', ok: 'Pausar', tipo: 'perigo', icone: 'pause_circle' } : { titulo: 'Retomar a ranqueada', msg: 'A classificação volta a aparecer no app.', ok: 'Retomar', tipo: 'ok', icone: 'play_circle' }))) return;
   const premios = comPremios ? rkEd.map((p, i) => ({ pos: i + 1, texto: String(p.texto || '').trim(), dias: Number(p.dias) || 0 })) : null;
   if (premios && premios.some((p) => !p.texto)) return toast('Escreva o prêmio de cada posição (ou tire a posição).', true);
   const r = await rpc('admin_ranking_salvar', { p_pausado: pausado, p_premios: premios });
@@ -907,7 +951,7 @@ document.addEventListener('click', (e) => {
   const d = t.dataset;
   if (d.pg) return ir(d.pg);
   if (d.pgIr) { e.preventDefault(); return ir(d.pgIr); }
-  if (d.a === 'sair') { if (confirm('Sair do Prismo Admin?')) sair(); return; }
+  if (d.a === 'sair') { confirmar({ titulo: 'Sair do Prismo Admin', msg: 'Para entrar de novo, use o seu e-mail e a sua senha.', ok: 'Sair', tipo: 'perigo', icone: 'logout' }).then((v) => { if (v) sair(); }); return; }
   if (d.a === 'recarregar') return recarregar();
   if (d.escala) { escala = d.escala; return relatorios(); }
   if (d.fon) { filtroOn = d.fon; return online(); }
@@ -949,6 +993,7 @@ document.addEventListener('click', (e) => {
   if (d.unotif) { Object.assign(nt, { publico: 'conta', conta: d.unotif, aba: 'enviar', quando: 'agora' }); return ir('notificacoes'); }
   if (d.apub) { lerAf(); an.publico = d.apub; document.querySelectorAll('[data-apub]').forEach((b) => b.classList.toggle('on', b === t)); return; }
   if (d.asem) { const i = Number(d.asem); an.semana = an.semana.includes(i) ? an.semana.filter((x) => x !== i) : an.semana.concat(i); t.classList.toggle('on'); lerAf(); return; }
+  if (d.abta) { lerAf(); an.botao_acao = d.abta; return anuncios(); }
   if (d.atur) { an.turnos = an.turnos.includes(d.atur) ? an.turnos.filter((x) => x !== d.atur) : an.turnos.concat(d.atur); t.classList.toggle('on'); lerAf(); return; }
   if (d.apub2) return publicarAnuncio();
   if (d.anesc) return $('an-arq') && $('an-arq').click();
