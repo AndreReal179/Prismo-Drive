@@ -85,3 +85,4 @@
 • 📣 Popups dos avisos com botão (abre um link ou uma tela do app) e tempo para fechar escolhido pela equipe; vários popups aparecem um depois do outro
 • ⚠️ Aviso na tela inicial quando falta alguma permissão (notificações, localização, botão flutuante ou bateria), com o botão Ativar em cada uma
 • 📅 Dívida no dia útil: escolha "Dia útil" ao adicionar ou editar uma dívida (ex.: 5º dia útil) e o app calcula a data certa de cada mês, pulando fins de semana e feriados nacionais
+• 🧾 Carteira com abas Em aberto, Pagas e Quitadas: veja cada parcela paga mês a mês (com data e juros) e as dívidas que você já terminou de pagar
