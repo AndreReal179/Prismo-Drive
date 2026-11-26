@@ -29,6 +29,8 @@ android {
         applicationId = "com.prismo.drive"
         minSdk = 24
         targetSdk = 34
+        // v2.3: a biblioteca de voz (Vosk) traz código nativo; só os processadores de celular (sem emulador x86) para o APK não engordar
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
         // versionName é a versão BASE (mínima). O GitHub completa sozinho: 1.9.2, 1.9.3…
         // Para começar uma versão nova (1.8.1, 1.8.2…), troque só o número aqui.
         versionName = "2.1.8"
@@ -89,6 +91,9 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
+    // v2.3 · "Ei Prismo!": reconhecimento offline da palavra de ativação (Vosk) — o modelo pt é baixado no app
+    implementation("com.alphacephei:vosk-android:0.3.47@aar")
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
     // Conta: "Entrar com Google" nativo (o Google não permite login dentro de WebView)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")

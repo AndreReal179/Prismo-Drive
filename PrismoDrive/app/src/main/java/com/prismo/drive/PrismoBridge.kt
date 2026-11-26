@@ -308,6 +308,18 @@ class PrismoBridge(private val activity: Activity) {
         "erro"
     }
 
+    // ── v2.3 · assistente de voz "Ei Prismo!" ──
+    private fun voz(): VozPrismo? = (activity as? MainActivity)?.voz
+    @JavascriptInterface fun vozEstado(): String = voz()?.estado() ?: "{}"
+    @JavascriptInterface fun vozAtivar(on: Boolean) { voz()?.ligar(on) }
+    @JavascriptInterface fun vozBaixarModelo() { voz()?.baixarModelo() }
+    @JavascriptInterface fun vozPedirMic() { voz()?.pedirMic() }
+    @JavascriptInterface fun vozDormir(on: Boolean) { val v = voz() ?: return; main.post { v.dormir(on) } }
+    @JavascriptInterface fun vozOuvir() { voz()?.ouvir() }
+    @JavascriptInterface fun vozPararOuvir() { voz()?.pararOuvir() }
+    @JavascriptInterface fun vozFalar(texto: String, id: String) { voz()?.falar(texto, id) }
+    @JavascriptInterface fun vozCalar() { voz()?.calar() }
+
     // ── v2.3 · aviso de permissões na tela inicial (sem contar a acessibilidade) ──
 
     /** {notif, gps, gpsSempre, bolha, bateria}: true = ligada. */

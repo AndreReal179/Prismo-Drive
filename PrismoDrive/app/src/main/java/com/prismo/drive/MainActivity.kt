@@ -34,6 +34,8 @@ import java.io.File
 class MainActivity : Activity() {
 
     private lateinit var web: WebView
+    /** v2.3 · assistente de voz "Ei Prismo!" (só com o app na tela) */
+    var voz: VozPrismo? = null
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private val handler = Handler(Looper.getMainLooper())
     private var progresso: JanelaAtualizacao.Progresso? = null
@@ -183,6 +185,7 @@ class MainActivity : Activity() {
         }
 
         try {
+            voz = VozPrismo(this, web)
             web.addJavascriptInterface(PrismoBridge(this), "PrismoNative")
             Notificacoes.criarCanal(this)
             PrismoBridge.pedirPermissaoNotificacao(this)
@@ -224,6 +227,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         web.onResume()
+        runCatching { voz?.naTela(true) }
         handler.postDelayed({ sincronizarIfood() }, 1500)
         // Voltou da tela "instalar apps desconhecidos": se liberou, instala o APK já baixado
         val pendente = Atualizador.apkPendente
@@ -235,12 +239,14 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
+        runCatching { voz?.naTela(false) }
         web.onPause()
         super.onPause()
     }
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        runCatching { voz?.destruir() }
         try {
             unregisterReceiver(receptorIfood)
         } catch (_: Throwable) {
@@ -287,6 +293,7 @@ class MainActivity : Activity() {
                 "try{window.dispatchEvent(new CustomEvent('prismo-turno',{detail:'$r'}));}catch(e){}", null
             )
         }
+        if (requestCode == VozPrismo.REQ_MIC) runCatching { voz?.micRespondeu() }
         if (requestCode == PrismoBridge.REQ_LOC_PERM) {
             web.evaluateJavascript("try{window.dispatchEvent(new Event('prismo-turno-perm'));}catch(e){}", null)
         }
@@ -460,6 +467,7 @@ class MainActivity : Activity() {
  function vis(e){if(!e)return false;if(e.classList&&e.classList.contains('hidden'))return false;return getComputedStyle(e).display!=='none';}
  if(window.PrismoPopup&&PrismoPopup.voltar())return '1';
  if(window.PrismoTurno&&PrismoTurno.voltar&&PrismoTurno.voltar())return '1';
+ if(window.PrismoVoz&&PrismoVoz.voltar())return '1';
  var pcv=window.PrismoConta?PrismoConta.voltar():false;
  if(pcv==='min')return '0';
  if(pcv)return '1';
