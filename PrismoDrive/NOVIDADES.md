@@ -86,3 +86,5 @@
 • ⚠️ Aviso na tela inicial quando falta alguma permissão (notificações, localização, botão flutuante ou bateria), com o botão Ativar em cada uma
 • 📅 Dívida no dia útil: escolha "Dia útil" ao adicionar ou editar uma dívida (ex.: 5º dia útil) e o app calcula a data certa de cada mês, pulando fins de semana e feriados nacionais
 • 🧾 Carteira com abas Em aberto, Pagas e Quitadas: veja cada parcela paga mês a mês (com data e juros) e as dívidas que você já terminou de pagar
+• 💰 Movimentar saldo: ao adicionar, escolha Salário, Corrida, Gorjeta, Extra, Freelance ou Diária, com descrição opcional; na saída a descrição continua obrigatória
+• 🎙️ Assistente de voz: com o app aberto, diga "Ei Prismo!" e fale "recebi 50 de gorjeta" ou "gastei 30 com lanche" — ele pergunta a categoria e lança na Carteira. Ligue em Configurações › Assistente de voz
