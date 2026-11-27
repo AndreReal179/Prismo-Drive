@@ -362,6 +362,23 @@ class PrismoBridge(private val activity: Activity) {
         }
     }
 
+    // ── v2.3 · "Ei Prismo, como está o clima?": última posição conhecida do celular (sem ligar o GPS) ──
+    @JavascriptInterface
+    fun ultimaLocalizacao(): String = try {
+        val fina = activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val grossa = activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!fina && !grossa) "" else {
+            val lm = activity.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+            var melhor: android.location.Location? = null
+            for (p in lm.getProviders(true)) {
+                val l = try { lm.getLastKnownLocation(p) } catch (_: SecurityException) { null } ?: continue
+                if (melhor == null || l.time > melhor.time) melhor = l
+            }
+            val m = melhor
+            if (m == null) "" else JSONObject().put("lat", m.latitude).put("lon", m.longitude).put("t", m.time).toString()
+        }
+    } catch (_: Throwable) { "" }
+
     // ── v2.3 · permissões do turno e rota com taxa de entrega ──
 
     /** {gps, bolha}: o que falta para o turno (localização e "aparecer sobre outros apps"). */

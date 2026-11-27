@@ -11099,7 +11099,7 @@ window.PrismoVoz=(function(){
       if(w==='milhao'||w==='milhoes'){cur=(cur||1)*1000000;tot+=cur;cur=0;achou=true;continue;}
       if(UN.hasOwnProperty(w)&&w!=='meia'){
         /* "um"/"uma" sozinho é artigo ("uma corrida"), não número: só vale antes de mil/real/reais */
-        if((w==='um'||w==='uma')&&!achou&&!/^(mil|milhao|real|reais|conto|contos|pila)$/.test(ws[i+1]||''))break;
+        if((w==='um'||w==='uma')&&!achou&&!/^(mil|milhao|real|reais|conto|contos|pila|centavo|centavos)$/.test(ws[i+1]||''))break;
         cur+=UN[w];achou=true;continue;}
       if(achou)break;
     }
@@ -11111,6 +11111,8 @@ window.PrismoVoz=(function(){
     if(m){
       var v=parseFloat(m[1].replace(/\./g,'')+(m[2]?'.'+m[2]:''));
       if(m[3])v*=1000;
+      /* v2.3: "1 centavo", "50 centavos" (sem reais antes) */
+      if(!m[2]&&!m[3]&&/^\s*centavos?\b/.test(t.slice(m.index+m[0].length))&&!/reais|real/.test(t.slice(0,m.index)))return v>0&&v<100?Math.round(v)/100:null;
       var cm=t.slice(m.index+m[0].length).match(/^\s*(?:reais|real)?\s*e\s*(\d{1,2})\s*centavos/);if(cm)v+=Number(cm[1])/100;
       return v>0?Math.round(v*100)/100:null;
     }
@@ -11118,6 +11120,8 @@ window.PrismoVoz=(function(){
     for(var i=0;i<ws.length;i++){if(UN.hasOwnProperty(ws[i])&&ws[i]!=='e'||ws[i]==='mil'){
       var r=porExtenso(ws.slice(i));
       if(r!=null&&r>0){
+        var so=ws.slice(i).join(' ').match(/^((?:(?:[a-z]+)\s+)*?)centavos?\b/);
+        if(so&&!/reais|real|mil/.test(so[1])&&so[1].trim().split(' ').every(function(x){return x==='e'||UN.hasOwnProperty(x);})&&r<100)return Math.round(r)/100;
         var rest=ws.slice(i).join(' '),c=rest.match(/(?:reais|real)\s+e\s+([a-z ]+?)\s+centavos/);if(c){var cv=porExtenso(c[1].split(' '));if(cv!=null&&cv<100)r+=cv/100;}
         return Math.round(r*100)/100;
       }
@@ -11276,8 +11280,8 @@ window.PrismoVoz=(function(){
   function comando(texto){
     var t=sem(texto);
     if(/o que (voce|vc) (sabe|pode|consegue) fazer|quais (sao )?(os )?comandos|me ajuda com|comandos de voz/.test(t)){
-      diz('Eu lanço valores na Carteira, digo seu saldo e o faturamento do dia, ligo e desligo o assistente de rotas, inicio e finalizo o turno, e abro qualquer tela do app. Por exemplo: abra a carteira, iniciar turno, ou recebi cinquenta de gorjeta.',
-        '<b>Posso fazer:</b><br>💰 “Recebi 50 de gorjeta” · “Gastei 30 com lanche”<br>👛 “Qual meu saldo?” · “Quanto fiz hoje?” · “Desfazer”<br>🛵 “Iniciar turno” · “Finalizar turno” · “Como está o turno?”<br>📡 “Ligar / Desligar o assistente de rotas” · “O assistente está ligado?”<br>📱 “Abra a carteira, missões, ranking, amigos, perfil, planos, veículo, manutenção, calendário, relatórios, comparativo, contas da semana, abastecer, odômetro, configurações, notificações, suporte, ajuda, guia, novidades, menu”<br>🚗 “Lançar uma corrida”',false,true);
+      diz('Eu lanço valores na Carteira, digo seu saldo e o faturamento do dia, ligo e desligo o assistente de rotas, inicio e finalizo o turno, e abro qualquer tela do app. Também faço contas e porcentagens, digo a hora, o clima e a cotação do dólar, e explico o que é alguma coisa. Por exemplo: recebi cinquenta de gorjeta, quanto é 10% de 250, ou como está o clima amanhã.',
+        '<b>Posso fazer:</b><br>💰 “Recebi 50 de gorjeta” · “Gastei 30 com lanche”<br>👛 “Qual meu saldo?” · “Quanto fiz hoje?” · “Desfazer”<br>🛵 “Iniciar turno” · “Finalizar turno” · “Como está o turno?”<br>📡 “Ligar / Desligar o assistente de rotas” · “O assistente está ligado?”<br>📱 “Abra a carteira, missões, ranking, amigos, perfil, planos, veículo, manutenção, calendário, relatórios, comparativo, contas da semana, abastecer, odômetro, configurações, notificações, suporte, ajuda, guia, novidades, menu”<br>🚗 “Lançar uma corrida”<br>🧮 “Quanto é 10% de 250?” · “1.250 dividido por 3”<br>🌦️ “Como está o clima amanhã em Campinas?” · “Que horas são?”<br>💵 “Quanto está o dólar?” · 📖 “O que é inflação?”',false,true);
       opcoes([['Abrir a Carteira','👛'],['Iniciar turno','▶️'],['Quanto fiz hoje?','📈']]);encerrar(20);return true;}
     /* assistente de rotas: ligar / desligar / está ligado? */
     if(/(assistente|avaliador) (de |das )?rotas?|leitor de corridas|leitura das corridas/.test(t)&&!ABRIR.test(t)||/(lig|ativ|deslig|desativ|para[r]? o|esta ligado)/.test(t)&&/(assistente|avaliador) (de |das )?rotas?/.test(t)){
@@ -11318,10 +11322,180 @@ window.PrismoVoz=(function(){
     return false;
   }
 
+  /* ════ v2.3 · assistente do dia a dia: contas, porcentagem, hora e data, clima, dólar, "o que é…" e conversa ════ */
+  var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var SEMANA=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  function nBr(v,max){if(!isFinite(v))return '';var a=Math.abs(v);return v.toLocaleString('pt-BR',{maximumFractionDigits:max!=null?max:(a>=100?2:(a>=1?3:6))});}
+  /* "dois mil e quinhentos" → "2500" (também "um", que aqui é número) */
+  function palavrasEmNumeros(t){
+    var ws=t.split(' '),out=[],i=0;
+    var eh=function(w){return (UN.hasOwnProperty(w)&&w!=='meia')||w==='mil';};
+    while(i<ws.length){
+      if(!eh(ws[i])){out.push(ws[i]);i++;continue;}
+      var tot=0,cur=0;
+      while(i<ws.length&&(eh(ws[i])||(ws[i]==='e'&&eh(ws[i+1]||'')&&ws[i+1]!=='mil'))){
+        var w=ws[i];if(w==='e'){i++;continue;}
+        if(w==='mil'){cur=(cur||1)*1000;tot+=cur;cur=0;}else cur+=UN[w];
+        i++;}
+      out.push(String(tot+cur));
+    }
+    return out.join(' ');
+  }
+  /* número escrito no jeito brasileiro: "1.250,50" "2,5" "3.5" */
+  function numBr(s){s=String(s);if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))return parseFloat(s.replace(/\./g,'').replace(',','.'));return parseFloat(s.replace(',','.'));}
+  /* conta sem eval: + − × ÷ ^ ( ) */
+  function calcular(exp){
+    var tk=exp.match(/\d+(?:\.\d+)?|[-+*/^()]/g);if(!tk)return null;var p=0;
+    function prim(){var t=tk[p++];if(t==='-')return -prim();if(t==='+')return prim();if(t==='('){var v=soma();if(tk[p]===')')p++;return v;}var n=parseFloat(t);if(isNaN(n))throw 0;return n;}
+    function pot(){var b=prim();if(tk[p]==='^'){p++;return Math.pow(b,pot());}return b;}
+    function mult(){var v=pot();while(tk[p]==='*'||tk[p]==='/'){var o=tk[p++],d=pot();if(o==='/'&&d===0)throw 'zero';v=o==='*'?v*d:v/d;}return v;}
+    function soma(){var v=mult();while(tk[p]==='+'||tk[p]==='-'){var o=tk[p++],d=mult();v=o==='+'?v+d:v-d;}return v;}
+    try{var r=soma();return p===tk.length?r:null;}catch(e){return e==='zero'?'zero':null;}
+  }
+  function contas(texto){
+    var t=palavrasEmNumeros(sem(texto).replace(/[?!]/g,' ').replace(/\s+/g,' ').replace(/\bpor cento\b/g,'%').trim());
+    var N='(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:[.,]\\d+)?)',P='\\s*(?:%|por ?cento)',m,r;
+    if((m=t.match(new RegExp(N+P+'\\s*(?:de|do|da|dos|das|sobre|em)\\s*(?:r\\$\\s*)?'+N)))){var a=numBr(m[1]),b=numBr(m[2]);r=a/100*b;return [nBr(a)+'% de '+nBr(b)+' é '+nBr(r,2)+'.',nBr(a)+'% de '+nBr(b)+' = <b>'+nBr(r,2)+'</b>'];}
+    if((m=t.match(new RegExp(N+'\\s*(?:e|eh|representa|equivale a)?\\s*quantos? (?:por ?cento|%) (?:de|do|da)\\s*'+N)))||(m=t.match(new RegExp('quantos? (?:por ?cento|%) (?:e|eh)\\s*'+N+'\\s*(?:de|do|da)\\s*'+N)))){var a2=numBr(m[1]),b2=numBr(m[2]);if(!b2)return ['Não dá para dividir por zero.',null];r=a2/b2*100;return [nBr(a2)+' é '+nBr(r,2)+'% de '+nBr(b2)+'.',nBr(a2)+' de '+nBr(b2)+' = <b>'+nBr(r,2)+'%</b>'];}
+    if((m=t.match(new RegExp(N+'\\s*(mais|\\+|com|menos|-|sem)\\s*'+N+P)))){var a3=numBr(m[1]),op=m[2],b3=numBr(m[3]),sobe=/mais|\+|com/.test(op);r=a3*(1+(sobe?b3:-b3)/100);return [nBr(a3)+(sobe?' mais ':' menos ')+nBr(b3)+'% dá '+nBr(r,2)+'.',nBr(a3)+(sobe?' + ':' − ')+nBr(b3)+'% = <b>'+nBr(r,2)+'</b>'];}
+    if((m=t.match(new RegExp('raiz (?:quadrada )?(?:de )?'+N)))){var a4=numBr(m[1]);return ['A raiz quadrada de '+nBr(a4)+' é '+nBr(Math.sqrt(a4),4)+'.','√'+nBr(a4)+' = <b>'+nBr(Math.sqrt(a4),4)+'</b>'];}
+    /* conta comum */
+    var e=' '+t+' ';
+    e=e.replace(/ multiplicad[oa] por | vezes /g,' * ').replace(/ divid(?:ido|ida|e|ir) (?:por )?| sobre /g,' / ').replace(/ elevado (?:a|ao) /g,' ^ ')
+       .replace(/ ao quadrado /g,' ^ 2 ').replace(/ ao cubo /g,' ^ 3 ').replace(/ mais /g,' + ').replace(/ menos /g,' - ')
+       .replace(/(\d)\s*x\s*(\d)/g,'$1 * $2').replace(/[×]/g,'*').replace(/[÷:]/g,'/').replace(/ abre parenteses? /g,' ( ').replace(/ fecha parenteses? /g,' ) ');
+    e=e.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+,\d+)/g,function(s){return String(numBr(s));});
+    var trechos=e.match(/[\d.()\s+\-*/^]+/g)||[];
+    var exp=trechos.map(function(s){return s.trim();}).filter(function(s){return /\d/.test(s)&&/\d\s*[-+*/^]\s*[\d(]/.test(s);}).sort(function(a,b){return b.length-a.length;})[0];
+    if(!exp)return null;
+    r=calcular(exp);if(r==='zero')return ['Não dá para dividir por zero.',null];if(r==null||!isFinite(r))return null;
+    var bonito=exp.replace(/\*/g,'×').replace(/\//g,'÷').replace(/\s+/g,' ').replace(/(\d+(?:\.\d+)?)/g,function(s){return nBr(parseFloat(s),6);});
+    var falado=exp.replace(/\*/g,' vezes ').replace(/\//g,' dividido por ').replace(/\+/g,' mais ').replace(/-/g,' menos ').replace(/\^/g,' elevado a ').replace(/[()]/g,' ').replace(/(\d+(?:\.\d+)?)/g,function(s){return nBr(parseFloat(s),6);}).replace(/\s+/g,' ').trim();
+    return [falado+' é '+nBr(r)+'.',bonito+' = <b>'+nBr(r)+'</b>'];
+  }
+  function dataFalada(d){return SEMANA[d.getDay()]+', '+d.getDate()+' de '+MESES[d.getMonth()];}
+  function hojeEAgora(t){
+    var d=new Date();
+    if(/que horas|qual (e |eh )?a hora|hora (agora|certa)|me (diz|fala) a hora|^horas?$/.test(t)){var h=d.getHours(),mi=d.getMinutes();return ['Agora são '+h+(h===1?' hora':' horas')+(mi?' e '+mi+(mi===1?' minuto':' minutos'):' em ponto')+'.',null];}
+    if(/amanha/.test(t)&&/que dia|qual (e |eh )?a data|dia da semana/.test(t)){var a=new Date(d.getTime()+864e5);return ['Amanhã é '+dataFalada(a)+'.',null];}
+    if(/que dia (e|eh) hoje|qual (e |eh )?a data|data de hoje|que dia da semana|dia da semana (e|eh) hoje|hoje (e|eh) que dia/.test(t))return ['Hoje é '+dataFalada(d)+' de '+d.getFullYear()+'.',null];
+    var m=t.match(/quantos dias (?:faltam|falta) (?:para|pra|pro|ate) (?:o |a )?(natal|ano novo|fim do mes|final do mes|dia (\d{1,2}))/);
+    if(m){var alvo;var hoje0=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      if(m[1]==='natal'){alvo=new Date(d.getFullYear(),11,25);if(alvo<hoje0)alvo=new Date(d.getFullYear()+1,11,25);}
+      else if(m[1]==='ano novo')alvo=new Date(d.getFullYear()+1,0,1);
+      else if(/mes/.test(m[1]))alvo=new Date(d.getFullYear(),d.getMonth()+1,0);
+      else{var dia=Number(m[2]);alvo=new Date(d.getFullYear(),d.getMonth(),dia);if(alvo<hoje0)alvo=new Date(d.getFullYear(),d.getMonth()+1,dia);}
+      var n=Math.round((alvo-hoje0)/864e5);
+      return [n===0?'É hoje!':(n===1?'Falta 1 dia.':'Faltam '+n+' dias.')+' ('+dataFalada(alvo)+')',null];}
+    return null;
+  }
+  var CLIMA={0:'céu limpo',1:'quase sem nuvens',2:'parcialmente nublado',3:'nublado',45:'neblina',48:'neblina',51:'garoa fraca',53:'garoa',55:'garoa forte',56:'garoa gelada',57:'garoa gelada',
+    61:'chuva fraca',63:'chuva',65:'chuva forte',66:'chuva gelada',67:'chuva gelada',71:'neve fraca',73:'neve',75:'neve forte',77:'neve',80:'pancadas de chuva fracas',81:'pancadas de chuva',82:'pancadas de chuva fortes',
+    85:'neve',86:'neve forte',95:'trovoadas',96:'trovoadas com granizo',99:'trovoadas com granizo'};
+  var ICL={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️'};
+  function icClima(c){return ICL[c]||(c>=95?'⛈️':(c>=71&&c<=86&&c!==80&&c!==81&&c!==82?'❄️':(c>=51?'🌧️':'🌥️')));}
+  function buscar(url,ms){
+    var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){try{ctl&&ctl.abort();}catch(e){}},ms||8000);
+    return fetch(url,ctl?{signal:ctl.signal}:{}).then(function(r){clearTimeout(tm);if(!r.ok)throw new Error('http '+r.status);return r.json();});
+  }
+  function semRede(){diz('Não consegui acessar a internet agora. Tente de novo daqui a pouco.');encerrar(6);}
+  var K_CID='prismo_voz_cidade';
+  function cidadeDe(texto){
+    var s=String(texto||'').replace(/[?!.]+$/,'').trim();
+    var m=s.match(/\b(?:em|no|na|de|da|do|pra|para)\s+([A-Za-zÀ-ÿ' .-]{3,50})$/i);if(!m)return '';
+    var c=m[1].replace(/\b(hoje|amanh[ãa]|agora|essa semana|esta semana|neste momento|por favor)\b/ig,'').trim();
+    if(/^(tempo|clima|previs[ãa]o|temperatura|hoje|amanh[ãa]|agora|chuva)$/i.test(c))return '';
+    return c;
+  }
+  function clima(texto,soCidade){
+    var t=sem(texto),amanha=/amanha/.test(t),cid=soCidade?String(texto).trim().replace(/^(em|no|na|de)\s+/i,''):cidadeDe(texto);
+    status('Vendo o clima…');
+    var comCoords=function(lat,lon,nome){
+      var u='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=2';
+      buscar(u).then(function(j){
+        var onde=nome?' em '+nome:' aí',fr,html;
+        if(amanha){var c=j.daily.weather_code[1],mx=Math.round(j.daily.temperature_2m_max[1]),mn=Math.round(j.daily.temperature_2m_min[1]),pc=j.daily.precipitation_probability_max[1];
+          fr='Amanhã'+onde+': '+CLIMA[c]+', mínima de '+mn+' e máxima de '+mx+' graus'+(pc!=null?', com '+pc+'% de chance de chuva':'')+'.';
+          html='<div class="vz-ok g"><span style="font-size:26px">'+icClima(c)+'</span><div><b>'+mn+'° / '+mx+'°</b><small>Amanhã'+escaparHtml(onde)+' · '+CLIMA[c]+(pc!=null?' · 🌧️ '+pc+'%':'')+'</small></div></div>'+escaparHtml(fr);}
+        else{var cu=j.current,c2=cu.weather_code,tp=Math.round(cu.temperature_2m),se=Math.round(cu.apparent_temperature),pc2=j.daily.precipitation_probability_max[0],mx2=Math.round(j.daily.temperature_2m_max[0]),mn2=Math.round(j.daily.temperature_2m_min[0]);
+          fr='Agora'+onde+' faz '+tp+' graus'+(Math.abs(se-tp)>=2?', com sensação de '+se:'')+', '+CLIMA[c2]+'. Hoje a mínima é '+mn2+' e a máxima '+mx2+(pc2!=null?', com '+pc2+'% de chance de chuva':'')+'.';
+          if(/chov|chuva/.test(t))fr=(pc2>=60?'Sim, é bem provável que chova':(pc2>=30?'Pode chover':'Acho que não vai chover'))+(pc2!=null?' ('+pc2+'% de chance)':'')+onde+' hoje. Agora faz '+tp+' graus, '+CLIMA[c2]+'.';
+          html='<div class="vz-ok g"><span style="font-size:26px">'+icClima(c2)+'</span><div><b>'+tp+'°C</b><small>'+escaparHtml(nome||'Onde você está')+' · '+CLIMA[c2]+' · '+mn2+'°/'+mx2+'°'+(pc2!=null?' · 🌧️ '+pc2+'%':'')+'</small></div></div>'+escaparHtml(fr);}
+        status('Pode falar');diz(fr,html);encerrar(9);
+      }).catch(semRede);
+    };
+    if(cid){
+      buscar('https://geocoding-api.open-meteo.com/v1/search?count=5&language=pt&format=json&name='+encodeURIComponent(cid)).then(function(j){
+        var l=(j&&j.results)||[];if(!l.length){status('Pode falar');diz('Não achei a cidade '+cid+'. Pode repetir o nome?',null,true);esperando='cidade';return;}
+        var c=l.filter(function(x){return x.country_code==='BR';})[0]||l[0];
+        try{localStorage.setItem(K_CID,JSON.stringify({n:c.name,lat:c.latitude,lon:c.longitude}));}catch(e){}
+        comCoords(c.latitude,c.longitude,c.name);
+      }).catch(semRede);
+      return;
+    }
+    var n=window.PrismoNative,loc=null;try{if(n&&n.ultimaLocalizacao){var s=n.ultimaLocalizacao();if(s)loc=JSON.parse(s);}}catch(e){}
+    if(loc&&loc.lat!=null){comCoords(loc.lat.toFixed(3),loc.lon.toFixed(3),'');return;}
+    var sv=null;try{sv=JSON.parse(localStorage.getItem(K_CID)||'null');}catch(e){}
+    if(sv&&sv.lat!=null){comCoords(sv.lat,sv.lon,sv.n);return;}
+    status('Pode falar');esperando='cidade';diz('De qual cidade você quer saber o clima?',null,true,true);
+  }
+  function cotacao(t){
+    var qual=/euro/.test(t)?'EUR':(/bitcoin|btc/.test(t)?'BTC':'USD'),nome={USD:'dólar',EUR:'euro',BTC:'bitcoin'}[qual];
+    status('Vendo a cotação…');
+    buscar('https://economia.awesomeapi.com.br/json/last/'+qual+'-BRL').then(function(j){
+      var x=j[qual+'BRL'];var v=parseFloat(x.bid),vr=parseFloat(x.pctChange);
+      var fr='O '+nome+' está em '+moeda(v)+(isFinite(vr)?', '+(vr>=0?'subiu ':'caiu ')+nBr(Math.abs(vr),2)+'% hoje':'')+'.';
+      status('Pode falar');diz(fr,'<div class="vz-ok g"><span style="font-size:24px">💵</span><div><b>'+moeda(v)+'</b><small>1 '+nome+(isFinite(vr)?' · '+(vr>=0?'▲ ':'▼ ')+nBr(Math.abs(vr),2)+'% hoje':'')+'</small></div></div>'+escaparHtml(fr));encerrar(8);
+    }).catch(semRede);
+  }
+  function wiki(termo){
+    status('Pesquisando…');
+    buscar('https://pt.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch='+encodeURIComponent(termo)).then(function(j){
+      var r=j&&j.query&&j.query.search&&j.query.search[0];if(!r)throw 'nada';
+      return buscar('https://pt.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(r.title.replace(/ /g,'_')));
+    }).then(function(s){
+      var txt=String(s.extract||'').replace(/\s*\([^)]*\)/g,'').replace(/\s+/g,' ').trim();if(!txt)throw 'nada';
+      var fr=(txt.match(/[^.!?]+[.!?]+/g)||[txt]).slice(0,2).join(' ').trim();if(fr.length>320)fr=fr.slice(0,317).replace(/\s\S*$/,'')+'…';
+      status('Pode falar');diz(fr,'<b>'+escaparHtml(s.title||termo)+'</b><br>'+escaparHtml(fr)+'<br><small style="opacity:.6">Fonte: Wikipédia</small>');encerrar(14);
+    }).catch(function(e){status('Pode falar');if(e==='nada'){diz('Não encontrei nada sobre '+termo+'.');encerrar(6);}else semRede();});
+  }
+  var PIADAS=['Por que o motorista levou uma escada pro trabalho? Porque ouviu dizer que ia subir de nível!','O que o pneu disse pro outro? Tô cansado de rodar com você!','Qual é o carro que mais gosta de música? O Toca-fitas… digo, o Fusca, porque ele é clássico!','Por que o GPS terminou o namoro? Porque ela vivia recalculando a rota!','O que o tanque vazio falou pro motorista? Me enche que eu gosto!'];
+  function conversa(t){
+    var h=new Date().getHours(),nome='';try{nome=String((PrismoConta.conta()||{}).nome||'').split(' ')[0];}catch(e){}
+    if(/^(oi|ola|e ai|eai|opa|salve|bom dia|boa tarde|boa noite|hey)\b/.test(t)&&t.split(' ').length<=4){var s=h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite');return [s+(nome?', '+nome:'')+'! Como posso ajudar?',null,true];}
+    if(/tudo bem|como (voce|vc) (esta|ta|vai)|beleza\??$/.test(t))return ['Tudo ótimo por aqui! E com você? Posso ajudar em alguma coisa?',null,true];
+    if(/(qual (e |eh )?(o )?seu nome|quem (e|eh) voce|quem e vc|como (voce|vc) se chama)/.test(t))return ['Eu sou o Prismo, o assistente do Prismo Drive. Lanço seus valores na Carteira, faço contas, vejo o clima e muito mais.',null];
+    if(/piada|me faz rir|algo engracado/.test(t))return [PIADAS[Math.floor(Math.random()*PIADAS.length)],null];
+    if(/cara ou coroa/.test(t))return [Math.random()<.5?'Deu cara!':'Deu coroa!',null];
+    if(/(joga|jogar|rola|rolar) (um |o )?dado/.test(t))return ['Deu '+(1+Math.floor(Math.random()*6))+'!',null];
+    var m=palavrasEmNumeros(t).match(/numero (?:aleatorio|qualquer)?\s*(?:de|entre)\s*(\d+)\s*(?:a|e|ate)\s*(\d+)/);
+    if(m){var a=Math.min(+m[1],+m[2]),b=Math.max(+m[1],+m[2]);return ['Deu '+(a+Math.floor(Math.random()*(b-a+1)))+'!',null];}
+    var km=palavrasEmNumeros(t).match(/(\d+(?:[.,]\d+)?)\s*(milhas?|km|quilometros?)\s*(?:em|para|pra)\s*(km|quilometros?|milhas?)/);
+    if(km){var v=numBr(km[1]),deM=/milha/.test(km[2]),paraM=/milha/.test(km[3]);if(deM!==paraM){var r=deM?v*1.609344:v/1.609344;return [nBr(v)+(deM?' milhas são ':' quilômetros são ')+nBr(r,2)+(deM?' quilômetros.':' milhas.'),null];}}
+    return null;
+  }
+  /* devolve true se respondeu */
+  function geral(texto){
+    var t=sem(texto).replace(/[?!.,]+$/,'').trim();
+    var c=conversa(t);if(c){diz(c[0],c[1],!!c[2]);encerrar(c[2]?12:8);return true;}
+    var h=hojeEAgora(t);if(h){diz(h[0],h[1]);encerrar(6);return true;}
+    if(/\b(clima|previsao|temperatura|vai chover|vai fazer (sol|frio|calor)|chovendo|esta chovendo|chuva hoje|chuva amanha)\b|(como|qual) (esta|ta|e|eh|vai estar|vai ficar) o tempo|\btempo (em|no|na|hoje|amanha|agora|la)\b|graus (em|no|na|hoje|agora|la)|quantos graus/.test(t)){clima(texto);return true;}
+    if(/\b(dolar|euro|bitcoin)\b/.test(t)&&/cotac|quanto|preco|valor|esta|hoje|ta /.test(t)){cotacao(t);return true;}
+    var ct=contas(texto);if(ct){diz(ct[0],ct[1]?'<div class="vz-ok g"><span class="material-icons">calculate</span><div><b>'+ct[1].replace(/<\/?b>/g,'')+'</b></div></div>':null);encerrar(8);return true;}
+    var w=t.match(/^(?:me (?:fala|conta|explica) (?:sobre|o que (?:e|eh)|quem (?:e|eh|foi))|o que (?:e|eh|significa|sao)|quem (?:e|eh|foi|era|sao)|o que voce sabe sobre|pesquisa(?:r)?(?: sobre)?)\s+(?:o |a |os |as |um |uma )?(.{2,60})$/);
+    if(w&&!/\b(voce|vc|prismo|isso|aquilo|ele|ela)\b/.test(w[1])){
+      var orig=String(texto).replace(/[?!.]+$/,'').trim(),k=orig.split(/\s+/).length-w[1].split(/\s+/).length;
+      wiki(orig.split(/\s+/).slice(k).join(' ')||w[1]);return true;}
+    return false;
+  }
+
   function entender(texto){
     clearTimeout(fecharTimer);
     balao('eu',escaparHtml(texto));opcoes([]);
     var t=sem(texto),it=intencao(texto);
+    if(esperando==='cidade'){esperando='';if(it!=='fechar')clima(texto,true);else{diz('Até mais!');encerrar(2);}return;}
+    /* v2.3: perguntas do dia a dia (contas, clima, hora, dólar, "o que é…") */
+    if((!esperando||esperando==='tipo'&&!/\b(entrada|gasto|saida)\b/.test(t))&&it!=='entrada'&&it!=='saida'&&geral(texto)){ped={};esperando=esperando==='cidade'?'cidade':'';return;}
     if((!esperando||(esperando!=='desc'&&(ABRIR.test(t)||/turno|assistente de rota/.test(t))))&&comando(texto)){ped={};esperando='';return;}
     if(it==='fechar'&&!esperando){diz('Até mais!');encerrar(2);return;}
     if(it==='desfazer'){var u=desfazerUltimo();if(u){try{recarregarCarteira();}catch(e){}diz('Pronto, desfiz o lançamento de '+moeda(u.valor)+' em '+u.cat+'.');}else diz('Não tenho nenhum lançamento recente para desfazer.');encerrar(5);return;}
@@ -11338,7 +11512,7 @@ window.PrismoVoz=(function(){
     proximo();
   }
   function proximo(){
-    if(!ped.tipo&&!ped.valor){esperando='';diz('Desculpe, não entendi. Você pode dizer, por exemplo: recebi 50 reais de gorjeta, ou gastei 30 com lanche.',null,true);return;}
+    if(!ped.tipo&&!ped.valor){esperando='';diz('Desculpe, não entendi. Você pode dizer, por exemplo: recebi 50 reais de gorjeta, quanto é 15% de 200, ou como está o clima.',null,true);return;}
     if(!ped.tipo){esperando='tipo';diz('Esse valor de '+moeda(ped.valor)+' é uma entrada ou um gasto?',null,true);opcoes([['Entrada','➕'],['Gasto','➖']]);return;}
     if(!ped.valor){esperando='valor';diz(ped.tipo==='entrada'?'Quanto você recebeu?':'Quanto você gastou?',null,true,true);return;}
     if(!liberado()){diz('A Carteira faz parte do Prismo Pro. Assine para lançar seus valores por voz.');ped={};esperando='';setTimeout(function(){fechar();try{PrismoConta.trava('carteira');}catch(e){}},3500);return;}
