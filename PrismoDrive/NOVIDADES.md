@@ -88,3 +88,6 @@
 • 🧾 Carteira com abas Em aberto, Pagas e Quitadas: veja cada parcela paga mês a mês (com data e juros) e as dívidas que você já terminou de pagar
 • 💰 Movimentar saldo: ao adicionar, escolha Salário, Corrida, Gorjeta, Extra, Freelance ou Diária, com descrição opcional; na saída a descrição continua obrigatória
 • 🎙️ Assistente de voz: com o app aberto, diga "Ei Prismo!" e fale "recebi 50 de gorjeta" ou "gastei 30 com lanche" — ele pergunta a categoria e lança na Carteira. Ligue em Configurações › Assistente de voz
+• 🗣️ Comandos de voz: "abra a carteira", "ligar/desligar o assistente de rotas", "iniciar/finalizar turno", "quanto fiz hoje?", "abrir missões/ranking/calendário…" e muito mais. Diga "o que você sabe fazer?"
+• 🎧 Escolha a voz do assistente: Ana, Clara, Júlia, Bruno, Rafael ou Diego (humanizadas) ou a voz do celular
+• 📅 Carteira: as dívidas que vencem nos próximos 10 dias já aparecem em "Em aberto", mesmo sendo do mês que vem
