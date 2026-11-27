@@ -92,3 +92,4 @@
 • 🎧 Escolha a voz do assistente: Ana, Clara, Júlia, Bruno, Rafael ou Diego (humanizadas) ou a voz do celular
 • 📅 Carteira: as dívidas que vencem nos próximos 10 dias já aparecem em "Em aberto", mesmo sendo do mês que vem
 • 👆 Tutorial: um passo a passo na própria tela mostra cada parte do app (e a parte Pro para quem tem o Pro). Aparece uma vez; depois é só abrir em Ajuda › Tutorial ou dizer "Ei Prismo, tutorial"
+• 🧠 "Ei Prismo" agora conversa: faz contas e porcentagens ("quanto é 15% de 200?"), diz a hora e a data, o clima de qualquer cidade (hoje e amanhã), a cotação do dólar e do euro, explica "o que é…" pela Wikipédia, conta piada, cara ou coroa e mais. Também entende centavos: "ganhei 1 centavo"
