@@ -465,6 +465,7 @@ class MainActivity : Activity() {
 (function(){try{
  function el(i){return document.getElementById(i);}
  function vis(e){if(!e)return false;if(e.classList&&e.classList.contains('hidden'))return false;return getComputedStyle(e).display!=='none';}
+ if(window.PrismoTutorial&&PrismoTutorial.voltar())return '1';
  if(window.PrismoPopup&&PrismoPopup.voltar())return '1';
  if(window.PrismoTurno&&PrismoTurno.voltar&&PrismoTurno.voltar())return '1';
  if(window.PrismoVoz&&PrismoVoz.voltar())return '1';

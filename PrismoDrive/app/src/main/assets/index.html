@@ -2119,6 +2119,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-ind
             <span id="acc-guia-icon" class="material-icons" style="font-size:18px;color:var(--muted);transition:transform 0.2s;">expand_more</span>
           </button>
           <div id="acc-guia" style="display:none;padding:0 16px 14px;flex-direction:column;gap:8px;">
+            <button type="button" class="gd-open-btn" onclick="PrismoTutorial.abrir()"><span class="material-icons" style="font-size:18px;">touch_app</span>Tutorial na tela</button>
             <button type="button" class="gd-open-btn" onclick="abrirGuia()"><span class="material-icons" style="font-size:18px;">menu_book</span>Abrir guia completo</button>
             <button type="button" class="gd-open-btn gd-termos-btn" onclick="PrismoConta.termos()"><span class="material-icons" style="font-size:18px;">gavel</span>Termos de uso e condições</button>
           </div>
@@ -6085,7 +6086,7 @@ function abrirNovidades(){
   /* espera a tela ficar livre: carregamento, termos, conta e outras janelas */
   function ocupado(){
     var vis=function(id){var e=document.getElementById(id);if(!e)return false;var cs=getComputedStyle(e);return cs.display!=='none'&&cs.visibility!=='hidden'&&!e.hidden&&e.offsetParent!==null;};
-    if(vis('prismo-splash')||vis('conta-bloq')||vis('pc-sync')||document.getElementById('tm-ov')||document.getElementById('pp-anuncio')||document.querySelector('#vz-ov.on'))return true;   /* v2.3: espera o popup de anúncio e o assistente de voz fecharem */
+    if(vis('prismo-splash')||vis('conta-bloq')||vis('pc-sync')||document.getElementById('tm-ov')||document.getElementById('pp-anuncio')||document.getElementById('tu-ov')||document.querySelector('#vz-ov.on'))return true;   /* v2.3: espera o popup de anúncio e o assistente de voz fecharem */
     var abertos=Array.prototype.some.call(document.querySelectorAll('[id^="modal-"]'),function(m){var cs=getComputedStyle(m);return cs.display!=='none'&&cs.visibility!=='hidden'&&m.offsetParent!==null;});
     return abertos;
   }
@@ -10348,6 +10349,7 @@ window.PrismoPaginas=(function(){
       +'<div class="pg-nvw"><button class="pg-nvbt'+(nvAberto?' on':'')+'" onclick="PrismoPaginas.nvAbrir()"><span class="pg-nvic"><span class="material-icons">auto_awesome</span></span><span style="flex:1;text-align:left"><b style="display:block;font-size:15px;color:#fff">Novidades</b><small style="display:block;font-size:11.5px;color:#d6c27a;font-weight:600;margin-top:1px">'+(qtd?qtd+' novidade'+(qtd===1?'':'s')+' na versão '+esc(vs[0].versao):'O que mudou no app')+'</small></span><span class="material-icons">expand_more</span></button>'
       +'<div class="pg-nv'+(nvAberto?' on':'')+'" id="pg-nv"><div>'+(nvAberto?nvHtml():'')+'</div></div></div>'
       +'<div class="pg-sec"><span>APRENDA E FALE COM A GENTE</span></div><div class="pg-box">'
+      +'<button class="pg-row" onclick="PrismoTutorial.abrir()"><span class="pg-ic" style="background:rgba(63,185,80,.12);color:#3fb950"><span class="material-icons">touch_app</span></span><span class="t"><b>Tutorial</b><small>Passo a passo na própria tela'+(plano()==='pro'||plano()==='admin'?' · Free e Pro':'')+'</small></span><span class="material-icons ch">chevron_right</span></button>'
       +'<button class="pg-row" onclick="abrirGuia()"><span class="pg-ic" style="background:rgba(251,191,36,.12);color:#fbbf24"><span class="material-icons">menu_book</span></span><span class="t"><b>Guia do app</b><small>Tutoriais com prints de cada aba</small></span><span class="material-icons ch">chevron_right</span></button>'
       +'<button class="pg-row" onclick="PrismoPaginas.abrir(\'suporte\',{filha:true})"><span class="pg-ic" style="background:rgba(63,185,80,.12);color:#3fb950"><span class="material-icons">support_agent</span></span><span class="t"><b>Suporte</b><small>Fale com a equipe · relate BUGs e ganhe recompensa</small></span><span class="material-icons ch">chevron_right</span></button>'
       +'<button class="pg-row" onclick="PrismoConta.termos()"><span class="pg-ic" style="background:rgba(255,255,255,.06);color:#c9d1d9"><span class="material-icons">gavel</span></span><span class="t"><b>Termos de uso</b><small>GPS, dados, pagamentos e reembolso</small></span><span class="material-icons ch">chevron_right</span></button>'
@@ -11258,7 +11260,8 @@ window.PrismoVoz=(function(){
     [/configura|ajuste/,'Abrindo as configurações.',function(){PrismoPaginas.abrir('config');}],
     [/suporte|atendimento|falar com/,'Abrindo o suporte.',function(){PrismoPaginas.abrir('suporte',{filha:true});}],
     [/novidade|o que mudou/,'Abrindo as novidades.',function(){abrirNovidades();}],
-    [/guia|tutorial|como usa/,'Abrindo o guia do app.',function(){abrirGuia();}],
+    [/tutorial|passo a passo|me ensina|como usa/,'Abrindo o tutorial.',function(){PrismoTutorial.abrir();}],
+    [/guia/,'Abrindo o guia do app.',function(){abrirGuia();}],
     [/\bajuda\b/,'Abrindo a ajuda.',function(){PrismoPaginas.abrir('ajuda');}],
     [/calendario|\bmes\b|do mes/,'Abrindo o calendário do mês.',function(){abrirCalendarioMensal();}],
     [/relatorio/,'Abrindo os relatórios.',function(){abrirModalRelatorio();}],
@@ -11415,6 +11418,166 @@ window.PrismoVoz=(function(){
     _teste:{valorDe:valorDe,intencao:intencao,catDe:function(t,e){return catDe(t,e?ENT:SAI);},descDe:descDe}};
 })();
 </script>
+<!-- v2.3 · Tutorial (passo a passo na própria tela). Aparece uma vez (Free e, ao ter o Pro, a parte Pro); depois só pelo botão "Tutorial" na Ajuda -->
+<style>
+#tu-ov{position:fixed;inset:0;z-index:100070;opacity:0;transition:opacity .25s;-webkit-tap-highlight-color:transparent}
+#tu-ov.on{opacity:1}
+#tu-ov .tu-blk{position:fixed;inset:0}
+#tu-ov .tu-spot{position:fixed;border-radius:18px;box-shadow:0 0 0 200vmax rgba(3,8,5,.82);transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s,height .35s,border-radius .35s;pointer-events:none}
+#tu-ov .tu-spot.sem{left:50%!important;top:42%!important;width:0!important;height:0!important}
+#tu-ov .tu-hit{position:fixed;border-radius:18px;cursor:pointer}
+#tu-ov .tu-ring{position:fixed;border-radius:20px;border:2px solid #3fb950;animation:tuP 1.6s ease-out infinite;pointer-events:none;transition:left .35s,top .35s,width .35s,height .35s}
+#tu-ov .tu-ring.sem{display:none}
+@keyframes tuP{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.22);opacity:0}}
+#tu-ov .tu-card{position:fixed;left:16px;right:16px;max-width:460px;margin:0 auto;background:linear-gradient(180deg,#132a1b,#0c1a11);border:1px solid rgba(63,185,80,.45);border-radius:20px;padding:18px 18px 14px;color:#e6f3ea;box-shadow:0 18px 50px rgba(0,0,0,.6);transition:top .3s,bottom .3s;animation:tuIn .3s ease}
+@keyframes tuIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#tu-ov .tu-card:before{content:"";position:absolute;width:16px;height:16px;background:#132a1b;border-left:1px solid rgba(63,185,80,.45);border-top:1px solid rgba(63,185,80,.45);transform:rotate(45deg);top:-9px;left:var(--sx,50%)}
+#tu-ov .tu-card.cima:before{top:auto;bottom:-9px;background:#0c1a11;transform:rotate(225deg)}
+#tu-ov .tu-card.meio:before{display:none}
+#tu-ov .tu-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#tu-ov .tu-tag{font-size:11px;font-weight:800;letter-spacing:.12em;color:#3fb950;text-transform:uppercase}
+#tu-ov .tu-tag.pro{color:#1a1200;background:#f2c14e;padding:3px 8px;border-radius:999px;letter-spacing:.08em}
+#tu-ov .tu-n{margin-left:auto;font-size:12px;color:#8fb39a;font-weight:700}
+#tu-ov .tu-t{font-size:19px;font-weight:800;margin:2px 0 6px;color:#fff}
+#tu-ov .tu-x{font-size:14.5px;line-height:1.45;color:#c4d9cb}
+#tu-ov .tu-x b{color:#fff}
+#tu-ov .tu-dots{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0 12px}
+#tu-ov .tu-dots i{height:6px;width:6px;border-radius:9px;background:rgba(255,255,255,.18);transition:width .25s}
+#tu-ov .tu-dots i.on{width:22px;background:#3fb950}#tu-ov .tu-dots i.ok{background:rgba(63,185,80,.55)}
+#tu-ov .tu-dots i.p.on{background:#f2c14e}#tu-ov .tu-dots i.p.ok{background:rgba(242,193,78,.55)}
+#tu-ov .tu-bts{display:flex;gap:10px}
+#tu-ov .tu-bts button{flex:1;height:46px;border-radius:14px;font:inherit;font-weight:800;font-size:15px;border:0;cursor:pointer}
+#tu-ov .tu-fim{background:transparent;color:#c4d9cb;border:1px solid rgba(255,255,255,.16)!important}
+#tu-ov .tu-prox{background:linear-gradient(180deg,#46c95a,#2f9c43);color:#04120a;box-shadow:0 6px 18px rgba(63,185,80,.35)}
+</style>
+<script>
+window.PrismoTutorial=(function(){
+  var K_FREE='prismo_tut_free',K_PRO='prismo_tut_pro';
+  function ler(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function gravar(k){try{localStorage.setItem(k,'1');}catch(e){}}
+  function plano(){try{return PrismoConta.plano();}catch(e){return 'free';}}
+  function temPro(){var p=plano();return p==='pro'||p==='admin';}
+  function q(s){try{return document.querySelector(s);}catch(e){return null;}}
+  function visivel(e){if(!e)return false;var r=e.getBoundingClientRect();if(r.width<4||r.height<4)return false;var cs=getComputedStyle(e);return cs.display!=='none'&&cs.visibility!=='hidden'&&(e.offsetParent!==null||cs.position==='fixed');}
+
+  /* passos: alvo (seletor da tela inicial) ou null = cartão no meio da tela */
+  var FREE=[
+    {t:'Bem-vindo ao Prismo Drive! 👋',x:'Vou te mostrar o app em poucos passos. Toque em <b>Próximo</b> para seguir ou em <b>Finalizar</b> para fechar. Dá para rever quando quiser em <b>Ajuda → Tutorial</b>.'},
+    {a:'#btn-foto-perfil',r:40,t:'Seu menu',x:'Toque na sua foto para abrir o menu: perfil, plano, configurações, missões, ranking e a <b>Ajuda</b>, onde fica este Tutorial.'},
+    {a:'.pd-hero',r:26,t:'Faturamento do dia',x:'Aqui aparece quanto você fez hoje e a barra das contas do mês. Em <b>Ver mês</b> você abre o calendário com todos os dias.'},
+    {a:'.fab',r:40,p:8,t:'Lançar corrida',x:'Pelo botão verde você lança uma corrida, uma diária ou inicia o seu <b>turno</b>. É por aqui que o faturamento do dia vai subindo.'},
+    {a:'#lista-historico',f:function(e){var u=e.closest('.pd-panel');return u&&u.querySelector('.pd-panel-h')||e;},r:18,t:'Linha do tempo',x:'Tudo o que você lançou na semana fica aqui, em ordem. Toque num item para ver os detalhes ou excluir.'},
+    {a:'#btn-sino-manut',t:'Manutenção',x:'O sino avisa a hora de trocar óleo, pneus e outras peças do seu veículo. O número vermelho mostra quantos alertas tem.'},
+    {a:'#btn-carteira-status',t:'Carteira 💰',x:'Com a Carteira você controla saldo, entradas, saídas e as dívidas do mês. Ela faz parte do <b>Pro</b>: toque no ícone para conhecer.',soFree:1},
+    {t:'“Ei Prismo!” 🎙️',x:'Com o app aberto, diga <b>“Ei Prismo!”</b> e fale o que precisa: “recebi 50 reais de corrida”, “abrir a carteira”, “iniciar turno”. Ative em <b>Configurações → Assistente de voz</b>.'}
+  ];
+  var PRO=[
+    {a:'#btn-carteira-status',t:'Sua Carteira 💰',x:'Saldo, entradas e saídas, dívidas (até em dia útil) e as que vencem nos próximos 10 dias. Em <b>Movimentar</b> você adiciona ou registra um gasto.'},
+    {a:'.pd-card.fuel',r:24,t:'Custo de combustível ⛽',x:'Toque na bomba para registrar o abastecimento: o valor sai da Carteira e o app calcula quanto o combustível come do seu faturamento.'},
+    {a:'.pd-card.bal',r:24,t:'Balanço semanal',x:'O resumo da sua semana. Toque para gerar a imagem do balanço e comparar os dias lado a lado.'},
+    {a:'.fab',r:40,p:8,t:'Turno com GPS',x:'Ao iniciar o turno, o km e o tempo contam sozinhos e aparece o botão flutuante: toque nele para lançar a <b>taxa de entrega</b> e finalizar cada rota.'},
+    {a:'#btn-foto-perfil',r:40,t:'Assistente de rotas',x:'No menu fica o <b>Assistente de rotas</b>: ele avalia as corridas do iFood e do InDrive e avisa com som se a corrida é boa ou ruim.'}
+  ];
+
+  var ov=null,passos=[],i=0,marcar=[],tent=0;
+  function iniciar(modo){
+    /* modo: 'auto' (primeira vez) ou 'manual' (botão Tutorial) */
+    if(ov)return;
+    var pro=temPro(),l=[];marcar=[];
+    if(modo==='manual'){
+      l=FREE.filter(function(s){return !(pro&&s.soFree);}).map(function(s){return {s:s,pro:false};});
+      if(pro)l=l.concat(PRO.map(function(s){return {s:s,pro:true};}));
+      marcar=[K_FREE].concat(pro?[K_PRO]:[]);
+    }else{
+      if(!ler(K_FREE)){l=FREE.filter(function(s){return !(pro&&s.soFree);}).map(function(s){return {s:s,pro:false};});marcar.push(K_FREE);}
+      if(pro&&!ler(K_PRO)){l=l.concat(PRO.map(function(s){return {s:s,pro:true};}));marcar.push(K_PRO);}
+    }
+    if(!l.length)return;
+    passos=l;i=0;
+    /* conta como visto já ao abrir (se fechar o app no meio, não volta sozinho) */
+    marcar.forEach(gravar);
+    try{if(window.PrismoPaginas)PrismoPaginas.fechar();}catch(e){}
+    try{fecharDrawer();}catch(e){}
+    ov=document.createElement('div');ov.id='tu-ov';
+    ov.innerHTML='<div class="tu-blk"></div><div class="tu-spot"></div><div class="tu-ring"></div><div class="tu-hit" role="button" aria-label="Próximo passo"></div><div class="tu-card" role="dialog" aria-modal="true"></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.tu-hit').onclick=proximo;
+    window.addEventListener('resize',posicionar);window.addEventListener('scroll',posicionar,{passive:true});
+    setTimeout(function(){mostrar();requestAnimationFrame(function(){if(ov)ov.classList.add('on');});},window.scrollY>4?350:0);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function alvo(s){
+    if(!s.a)return null;
+    var e=q(s.a);if(e&&s.f)e=s.f(e);
+    return visivel(e)?e:null;
+  }
+  function mostrar(){
+    if(!ov)return;
+    /* pula passos cujo item não está na tela */
+    while(i<passos.length&&passos[i].s.a&&!alvo(passos[i].s))i++;
+    if(i>=passos.length){fechar();return;}
+    var s=passos[i].s,e=alvo(s);
+    if(e){var r=e.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-40){e.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(posicionar,400);setTimeout(posicionar,900);}}
+    var tot=passos.length,dots='';
+    for(var k=0;k<tot;k++)dots+='<i class="'+(passos[k].pro?'p ':'')+(k===i?'on':k<i?'ok':'')+'"></i>';
+    var ult=i===tot-1,pro=passos[i].pro;
+    var c=ov.querySelector('.tu-card');
+    c.style.animation='none';void c.offsetWidth;c.style.animation='';
+    c.innerHTML='<div class="tu-top"><span class="tu-tag'+(pro?' pro':'')+'">'+(pro?'Novo no Pro':'Tutorial')+'</span><span class="tu-n">'+(i+1)+' de '+tot+'</span></div>'
+      +'<div class="tu-t">'+s.t+'</div><div class="tu-x">'+s.x+'</div><div class="tu-dots">'+dots+'</div>'
+      +'<div class="tu-bts"><button type="button" class="tu-fim">Finalizar</button><button type="button" class="tu-prox">'+(ult?'Concluir ✓':'Próximo →')+'</button></div>';
+    c.querySelector('.tu-fim').onclick=fechar;
+    c.querySelector('.tu-prox').onclick=proximo;
+    posicionar();
+  }
+  function posicionar(){
+    if(!ov||i>=passos.length)return;
+    var s=passos[i].s,e=alvo(s),sp=ov.querySelector('.tu-spot'),rg=ov.querySelector('.tu-ring'),hit=ov.querySelector('.tu-hit'),c=ov.querySelector('.tu-card');
+    c.classList.remove('cima','meio');c.style.top=c.style.bottom='';
+    if(!e){
+      sp.classList.add('sem');rg.classList.add('sem');hit.style.display='none';
+      c.classList.add('meio');c.style.top=Math.max(24,(innerHeight-c.offsetHeight)/2)+'px';return;
+    }
+    sp.classList.remove('sem');rg.classList.remove('sem');hit.style.display='block';
+    var r=e.getBoundingClientRect(),p=s.p||6,rad=(s.r||18)+'px';
+    var bx={left:r.left-p,top:r.top-p,width:r.width+p*2,height:r.height+p*2};
+    [sp,rg,hit].forEach(function(x){x.style.left=bx.left+'px';x.style.top=bx.top+'px';x.style.width=bx.width+'px';x.style.height=bx.height+'px';x.style.borderRadius=rad;});
+    var cr=c.getBoundingClientRect(),cx=r.left+r.width/2-cr.left-8;
+    c.style.setProperty('--sx',Math.max(18,Math.min(cr.width-34,cx))+'px');
+    var embaixo=innerHeight-(bx.top+bx.height),emcima=bx.top;
+    if(embaixo>=c.offsetHeight+28||embaixo>=emcima){c.style.top=Math.min(innerHeight-c.offsetHeight-12,bx.top+bx.height+16)+'px';}
+    else{c.classList.add('cima');c.style.bottom=Math.min(innerHeight-c.offsetHeight-12,innerHeight-bx.top+16)+'px';}
+  }
+  function proximo(){if(!ov)return;i++;if(i>=passos.length){fechar();return;}mostrar();}
+  function fechar(){
+    if(!ov)return;var d=ov;ov=null;passos=[];
+    window.removeEventListener('resize',posicionar);window.removeEventListener('scroll',posicionar);
+    d.classList.remove('on');setTimeout(function(){d.remove();},260);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  /* espera a tela inicial ficar livre: carregamento, conta, novidades, anúncio, assistente, menus e janelas */
+  function ocupado(){
+    var vis=function(id){var e=document.getElementById(id);if(!e)return false;var cs=getComputedStyle(e);return cs.display!=='none'&&cs.visibility!=='hidden'&&!e.hidden&&e.offsetParent!==null;};
+    if(document.hidden||vis('prismo-splash')||vis('conta-bloq')||vis('pc-sync')||document.getElementById('tm-ov')||document.getElementById('pp-anuncio')||document.getElementById('wn-ov')||document.querySelector('#tp-ov.on')||document.querySelector('#vz-ov.on'))return true;
+    if(document.querySelector('.pg.on'))return true;
+    var dw=document.getElementById('drawer-menu');if(dw&&!dw.classList.contains('hidden')&&dw.style.pointerEvents==='auto')return true;
+    if(document.querySelector('.pg-sh'))return true;
+    return Array.prototype.some.call(document.querySelectorAll('[id^="modal-"]'),function(m){var cs=getComputedStyle(m);return cs.display!=='none'&&cs.visibility!=='hidden'&&m.offsetParent!==null&&!m.classList.contains('hidden');});
+  }
+  function logado(){try{return PrismoConta.logado();}catch(e){return false;}}
+  function pendente(){return !ler(K_FREE)||(temPro()&&!ler(K_PRO));}
+  function checar(){
+    if(ov||!pendente())return;
+    if(!logado()||ocupado())return;
+    iniciar('auto');
+  }
+  function voltar(){if(!ov)return false;fechar();return true;}
+  function boot(){setTimeout(checar,7000);setInterval(checar,5000);document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(checar,2500);});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  return {abrir:function(){iniciar('manual');},iniciar:iniciar,fechar:fechar,voltar:voltar,aberto:function(){return !!ov;},_reset:function(){try{localStorage.removeItem(K_FREE);localStorage.removeItem(K_PRO);}catch(e){}}};
+})();
+</script>
+
 </body>
 </html>
 
