@@ -91,3 +91,4 @@
 • 🗣️ Comandos de voz: "abra a carteira", "ligar/desligar o assistente de rotas", "iniciar/finalizar turno", "quanto fiz hoje?", "abrir missões/ranking/calendário…" e muito mais. Diga "o que você sabe fazer?"
 • 🎧 Escolha a voz do assistente: Ana, Clara, Júlia, Bruno, Rafael ou Diego (humanizadas) ou a voz do celular
 • 📅 Carteira: as dívidas que vencem nos próximos 10 dias já aparecem em "Em aberto", mesmo sendo do mês que vem
+• 👆 Tutorial: um passo a passo na própria tela mostra cada parte do app (e a parte Pro para quem tem o Pro). Aparece uma vez; depois é só abrir em Ajuda › Tutorial ou dizer "Ei Prismo, tutorial"
