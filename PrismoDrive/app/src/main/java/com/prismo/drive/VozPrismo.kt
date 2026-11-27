@@ -58,7 +58,16 @@ class VozPrismo(private val act: Activity, private val web: WebView) {
     private var ttsPronto = false
 
     private fun pastaModelo() = File(act.filesDir, PASTA)
-    fun temModelo() = File(pastaModelo(), "am/final.mdl").exists() && File(pastaModelo(), "conf/model.conf").exists()
+    /* o modelo instalado: marcador ".ok" + o arquivo principal (final.mdl) em am/ ou na raiz (modelos antigos) */
+    fun temModelo() = File(pastaModelo(), ".ok").exists() &&
+        (File(pastaModelo(), "am/final.mdl").exists() || File(pastaModelo(), "final.mdl").exists())
+
+    /** Acha, dentro do que foi descompactado, a pasta que o Vosk espera (a que tem am/final.mdl, ou final.mdl na raiz). */
+    private fun raizModelo(dir: File): File? {
+        val mdl = dir.walkTopDown().maxDepth(5).firstOrNull { it.isFile && it.name == "final.mdl" } ?: return null
+        val pai = mdl.parentFile ?: return null
+        return if (pai.name == "am") pai.parentFile else pai
+    }
     fun temMic() = Build.VERSION.SDK_INT < 23 || act.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
     var ativo: Boolean
         get() = prefs.getBoolean("ativo", false)
@@ -134,22 +143,27 @@ class VozPrismo(private val act: Activity, private val web: WebView) {
                         }
                     }
                 }
-                // descompacta numa pasta nova e só troca no fim (o zip tem uma pasta raiz: vosk-model-small-pt-0.3/)
+                // descompacta numa pasta nova e só troca no fim (com ou sem pasta raiz dentro do zip)
                 val novo = File(act.filesDir, "$PASTA.novo"); novo.deleteRecursively(); novo.mkdirs()
                 val base = novo.canonicalPath + File.separator
+                if (lido < 5L * 1024 * 1024) throw Exception("download incompleto (" + (lido / 1024) + " KB) · tente de novo no Wi-Fi")
+                var arquivos = 0
                 ZipInputStream(tmp.inputStream().buffered()).use { z ->
                     while (true) {
                         val e = z.nextEntry ?: break
-                        val nome = e.name.substringAfter('/', "")
-                        if (nome.isEmpty()) continue
+                        val nome = e.name.replace('\\', '/').trimStart('/').removePrefix("./")
+                        if (nome.isEmpty() || nome.contains("__MACOSX")) continue
                         val alvo = File(novo, nome)
                         if (!alvo.canonicalPath.startsWith(base)) throw Exception("zip inválido")   // zip slip
-                        if (e.isDirectory) alvo.mkdirs() else { alvo.parentFile?.mkdirs(); FileOutputStream(alvo).use { z.copyTo(it) } }
+                        if (e.isDirectory) alvo.mkdirs() else { alvo.parentFile?.mkdirs(); FileOutputStream(alvo).use { z.copyTo(it) }; arquivos++ }
                     }
                 }
-                if (!File(novo, "am/final.mdl").exists()) throw Exception("modelo incompleto")
+                if (arquivos == 0) throw Exception("o arquivo baixado não é a voz (site fora do ar?)")
+                val raiz = raizModelo(novo) ?: throw Exception("arquivo da voz sem o modelo (final.mdl)")
                 pastaModelo().deleteRecursively()
-                if (!novo.renameTo(pastaModelo())) throw Exception("não deu para salvar")
+                if (!raiz.renameTo(pastaModelo())) throw Exception("não deu para salvar")
+                novo.deleteRecursively()
+                File(pastaModelo(), ".ok").writeText(System.currentTimeMillis().toString())
                 ok = true
             } catch (t: Throwable) {
                 erro = t.message ?: "erro"
