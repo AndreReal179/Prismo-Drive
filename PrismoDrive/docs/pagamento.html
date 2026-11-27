@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Prismo Drive · Pagamento</title>
+<style>
+:root{--bg:#06110b;--card:#0d1a13;--borda:rgba(63,185,80,.25);--verde:#3fb950;--ouro:#facc15;--txt:#e6edf3;--mut:#8b949e}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:radial-gradient(120% 70% at 50% 0%,#0f3a1d 0%,var(--bg) 60%);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--borda);border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 20px 60px -20px rgba(0,0,0,.7)}
+.ic{width:76px;height:76px;margin:0 auto 14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;background:rgba(63,185,80,.14);border:2px solid rgba(63,185,80,.5)}
+.pend .ic{background:rgba(250,204,21,.12);border-color:rgba(250,204,21,.5)}
+.erro .ic{background:rgba(248,81,73,.12);border-color:rgba(248,81,73,.5)}
+h1{font-size:21px;margin:0 0 8px;font-weight:900}
+p{font-size:14px;line-height:1.5;color:var(--mut);margin:0 0 20px}
+.bt{display:block;width:100%;padding:15px;border-radius:16px;border:none;font-size:16px;font-weight:900;text-decoration:none;color:#04210d;background:linear-gradient(135deg,#2ea44f,#4ade80);box-shadow:0 12px 26px -12px rgba(63,185,80,.8)}
+.dica{font-size:12px;margin:14px 0 0}
+.marca{margin-top:18px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#4b5b51;font-weight:800}
+</style>
+</head>
+<body>
+<div class="card" id="c">
+  <div class="ic" id="ic">✅</div>
+  <h1 id="t">Pagamento aprovado!</h1>
+  <p id="m">Seu Pro já está sendo liberado na sua conta. Volte para o Prismo Drive.</p>
+  <a class="bt" id="bt" href="#">Voltar para o Prismo Drive</a>
+  <p class="dica">Se o app não abrir, é só voltar para ele: o Pro aparece sozinho.</p>
+  <div class="marca">Prismo Drive · Mercado Pago</div>
+</div>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search),s=(q.get('s')||q.get('status')||'ok').replace(/[^a-z]/gi,'').slice(0,12);
+  var st=q.get('collection_status')||q.get('status');
+  if(st==='pending'||st==='in_process')s='pendente';
+  if(st==='rejected'||st==='null')s='falhou';
+  var c=document.getElementById('c'),T=function(id,v){document.getElementById(id).textContent=v;};
+  if(s==='pendente'){c.className='card pend';T('ic','⏳');T('t','Pagamento em análise');T('m','Assim que o Mercado Pago confirmar, o Pro entra sozinho na sua conta. Pode voltar para o app.');}
+  else if(s==='falhou'){c.className='card erro';T('ic','✕');T('t','Pagamento não concluído');T('m','Nada foi cobrado. Volte para o app e tente de novo quando quiser.');}
+  var link='intent://pagamento?s='+s+'#Intent;scheme=com.prismo.drive;package=com.prismo.drive;end';
+  if(!/android/i.test(navigator.userAgent))link='com.prismo.drive://pagamento?s='+s;
+  document.getElementById('bt').href=link;
+  setTimeout(function(){try{location.href=link;}catch(e){}},700);
+})();
+</script>
+</body>
+</html>
