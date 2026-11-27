@@ -89,11 +89,11 @@ class VozPrismo(private val act: Activity, private val web: WebView) {
 
     fun naTela(v: Boolean) {
         naTela = v
-        if (v) retomar() else { pararEscuta(); pararReconhecedor(); runCatching { tts?.stop() } }
+        if (v) retomar() else { pararEscuta(); pararReconhecedor(); runCatching { tts?.stop() }; pararAudio() }
     }
 
     fun destruir() {
-        pararEscuta(); pararReconhecedor()
+        pararEscuta(); pararReconhecedor(); pararAudio()
         runCatching { modelo?.close() }; modelo = null
         runCatching { tts?.shutdown() }; tts = null
     }
@@ -288,6 +288,12 @@ class VozPrismo(private val act: Activity, private val web: WebView) {
                     ttsPronto = st == TextToSpeech.SUCCESS
                     if (ttsPronto) {
                         runCatching { tts?.language = Locale("pt", "BR") }
+                        // a voz mais natural que o celular tiver em português do Brasil
+                        runCatching {
+                            val melhor = tts?.voices?.filter { v -> v.locale.language == "pt" && (v.locale.country == "BR" || v.locale.country.isEmpty()) && !v.features.contains("notInstalled") }
+                                ?.maxWithOrNull(compareBy({ it.quality }, { if (it.isNetworkConnectionRequired) 0 else 1 }))
+                            if (melhor != null) tts?.voice = melhor
+                        }
                         tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                             override fun onStart(u: String?) {}
                             override fun onDone(u: String?) { js("prismo-voz-falou", JSONObject().put("id", u ?: "")) }
@@ -304,7 +310,29 @@ class VozPrismo(private val act: Activity, private val web: WebView) {
         }
     }
 
-    fun calar() { main.post { runCatching { tts?.stop() } } }
+    fun calar() { main.post { runCatching { tts?.stop() }; pararAudio() } }
+
+    // ───────────────────── voz humanizada (áudio pronto, vindo do servidor) ─────────────────────
+    private var player: android.media.MediaPlayer? = null
+    private fun pararAudio() { val p = player ?: return; player = null; runCatching { p.stop() }; runCatching { p.release() } }
+
+    fun tocar(b64: String, id: String) {
+        main.post {
+            pararAudio(); runCatching { tts?.stop() }
+            val ok = runCatching {
+                val f = File(act.cacheDir, "voz_resposta.mp3")
+                f.writeBytes(android.util.Base64.decode(b64, android.util.Base64.DEFAULT))
+                pararEscuta()
+                val mp = android.media.MediaPlayer()
+                mp.setDataSource(f.absolutePath)
+                mp.setOnCompletionListener { if (player === mp) pararAudio(); js("prismo-voz-falou", JSONObject().put("id", id)) }
+                mp.setOnErrorListener { _, _, _ -> if (player === mp) pararAudio(); js("prismo-voz-falou", JSONObject().put("id", id).put("erro", true)); true }
+                mp.prepare(); mp.start()
+                player = mp
+            }.isSuccess
+            if (!ok) js("prismo-voz-falou", JSONObject().put("id", id).put("erro", true))
+        }
+    }
 
     fun pedirMic() {
         if (Build.VERSION.SDK_INT >= 23) main.post { runCatching { act.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQ_MIC) } }

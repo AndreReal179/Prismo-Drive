@@ -319,6 +319,7 @@ class PrismoBridge(private val activity: Activity) {
     @JavascriptInterface fun vozPararOuvir() { voz()?.pararOuvir() }
     @JavascriptInterface fun vozFalar(texto: String, id: String) { voz()?.falar(texto, id) }
     @JavascriptInterface fun vozCalar() { voz()?.calar() }
+    @JavascriptInterface fun vozTocar(b64: String, id: String) { voz()?.tocar(b64, id) }
 
     // ── v2.3 · aviso de permissões na tela inicial (sem contar a acessibilidade) ──
 
